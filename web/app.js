@@ -121,18 +121,40 @@ if (refreshBtn) {
 async function pollJob(jobId) {
   setStatus(`Job <code>${jobId}</code> running…`);
   videoSection.classList.add('hidden');
+  
+  // Show loading animation
+  const loadingAnimation = document.getElementById('loading-animation');
+  const loadingStatus = document.getElementById('loading-status');
+  if (loadingAnimation) {
+    loadingAnimation.classList.remove('hidden');
+  }
 
   let delay = 1500; // start with 1.5s, back off up to 5s
   for (;;) {
     const res = await fetch(`/api/jobs/${jobId}`);
     if (!res.ok) {
       setStatus(`Error fetching status (HTTP ${res.status})`);
+      if (loadingAnimation) {
+        loadingAnimation.classList.add('hidden');
+      }
       return;
     }
     const data = await res.json();
     const logHtml = `<pre class="log">${escapeHtml(data.log || '')}</pre>`;
 
+    // Update loading status with latest log
+    if (loadingStatus) {
+      const logLines = (data.log || '').split('\n').filter(l => l.trim());
+      const lastLine = logLines[logLines.length - 1] || 'Processing...';
+      loadingStatus.textContent = lastLine.substring(0, 60);
+    }
+
     if (data.status === 'done') {
+      // Hide loading animation
+      if (loadingAnimation) {
+        loadingAnimation.classList.add('hidden');
+      }
+      
       setStatus(`Job <code>${jobId}</code> finished.` + logHtml);
       if (data.video_url) {
         videoEl.src = data.video_url;
@@ -162,6 +184,12 @@ async function pollJob(jobId) {
     }
 
     if (data.status === 'error') {
+      // Hide loading animation on error
+      const loadingAnimation = document.getElementById('loading-animation');
+      if (loadingAnimation) {
+        loadingAnimation.classList.add('hidden');
+      }
+      
       setStatus(`Job <code>${jobId}</code> failed.` + logHtml);
       return;
     }
@@ -192,6 +220,16 @@ form.addEventListener('submit', async (e) => {
   }
 
   setStatus('Submitting job…');
+
+  // Show loading animation
+  const loadingAnimation = document.getElementById('loading-animation');
+  if (loadingAnimation) {
+    loadingAnimation.classList.remove('hidden');
+  }
+  const videoSection = document.getElementById('video-section');
+  if (videoSection) {
+    videoSection.classList.add('hidden');
+  }
 
   try {
     const res = await fetch('/api/run', {
