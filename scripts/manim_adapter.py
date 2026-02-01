@@ -105,36 +105,54 @@ def generate_scene_script(
 
     scene_cls = "ThreeDScene" if needs_3d else "Scene"
 
+    # Inject intro scene with voiceover if not present
+    scenes_with_intro = scenes.copy()
+    if not scenes or (scenes and scenes[0].get('description', '').lower() != 'intro'):
+        intro_scene = {
+            "id": "intro",
+            "description": "intro",
+            "voiceover": "Welcome to Phiversity. Where Physics Education is made simple.",
+            "elements": []
+        }
+        scenes_with_intro.insert(0, intro_scene)
+        # Also inject into the original data so voiceover generation picks it up
+        if "animation_plan" not in data:
+            data["animation_plan"] = {}
+        if "scenes" not in data["animation_plan"]:
+            data["animation_plan"]["scenes"] = []
+        data["animation_plan"]["scenes"].insert(0, intro_scene)
+    
     lines: List[str] = [
         "from manim import *",
         "from manim import rate_functions as rf",
         "",
         f"class GeneratedScene({scene_cls}):",
         "    def construct(self):",
-        "        # Intro screen",
-        "        intro = Text('Phiversity', font_size=72, color=BLUE)",
-        "        tagline = Text('Physics Education Made Simple', font_size=28, color=WHITE).next_to(intro, DOWN)",
-        "        self.play(FadeIn(intro, scale=0.5))",
-        "        self.play(Write(tagline))",
-        "        self.wait(1)",
-        "        self.play(FadeOut(intro), FadeOut(tagline))",
-        "        self.wait(0.3)",
-        "",
         "        # Add watermark",
         "        watermark = Text('Phiversity', font_size=18, color=GRAY).set_opacity(0.5)",
         "        watermark.to_corner(DR, buff=0.2)",
         "        self.add(watermark)",
         "",
-        f"        title = Text('{_safe_str(topic)}').scale(0.8)",
-        "        self.play(Write(title))",
-        "        self.wait(0.5)",
-        "        self.play(FadeOut(title))",
     ]
     if needs_3d:
         lines.append("        self.set_camera_orientation(phi=60*DEGREES, theta=45*DEGREES)")
 
-    for sidx, sc in enumerate(scenes, start=1):
+    for sidx, sc in enumerate(scenes_with_intro, start=1):
         desc = sc.get("description", "")
+        scene_id = sc.get("id", "")
+        
+        # Special handling for intro scene
+        if scene_id == "intro" or desc.lower() == "intro":
+            lines.append("        # Intro screen")
+            lines.append("        intro = Text('Phiversity', font_size=72, color=BLUE)")
+            lines.append("        tagline = Text('Physics Education Made Simple', font_size=28, color=WHITE).next_to(intro, DOWN)")
+            lines.append("        self.play(FadeIn(intro, scale=0.5))")
+            lines.append("        self.play(Write(tagline))")
+            lines.append("        self.wait(1)")
+            lines.append("        self.play(FadeOut(intro), FadeOut(tagline))")
+            lines.append("        self.wait(0.3)")
+            continue
+        
         scene_title = _safe_str(desc[:80]) or sc.get("id", f"Scene {sidx}")
         lines.append(f"        header = Text('{scene_title}').scale(0.6).to_edge(UP)")
         lines.append("        self.play(FadeIn(header, shift=DOWN))")
