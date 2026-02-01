@@ -25,7 +25,7 @@ REM Check if dependencies are installed
 echo Checking dependencies...
 %VENV_DIR%\Scripts\pip install -q -e . 2>nul
 
-REM Start the server
+REM Display server info
 echo.
 echo ========================================
 echo Phiversity Server Starting...
@@ -34,11 +34,20 @@ echo.
 echo The application will be available at:
 echo http://127.0.0.1:8000
 echo.
-echo Press Ctrl+C to stop the server.
+echo Opening browser in 3 seconds...
+echo.
+timeout /t 3 /nobreak
+
+REM Open browser
+start http://127.0.0.1:8000
+
+REM Run the server
+echo.
+echo Server is running. Press Ctrl+C to stop.
 echo ========================================
 echo.
 
-REM Run the server
 %VENV_DIR%\Scripts\python -m uvicorn scripts.server.app:app --host 127.0.0.1 --port 8000 --reload
 
 pause
+

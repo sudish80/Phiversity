@@ -31,11 +31,20 @@ Write-Host ""
 Write-Host "The application will be available at:" -ForegroundColor White
 Write-Host "http://127.0.0.1:8000" -ForegroundColor Yellow
 Write-Host ""
-Write-Host "Press Ctrl+C to stop the server." -ForegroundColor Yellow
+Write-Host "Opening browser in 3 seconds..." -ForegroundColor Yellow
+Write-Host ""
+
+# Wait 3 seconds
+Start-Sleep -Seconds 3
+
+# Open browser
+Start-Process "http://127.0.0.1:8000"
+
+# Run the server
+Write-Host "Server is running. Press Ctrl+C to stop." -ForegroundColor Yellow
 Write-Host "========================================" -ForegroundColor Cyan
 Write-Host ""
 
-# Run the server
 & python -m uvicorn scripts.server.app:app --host 127.0.0.1 --port 8000 --reload
 
 Read-Host "Press Enter to exit"
