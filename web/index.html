@@ -65,10 +65,28 @@
     </div>
 
     <div id="video-section" class="video hidden">
-      <h2>Result</h2>
-      <video id="result-video" controls width="960"></video>
-      <div id="plan-link"></div>
-      <div id="log-link"></div>
+      <div class="video-box-wrapper">
+        <div class="video-box">
+          <div class="video-header">
+            <h2>Your Generated Video</h2>
+            <button class="close-video" id="close-video" type="button">×</button>
+          </div>
+          <div class="video-player-container">
+            <video id="result-video" controls width="100%"></video>
+          </div>
+          <div class="video-info">
+            <div class="info-row">
+              <h3>Video Details</h3>
+            </div>
+            <div id="plan-link" class="info-link"></div>
+            <div id="log-link" class="info-link"></div>
+          </div>
+          <div class="video-actions">
+            <a id="download-video" href="#" download class="action-btn download-btn">Download Video</a>
+            <button id="share-video" class="action-btn share-btn" type="button">Share</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

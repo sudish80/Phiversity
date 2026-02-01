@@ -11,6 +11,9 @@ const refreshBtn = document.getElementById('refreshBtn');
 const statusList = document.getElementById('statusList');
 const overallStatusEl = document.getElementById('overallStatus');
 const cornerStatus = document.getElementById('cornerStatus');
+const closeVideoBtn = document.getElementById('close-video');
+const downloadVideoBtn = document.getElementById('download-video');
+const shareVideoBtn = document.getElementById('share-video');
 
 function setStatus(html) {
   statusEl.innerHTML = html;
@@ -401,6 +404,45 @@ document.addEventListener('DOMContentLoaded', () => {
     btnFacebookCircle.addEventListener('click', () => {
       console.log('Facebook login clicked');
       login({ type: 'facebook', name: 'Facebook User', email: 'user@facebook.com' });
+    });
+  }
+
+  // Close video box button
+  if (closeVideoBtn) {
+    closeVideoBtn.addEventListener('click', () => {
+      videoSection.classList.add('hidden');
+    });
+  }
+
+  // Download video button
+  if (downloadVideoBtn) {
+    downloadVideoBtn.addEventListener('click', () => {
+      if (videoEl.src) {
+        const link = document.createElement('a');
+        link.href = videoEl.src;
+        link.download = 'phiversity-video.mp4';
+        link.click();
+      }
+    });
+  }
+
+  // Share video button
+  if (shareVideoBtn) {
+    shareVideoBtn.addEventListener('click', () => {
+      if (navigator.share && videoEl.src) {
+        navigator.share({
+          title: 'Phiversity - Generated Video',
+          text: 'Check out this physics animation created by Phiversity!',
+          url: window.location.href
+        }).catch(err => console.log('Share failed:', err));
+      } else {
+        // Fallback: copy URL to clipboard
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          alert('Video URL copied to clipboard!');
+        }).catch(() => {
+          alert('Video URL: ' + window.location.href);
+        });
+      }
     });
   }
 });
