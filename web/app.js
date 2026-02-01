@@ -39,7 +39,7 @@ if (sampleBtn) {
     const orch = document.getElementById('orchestrate');
     orch.checked = true;
     const vf = document.getElementById('voice-first');
-    vf.checked = false;
+    vf.checked = true;
     const ea = document.getElementById('element-audio');
     ea.checked = false;
     setStatus('Sample filled — click Run to start.');
