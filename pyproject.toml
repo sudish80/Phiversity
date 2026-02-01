@@ -20,4 +20,5 @@ dependencies = [
     "scipy>=1.11",
     "aiofiles>=23.2.1",
     "python-dotenv>=1.0.1",
+    "werkzeug>=1.0.1",
 ]
