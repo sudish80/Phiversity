@@ -316,6 +316,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginBtn = document.querySelector("label.login");
   const signupBtn = document.querySelector("label.signup");
   const signupLink = document.querySelector("form .signup-link a");
+  const skipBtn = document.getElementById('skip-login');
+  const btnGoogleCircle = document.getElementById('btn-google-circle');
+  const btnFacebookCircle = document.getElementById('btn-facebook-circle');
   
   if (signupBtn && loginForm && loginText) {
     signupBtn.onclick = (() => {
@@ -335,6 +338,31 @@ document.addEventListener('DOMContentLoaded', () => {
     signupLink.onclick = (() => {
       signupBtn.click();
       return false;
+    });
+  }
+
+  // Skip button handler
+  if (skipBtn) {
+    skipBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      console.log('Skip login clicked');
+      login({ type: 'guest', name: 'Guest User' });
+    });
+  }
+
+  // Google circle button
+  if (btnGoogleCircle) {
+    btnGoogleCircle.addEventListener('click', () => {
+      console.log('Google login clicked');
+      login({ type: 'google', name: 'Google User', email: 'user@gmail.com' });
+    });
+  }
+
+  // Facebook circle button
+  if (btnFacebookCircle) {
+    btnFacebookCircle.addEventListener('click', () => {
+      console.log('Facebook login clicked');
+      login({ type: 'facebook', name: 'Facebook User', email: 'user@facebook.com' });
     });
   }
 });
