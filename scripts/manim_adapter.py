@@ -530,7 +530,15 @@ def render_with_manim(script_path: Path, scene_name: str, out_path: Optional[Pat
         output_flag = ["-o", out_path.name]
 
     cmd = [sys.executable, "-m", "manim", quality_flag, *output_flag, str(script_path), scene_name]
-    subprocess.run(cmd, check=True, env=env)
+    
+    # Add timeout to prevent indefinite hangs (15 minutes max)
+    timeout_seconds = int(os.getenv("MANIM_TIMEOUT", "900"))  # 15 minutes default
+    try:
+        print(f"[manim_adapter] Starting Manim render with {timeout_seconds}s timeout...")
+        subprocess.run(cmd, check=True, env=env, timeout=timeout_seconds)
+        print(f"[manim_adapter] Manim render completed successfully")
+    except subprocess.TimeoutExpired:
+        raise RuntimeError(f"Manim rendering exceeded timeout of {timeout_seconds} seconds. Try reducing scene complexity or quality.")
 
     if out_path:
         produced_dir = Path("media") / "videos" / script_path.stem

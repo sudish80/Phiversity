@@ -154,6 +154,11 @@ def _worker(job: Job, req: RunRequest):
     out_dir = VIDEOS_DIR / "web_jobs" / job.id
     out_dir.mkdir(parents=True, exist_ok=True)
     job.set_out_dir(out_dir)
+    
+    # Overall job timeout (default 20 minutes)
+    job_timeout = int(os.getenv("JOB_TIMEOUT", "1200"))
+    start_time = time.time()
+    
     try:
         python = sys.executable
         plan_path = TEXTS_DIR / f"solution_plan_{job.id}.json"
@@ -187,10 +192,20 @@ def _worker(job: Job, req: RunRequest):
                         cmd_1.extend(["--prompt-file", str(default_prompt_path)])
                 except Exception:
                     pass
+            job.append_log("[server] Starting LLM orchestration...\n")
             rc1 = _run_and_capture(cmd_1, ROOT, job)
             if rc1 != 0:
+                job.append_log("[server] Orchestration failed\n")
                 job.set_status("error")
                 return
+            
+            # Check timeout
+            elapsed = time.time() - start_time
+            if elapsed > job_timeout:
+                job.append_log(f"[server] Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)\n")
+                job.set_status("error")
+                return
+            job.append_log(f"[server] Orchestration completed ({elapsed:.1f}s elapsed)\n")
         else:
             # If not orchestrating, assume problem contains a path to plan JSON
             try:
@@ -221,11 +236,24 @@ def _worker(job: Job, req: RunRequest):
         if req.element_audio:
             cmd_2.append("--element-audio")
 
+        job.append_log("[server] Starting video generation pipeline...\n")
         rc2 = _run_and_capture(cmd_2, ROOT, job)
-        if rc2 != 0:
+        
+        # Check timeout
+        elapsed = time.time() - start_time
+        if elapsed > job_timeout:
+            job.append_log(f"[server] Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)\n")
             job.set_status("error")
             _persist_job(job)
             return
+            
+        if rc2 != 0:
+            job.append_log("[server] Pipeline execution failed\n")
+            job.set_status("error")
+            _persist_job(job)
+            return
+        
+        job.append_log(f"[server] Pipeline completed ({elapsed:.1f}s total)\n")
 
         # Pipeline writes final.mp4 in out_dir
         final_path = out_dir / "final.mp4"
@@ -241,10 +269,14 @@ def _worker(job: Job, req: RunRequest):
             job.set_video(final_scan)
         else:
             job.set_video(final_path)
+        
+        total_elapsed = time.time() - start_time
+        job.append_log(f"[server] Job completed successfully in {total_elapsed:.1f}s\n")
         job.set_status("done")
         _persist_job(job)
     except Exception as e:
-        job.append_log(f"Unhandled exception: {e}\n")
+        elapsed = time.time() - start_time
+        job.append_log(f"[server] Unhandled exception after {elapsed:.1f}s: {e}\n")
         job.set_status("error")
         _persist_job(job)
 @app.post("/api/run")

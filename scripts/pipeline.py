@@ -1,6 +1,7 @@
 import argparse
 import json
 import os
+import signal
 from pathlib import Path
 from typing import Optional
 from dotenv import load_dotenv
@@ -19,6 +20,11 @@ from .voiceover import (
 from .av_sync import combine_video_with_audio
 
 
+class TimeoutError(Exception):
+    """Raised when pipeline execution exceeds timeout"""
+    pass
+
+
 def run_pipeline(
     question: Optional[str],
     json_in: Optional[str],
@@ -30,6 +36,7 @@ def run_pipeline(
     workdir.mkdir(parents=True, exist_ok=True)
 
     # Step 1: Get structured JSON (either orchestrate or read input)
+    print("[pipeline] Step 1/5: Getting solution plan...")
     if json_in:
         data = json.loads(Path(json_in).read_text(encoding="utf-8"))
     else:
@@ -39,13 +46,24 @@ def run_pipeline(
         data = result.model_dump()
     json_path = workdir / "solution_plan.json"
     json_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    
+    # Check complexity and warn if too high
+    scenes = data.get("animation_plan", {}).get("scenes", [])
+    total_elements = sum(len(sc.get("elements", [])) for sc in scenes)
+    print(f"[pipeline] Plan has {len(scenes)} scenes with {total_elements} total elements")
+    if len(scenes) > 10:
+        print(f"[pipeline] WARNING: High scene count ({len(scenes)}) may cause slow rendering")
+    if total_elements > 50:
+        print(f"[pipeline] WARNING: High element count ({total_elements}) may cause slow rendering")
 
     # Voice-first mode: generate audio first to time scenes to audio durations
     audio_dir = workdir / "voice"
     if voice_first:
         if element_audio:
+            print("[pipeline] Step 2/5: Generating element-wise audio (this may take time)...")
             nested_paths = synthesize_element_wise(data, audio_dir)
             element_durs = get_element_durations(nested_paths)
+            print("[pipeline] Step 3/5: Generating Manim script...")
             gen_script = manim_adapter.generate_scene_script(
                 data, scene_durations=[sum(x) for x in element_durs], element_durations=element_durs
             )
@@ -53,41 +71,52 @@ def run_pipeline(
             gen_dir.mkdir(parents=True, exist_ok=True)
             script_path = gen_dir / "generated_scene.py"
             script_path.write_text(gen_script, encoding="utf-8")
+            print("[pipeline] Step 4/5: Rendering video with Manim (this may take several minutes)...")
             silent_video = manim_adapter.render_with_manim(
                 script_path, "GeneratedScene", out_path=workdir / "silent.mp4", quality=os.getenv("MANIM_QUALITY", "medium")
             )
+            print("[pipeline] Step 5/5: Combining video with audio...")
             final_path = workdir / "final.mp4"
             combine_video_with_audio(silent_video, flatten_audio(nested_paths), final_path)
         else:
+            print("[pipeline] Step 2/5: Generating scene-wise audio...")
             audio_paths = synthesize_scene_wise(data, audio_dir)
             durations = get_audio_durations(audio_paths)
+            print("[pipeline] Step 3/5: Generating Manim script...")
             gen_script = manim_adapter.generate_scene_script(data, scene_durations=durations)
             gen_dir = Path("scripts") / "_generated"
             gen_dir.mkdir(parents=True, exist_ok=True)
             script_path = gen_dir / "generated_scene.py"
             script_path.write_text(gen_script, encoding="utf-8")
+            print("[pipeline] Step 4/5: Rendering video with Manim (this may take several minutes)...")
             silent_video = manim_adapter.render_with_manim(
                 script_path, "GeneratedScene", out_path=workdir / "silent.mp4", quality=os.getenv("MANIM_QUALITY", "medium")
             )
+            print("[pipeline] Step 5/5: Combining video with audio...")
             final_path = workdir / "final.mp4"
             combine_video_with_audio(silent_video, audio_paths, final_path)
     else:
         # Video-first (previous behavior): render silent video, then synthesize and overlay audio
+        print("[pipeline] Step 2/5: Generating Manim script...")
         gen_script = manim_adapter.generate_scene_script(data)
         gen_dir = Path("scripts") / "_generated"
         gen_dir.mkdir(parents=True, exist_ok=True)
         script_path = gen_dir / "generated_scene.py"
         script_path.write_text(gen_script, encoding="utf-8")
+        print("[pipeline] Step 3/5: Rendering video with Manim (this may take several minutes)...")
         silent_video = manim_adapter.render_with_manim(
             script_path, "GeneratedScene", out_path=workdir / "silent.mp4", quality=os.getenv("MANIM_QUALITY", "medium")
         )
+        print("[pipeline] Step 4/5: Generating audio...")
         if element_audio:
             nested_paths = synthesize_element_wise(data, audio_dir)
             audio_paths = flatten_audio(nested_paths)
         else:
             audio_paths = synthesize_scene_wise(data, audio_dir)
+        print("[pipeline] Step 5/5: Combining video with audio...")
         final_path = workdir / "final.mp4"
         combine_video_with_audio(silent_video, audio_paths, final_path)
+    print(f"[pipeline] ✓ Pipeline complete! Output: {final_path}")
     return final_path
 
 
