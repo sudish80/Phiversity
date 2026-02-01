@@ -1,0 +1,119 @@
+* { box-sizing: border-box; }
+body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 0; background: #0f172a; color: #e2e8f0; }
+.container { max-width: 1000px; margin: 0 auto; padding: 24px; }
+h1 { margin: 0 0 16px; font-size: 24px; }
+form { background: #111827; padding: 16px; border-radius: 8px; border: 1px solid #1f2937; }
+label { display: block; font-weight: 600; margin-bottom: 8px; }
+textarea { width: 100%; padding: 8px; background: #0b1220; color: #e2e8f0; border: 1px solid #1f2937; border-radius: 6px; }
+.row { margin: 10px 0; }
+button { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; cursor: pointer; }
+button:hover { background: #1d4ed8; }
+.status { margin-top: 16px; padding: 12px; background: #0b1220; border: 1px solid #1f2937; border-radius: 8px; white-space: normal; }
+pre.log { max-height: 300px; overflow: auto; background: #0b1220; padding: 8px; border-radius: 6px; border: 1px solid #1f2937; }
+.video { margin-top: 20px; }
+.hidden { display: none !important; }
+/* Cards */
+.card { background: #111827; border: 1px solid #1f2937; border-radius: 8px; padding: 16px; margin: 16px 0; }
+.card-header { display: flex; align-items: center; justify-content: space-between; }
+.btn { background: #374151; }
+.btn:hover { background: #4b5563; }
+.status-list { display: grid; grid-template-columns: 1fr; gap: 8px; margin-top: 8px; }
+.status-item { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 6px; border: 1px solid #1f2937; background: #0b1220; }
+.status-item.pass { border-color: #14532d; background: #052e1a; }
+.status-item.fail { border-color: #7f1d1d; background: #2d0b0b; }
+.badge { font-size: 12px; padding: 2px 6px; border-radius: 4px; }
+.badge.pass { background: #16a34a; color: #052e1a; }
+.badge.fail { background: #ef4444; color: #2d0b0b; }
+.hint { margin-top: 8px; font-size: 12px; color: #94a3b8; }
+.status.pass { border-color: #14532d; background: #052e1a; }
+.status.fail { border-color: #7f1d1d; background: #2d0b0b; }
+/* Corner status */
+.corner-status { position: fixed; top: 12px; right: 12px; background: #0b1220; border: 1px solid #1f2937; border-radius: 8px; padding: 8px 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); font-size: 13px; }
+.corner-status .title { font-weight: 700; margin-bottom: 4px; }
+.corner-status .line { display: flex; gap: 6px; align-items: center; }
+.corner-status .badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; background: #16a34a; color: #052e1a; }
+
+/* Login Overlay */
+.login-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(15, 23, 42, 0.95);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.login-card {
+  background: #1e293b;
+  padding: 32px;
+  border-radius: 12px;
+  border: 1px solid #334155;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.login-card h2 { margin-top: 0; color: #f8fafc; }
+.login-card p { color: #94a3b8; margin-bottom: 24px; }
+
+.login-buttons { display: flex; flex-direction: column; gap: 12px; }
+
+.social-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 10px;
+  font-weight: 500;
+  border-radius: 6px;
+  transition: opacity 0.2s;
+}
+.social-btn .icon { font-weight: bold; margin-right: 10px; font-size: 18px; }
+
+.google { background: #ffffff; color: #374151; }
+.google:hover { background: #f3f4f6; }
+
+.facebook { background: #1877f2; color: white; }
+.facebook:hover { background: #166fe5; }
+
+.divider {
+  display: flex;
+  align-items: center;
+  margin: 20px 0;
+  color: #64748b;
+  font-size: 12px;
+}
+.divider::before, .divider::after {
+  content: "";
+  flex: 1;
+  border-bottom: 1px solid #334155;
+}
+.divider span { padding: 0 10px; }
+
+#email-login-form {
+  background: transparent;
+  border: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#email-login-form input {
+  padding: 10px;
+  background: #0f172a;
+  border: 1px solid #334155;
+  color: white;
+  border-radius: 6px;
+}
+
+.email-btn { width: 100%; background: #2563eb; }
+.guest-section { margin-top: 20px; border-top: 1px solid #334155; padding-top: 20px; }
+.guest-btn { background: transparent; border: 1px solid #475569; color: #94a3b8; width: 100%; }
+.guest-btn:hover { background: #334155; color: white; }
+

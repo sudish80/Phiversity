@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+.venv312/
+env/
+venv/
+
+# Environment Variables
+.env
+
+# Generated Output
+media/
+voice_cache/
+web_jobs/
+dist/
+*.zip
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Manim
+scripts/_generated/

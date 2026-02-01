@@ -1,0 +1,53 @@
+{
+  "checks": [
+    {
+      "service": "openai",
+      "reachable": false,
+      "auth_valid": false,
+      "model": null,
+      "latency_ms": null,
+      "error": "OPENAI_API_KEY not set"
+    },
+    {
+      "service": "deepseek",
+      "reachable": false,
+      "auth_valid": false,
+      "model": null,
+      "latency_ms": null,
+      "error": "DEEPSEEK_API_KEY not set"
+    },
+    {
+      "service": "gemini",
+      "reachable": true,
+      "auth_valid": true,
+      "model": "gemini-flash-latest",
+      "latency_ms": 87053,
+      "error": null
+    },
+    {
+      "service": "elevenlabs",
+      "reachable": false,
+      "auth_valid": false,
+      "model": null,
+      "latency_ms": null,
+      "error": "ELEVENLABS_API_KEY not set"
+    },
+    {
+      "service": "pyttsx3",
+      "reachable": true,
+      "auth_valid": true,
+      "model": "offline",
+      "latency_ms": 2988,
+      "error": null
+    }
+  ],
+  "summary": {
+    "any_pass": true,
+    "pass_count": 2,
+    "services_pass": [
+      "gemini",
+      "pyttsx3"
+    ]
+  },
+  "timestamp": 1769757449
+}
