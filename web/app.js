@@ -1,3 +1,8 @@
+// Configuration
+const API_URL = window.location.origin; // Auto-detect for cloud deployment
+// For local development, you can override:
+// const API_URL = 'http://localhost:8000';
+
 const form = document.getElementById('run-form');
 const statusEl = document.getElementById('status');
 const videoSection = document.getElementById('video-section');
@@ -134,7 +139,7 @@ async function pollJob(jobId) {
 
   let delay = 1500; // start with 1.5s, back off up to 5s
   for (;;) {
-    const res = await fetch(`/api/jobs/${jobId}`);
+    const res = await fetch(`${API_URL}/api/jobs/${jobId}`);
     if (!res.ok) {
       setStatus(`Error fetching status (HTTP ${res.status})`);
       if (loadingAnimation) {
@@ -235,7 +240,7 @@ form.addEventListener('submit', async (e) => {
   }
 
   try {
-    const res = await fetch('/api/run', {
+    const res = await fetch(`${API_URL}/api/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ problem, orchestrate, voice_first: voiceFirst, element_audio: elementAudio, custom_prompt: customPrompt || null }),

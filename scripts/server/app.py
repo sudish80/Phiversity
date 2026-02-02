@@ -11,11 +11,18 @@ from typing import Dict, Optional, Any
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
 # Load environment variables from .env if present; allow overriding existing
 load_dotenv(override=True)
+
+# Import cloud storage
+try:
+    from scripts.cloud_storage import storage as cloud_storage
+except ImportError:
+    cloud_storage = None
 
 ROOT = Path(__file__).resolve().parents[2]
 MEDIA_DIR = ROOT / "media"
@@ -28,6 +35,15 @@ TEXTS_DIR.mkdir(parents=True, exist_ok=True)
 WEB_DIR.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Manimations Frontend API")
+
+# Enable CORS for cloud deployment
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 
 class RunRequest(BaseModel):
@@ -47,7 +63,9 @@ class Job:
         self.status: str = "queued"  # queued | running | done | error
         self.log: str = ""
         self.video_path: Optional[Path] = None
+        self.video_url: Optional[str] = None  # Cloud storage URL
         self.plan_path: Optional[Path] = None
+        self.plan_url: Optional[str] = None  # Cloud storage URL
         self.out_dir: Optional[Path] = None
         self._lock = threading.Lock()
 
@@ -270,6 +288,21 @@ def _worker(job: Job, req: RunRequest):
         else:
             job.set_video(final_path)
         
+        # Upload to cloud storage if configured
+        if cloud_storage and cloud_storage.backend != "local":
+            job.append_log("[server] Uploading video to cloud storage...\n")
+            try:
+                video_url = cloud_storage.upload_video(final_path, job.id)
+                job.video_url = video_url
+                job.append_log(f"[server] Video uploaded: {video_url}\n")
+                
+                # Upload plan JSON too
+                if job.plan_path and job.plan_path.exists():
+                    plan_url = cloud_storage.upload_json(job.plan_path, job.id)
+                    job.plan_url = plan_url
+            except Exception as e:
+                job.append_log(f"[server] Cloud upload warning: {e}\n")
+        
         total_elapsed = time.time() - start_time
         job.append_log(f"[server] Job completed successfully in {total_elapsed:.1f}s\n")
         job.set_status("done")
@@ -279,6 +312,12 @@ def _worker(job: Job, req: RunRequest):
         job.append_log(f"[server] Unhandled exception after {elapsed:.1f}s: {e}\n")
         job.set_status("error")
         _persist_job(job)
+        
+@app.get("/health")
+def health_check():
+    """Health check endpoint for cloud platforms"""
+    return {"status": "ok", "service": "manimations-api"}
+
 @app.post("/api/run")
 def run(req: RunRequest):
     job = jobs.create()
@@ -351,13 +390,17 @@ def job_status(job_id: str):
 
     video_url = None
     if job.video_path and job.video_path.exists():
-        # Expose under /media
-        try:
-            rel = job.video_path.relative_to(MEDIA_DIR)
-            video_url = f"/media/{rel.as_posix()}"
-        except ValueError:
-            # Not under media; fallback to absolute path disclosure (not preferred)
-            video_url = str(job.video_path)
+        # Prioritize cloud URL if available
+        if job.video_url:
+            video_url = job.video_url
+        else:
+            # Expose under /media
+            try:
+                rel = job.video_path.relative_to(MEDIA_DIR)
+                video_url = f"/media/{rel.as_posix()}"
+            except ValueError:
+                # Not under media; fallback to absolute path disclosure (not preferred)
+                video_url = str(job.video_path)
 
     # Return tail of the log to keep payload small
     log = job.log
