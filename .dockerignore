@@ -40,16 +40,29 @@ wheels/
 .env
 .env.local
 
-# Media files (generated)
+# Media files (generated - not needed in container)
 media/videos/
 media/Tex/
+media/images/
+media/texts/
 voice_cache/
 web_jobs/
 
-# Documentation
+# Documentation - EXCLUDE FROM BUILD
 *.md
-!README.md
-!DEPLOY.md
+DOCUMENTATION*.txt
+GENERATION*.txt
+HISTORY*.txt
+FIX*.txt
+IMPLEMENTATION*.txt
+PERFORMANCE*.txt
+QUICK*.txt
+GETTING*.txt
+RUN*.txt
+README*.txt
+Prompt.txt
+Prompt.json
+Prompt.bak
 
 # Tests
 test/
@@ -58,3 +71,4 @@ test/
 # Misc
 .DS_Store
 Thumbs.db
+

@@ -1,32 +1,30 @@
-# Cloud-optimized deployment for Railway, Render, Fly.io
+# Optimized lightweight build for Railway free tier
 FROM python:3.11-slim
 
-# Install system dependencies for Manim and multimedia processing
+# Install only essential dependencies (minimize size)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
-    texlive \
+    texlive-latex-base \
+    texlive-fonts-recommended \
     texlive-latex-extra \
-    texlive-fonts-extra \
-    texlive-latex-recommended \
-    texlive-science \
-    tipa \
     libcairo2-dev \
     libpango1.0-dev \
     libpq-dev \
     build-essential \
     curl \
-    git \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
 # Set working directory
 WORKDIR /app
 
-# Copy requirements first for better caching
+# Copy requirements first
 COPY requirements.txt .
 
-# Install Python dependencies with optimizations
+# Install Python dependencies with minimal cache
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    find /usr/local -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
 # Copy application code
 COPY . .
@@ -34,16 +32,24 @@ COPY . .
 # Create necessary directories
 RUN mkdir -p media/videos media/images media/texts voice_cache web_jobs
 
-# Expose port for FastAPI
+# Remove unnecessary files to save space
+RUN find . -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true && \
+    find . -type d -name .pytest_cache -exec rm -rf {} + 2>/dev/null || true && \
+    find . -type d -name .git -exec rm -rf {} + 2>/dev/null || true && \
+    rm -rf ./test ./fine\ tuned ./media/Tex/* ./media/images/* 2>/dev/null || true && \
+    rm -rf ./*.md ./Prompt* ./HISTORY* ./FIX* ./IMPLEMENTATION* ./PERFORMANCE* ./GENERATION* ./GETTING* ./QUICK* ./README* ./RUN* 2>/dev/null || true
+
+# Expose port
 EXPOSE 8000
 
-# Set environment variables for cloud deployment
+# Environment variables
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
-ENV MANIM_QUALITY=${MANIM_QUALITY:-low}
-ENV JOB_TIMEOUT=${JOB_TIMEOUT:-600}
+ENV PYTHONOPTIMIZE=2
+ENV MANIM_QUALITY=low
+ENV JOB_TIMEOUT=600
 ENV HOST=0.0.0.0
 ENV PORT=8000
 
-# Run the FastAPI server with gunicorn for production
+# Start server
 CMD ["uvicorn", "scripts.server.app:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
