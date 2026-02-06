@@ -62,8 +62,10 @@ def get_gemini_model(api_key: Optional[str] = None, model_name: Optional[str] = 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
             import google.generativeai as genai  # type: ignore
-    except Exception as e:
+    except ImportError as e:
         raise RuntimeError("google-generativeai package not installed. Install with: pip install google-generativeai") from e
+    except Exception as e:
+        raise RuntimeError(f"Failed to import google-generativeai: {type(e).__name__}: {e}") from e
     model = model_name or os.getenv("GEMINI_MODEL", "gemini-flash-latest")
     genai.configure(api_key=key, transport='rest')
     return genai.GenerativeModel(model)
