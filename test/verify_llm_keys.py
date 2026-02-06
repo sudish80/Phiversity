@@ -5,14 +5,16 @@ from pathlib import Path
 
 
 def read_env_values() -> dict:
-    """Parse the workspace .env file without modifying process environment."""
-    env: dict = {}
+    """Parse the workspace .env file and merge with process environment."""
+    env: dict = dict(os.environ)
     try:
         from dotenv import dotenv_values
         root = Path(__file__).resolve().parents[1]
         env_path = root / ".env"
         if env_path.exists():
-            env = dict(dotenv_values(str(env_path)))
+            env_file = dict(dotenv_values(str(env_path)))
+            # .env takes precedence over process environment for consistency
+            env.update({k: v for k, v in env_file.items() if v is not None})
     except Exception:
         pass
     return env

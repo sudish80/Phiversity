@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from .prompt_orchestrator import orchestrate_solution
+from .prompt_orchestrator import orchestrate_solution, generate_local_fallback_plan
 
 
 def main():
@@ -40,13 +40,21 @@ def main():
             json.dump(result.model_dump(), f, ensure_ascii=False, indent=2)
         print(f"Saved structured JSON to: {out_path}")
     except Exception as e:
-        # On strict mode (fallback disabled), write 'false' and exit non-zero
         default_out = Path("media") / "texts" / "solution_plan.json"
         out_path = Path(args.out) if args.out else default_out
         out_path.parent.mkdir(parents=True, exist_ok=True)
-        out_path.write_text("false", encoding="utf-8")
-        print(f"Orchestration failed; wrote 'false' to: {out_path}. Error: {e}")
-        raise SystemExit(1)
+        if os.getenv("ORCHESTRATOR_DISABLE_LOCAL_FALLBACK"):
+            out_path.write_text("false", encoding="utf-8")
+            print(f"Orchestration failed; wrote 'false' to: {out_path}. Error: {e}")
+            raise SystemExit(1)
+        # Generate a local minimal valid plan to allow pipeline to continue
+        print(f"[orchestrator] Using local fallback plan due to error: {e}")
+        fallback = generate_local_fallback_plan(question)
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(fallback.model_dump(), f, ensure_ascii=False, indent=2)
+        print(f"Saved local fallback JSON to: {out_path}")
+        # Exit success so server proceeds to pipeline
+        return
 
 
 if __name__ == "__main__":

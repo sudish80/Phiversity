@@ -150,6 +150,17 @@ async function pollJob(jobId) {
     const data = await res.json();
     const logHtml = `<pre class="log">${escapeHtml(data.log || '')}</pre>`;
 
+    // Update progress bar
+    const progress = data.progress || 0;
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+    if (progressBar) {
+      progressBar.style.width = `${progress}%`;
+    }
+    if (progressText) {
+      progressText.textContent = `${progress}%`;
+    }
+
     // Update loading status with latest log
     if (loadingStatus) {
       const logLines = (data.log || '').split('\n').filter(l => l.trim());

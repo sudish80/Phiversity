@@ -7,6 +7,7 @@ import subprocess
 import time
 from pathlib import Path
 from typing import Dict, Optional, Any
+from fastapi import APIRouter
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
@@ -45,6 +46,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+router = APIRouter()
 
 class RunRequest(BaseModel):
     problem: str
@@ -67,6 +69,7 @@ class Job:
         self.plan_path: Optional[Path] = None
         self.plan_url: Optional[str] = None  # Cloud storage URL
         self.out_dir: Optional[Path] = None
+        self.progress: int = 0  # 0-100 percentage
         self._lock = threading.Lock()
 
     def append_log(self, text: str):
@@ -96,6 +99,10 @@ class Job:
         with self._lock:
             self.out_dir = path
 
+    def set_progress(self, percent: int):
+        with self._lock:
+            self.progress = max(0, min(100, percent))
+
     def to_dict(self) -> Dict[str, Any]:
         return {
             "job_id": self.id,
@@ -103,6 +110,7 @@ class Job:
             "video_path": str(self.video_path) if self.video_path else None,
             "plan_path": str(self.plan_path) if self.plan_path else None,
             "out_dir": str(self.out_dir) if self.out_dir else None,
+            "progress": self.progress,
         }
 
 
@@ -168,6 +176,7 @@ def _worker(job: Job, req: RunRequest):
     # Refresh .env on each job in case keys changed
     load_dotenv(override=True)
     job.set_status("running")
+    job.set_progress(5)  # Job started
     # Initialize job directory and persist initial state
     out_dir = VIDEOS_DIR / "web_jobs" / job.id
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -184,6 +193,7 @@ def _worker(job: Job, req: RunRequest):
         _persist_job(job)
 
         if req.orchestrate:
+            job.set_progress(10)  # Starting orchestration
             cmd_1 = [
                 python,
                 "-m",
@@ -223,6 +233,7 @@ def _worker(job: Job, req: RunRequest):
                 job.append_log(f"[server] Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)\n")
                 job.set_status("error")
                 return
+            job.set_progress(30)  # Orchestration completed
             job.append_log(f"[server] Orchestration completed ({elapsed:.1f}s elapsed)\n")
         else:
             # If not orchestrating, assume problem contains a path to plan JSON
@@ -240,6 +251,7 @@ def _worker(job: Job, req: RunRequest):
                 job.set_status("error")
                 return
 
+        job.set_progress(40)
         cmd_2 = [
             python,
             "-m",
@@ -271,6 +283,7 @@ def _worker(job: Job, req: RunRequest):
             _persist_job(job)
             return
         
+        job.set_progress(90)  # Pipeline completed
         job.append_log(f"[server] Pipeline completed ({elapsed:.1f}s total)\n")
 
         # Pipeline writes final.mp4 in out_dir
@@ -305,6 +318,7 @@ def _worker(job: Job, req: RunRequest):
         
         total_elapsed = time.time() - start_time
         job.append_log(f"[server] Job completed successfully in {total_elapsed:.1f}s\n")
+        job.set_progress(100)  # Job completed
         job.set_status("done")
         _persist_job(job)
     except Exception as e:
@@ -380,6 +394,7 @@ def job_status(job_id: str):
             content={
                 "job_id": job_id,
                 "status": data.get("status", "error"),
+                "progress": data.get("progress", 0),
                 "video_url": video_url,
                 "plan_path": plan_path,
                 "plan_url": plan_url,
@@ -432,6 +447,7 @@ def job_status(job_id: str):
         content={
             "job_id": job.id,
             "status": job.status,
+            "progress": job.progress,
             "video_url": video_url,
             "plan_path": str(job.plan_path) if job.plan_path else None,
             "plan_url": plan_url,
