@@ -1,6 +1,22 @@
 import argparse
+import os
+import shutil
 from pathlib import Path
 from typing import List
+
+# Configure moviepy to use system ffmpeg (Railway has ffmpeg installed via apt)
+ffmpeg_binary = os.getenv("FFMPEG_BINARY")
+if ffmpeg_binary:
+    # Use explicitly set ffmpeg path
+    import moviepy.config
+    moviepy.config.FFMPEG_BINARY = ffmpeg_binary
+elif not shutil.which("ffmpeg"):
+    # If no explicit path and ffmpeg not in PATH, raise early
+    raise RuntimeError(
+        "ffmpeg not found in system PATH and FFMPEG_BINARY not set. "
+        "On Railway, ffmpeg is installed via apt. "
+        "On local Windows, set FFMPEG_BINARY in .env"
+    )
 
 try:
     # MoviePy 1.x
