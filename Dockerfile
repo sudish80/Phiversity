@@ -22,7 +22,9 @@ WORKDIR /app
 COPY requirements.txt .
 
 # Install Python dependencies with minimal cache
+# Force reinstall to avoid Docker layer caching issues
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel && \
+    pip install --no-cache-dir --force-reinstall google-generativeai>=0.8.0 && \
     pip install --no-cache-dir -r requirements.txt && \
     find /usr/local -type d -name __pycache__ -exec rm -rf {} + 2>/dev/null || true
 
