@@ -1,0 +1,25 @@
+# Don't upload these to Railway
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.git/
+.gitignore
+.pytest_cache/
+.vscode/
+.idea/
+*.md
+media/videos/*
+media/images/*
+media/texts/*
+voice_cache/*
+test/
+*.bak
+Prompt.bak
+Prompt.json
