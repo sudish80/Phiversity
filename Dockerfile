@@ -1,4 +1,5 @@
 # Optimized lightweight build for Railway free tier
+# Updated: 2026-02-07 06:08 UTC - Force rebuild with Python 3.12 + espeak-ng
 FROM python:3.12-slim
 
 # Install only essential dependencies (minimize size)
