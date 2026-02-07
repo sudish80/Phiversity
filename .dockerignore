@@ -1,0 +1,75 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.python-version
+env/
+venv/
+.venv/
+.venv312/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Environment
+.env
+.env.local
+
+# Media files (generated - not needed in container)
+media/videos/
+media/Tex/
+media/images/
+media/texts/
+voice_cache/
+web_jobs/
+
+# Documentation - EXCLUDE FROM BUILD
+*.md
+DOCUMENTATION*.txt
+GENERATION*.txt
+HISTORY*.txt
+FIX*.txt
+IMPLEMENTATION*.txt
+PERFORMANCE*.txt
+QUICK*.txt
+GETTING*.txt
+RUN*.txt
+README*.txt
+Prompt.txt
+Prompt.json
+Prompt.bak
+
+# Tests
+test/
+*.pyc
+
+# Misc
+.DS_Store
+Thumbs.db
+
