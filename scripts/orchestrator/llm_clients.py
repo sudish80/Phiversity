@@ -63,6 +63,9 @@ def get_gemini_model(api_key: Optional[str] = None, model_name: Optional[str] = 
     if not key:
         raise RuntimeError("GEMINI_API_KEY is empty after cleanup")
     
+    # Set the cleaned key in environment BEFORE importing (package checks during import)
+    os.environ["GOOGLE_API_KEY"] = key
+    
     try:
         import warnings
         with warnings.catch_warnings():
