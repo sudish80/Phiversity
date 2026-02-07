@@ -129,6 +129,7 @@ def generate_scene_script(
     lines: List[str] = [
         "from manim import *",
         "from manim import rate_functions as rf",
+        "from manim.utils.color import Color",
         "",
         f"class GeneratedScene({scene_cls}):",
         "    def construct(self):",
