@@ -2,7 +2,12 @@
 # Updated: 2026-02-07 06:08 UTC - Force rebuild with Python 3.12 + espeak-ng
 FROM python:3.12-slim
 
+# Cache-busting arg (change value to force rebuild from this point)
+ARG CACHE_BUST=2026-02-07-06:21
+RUN echo "Cache bust: $CACHE_BUST"
+
 # Install only essential dependencies (minimize size)
+# Cache-bust: 2026-02-07-06:20
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
     texlive-latex-base \
