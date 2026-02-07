@@ -177,9 +177,13 @@ def _run_and_capture(cmd: list[str], cwd: Path, job: Job) -> int:
         if 'PYTHONIOENCODING' not in env:
             env['PYTHONIOENCODING'] = 'utf-8'
         
+        # CRITICAL: Force unbuffered output so parent process sees real-time logs
+        env['PYTHONUNBUFFERED'] = '1'
+        
         proc = subprocess.Popen(
             cmd,
             cwd=str(cwd),
+            stdin=subprocess.DEVNULL,  # Prevent subprocess from blocking on input
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -187,8 +191,13 @@ def _run_and_capture(cmd: list[str], cwd: Path, job: Job) -> int:
             env=env,
         )
         assert proc.stdout is not None
+        line_count = 0
         for line in proc.stdout:
             job.append_log(line)
+            line_count += 1
+            # Log every 50th line to show progress in long-running processes
+            if line_count % 50 == 0:
+                job.append_log(f"[server] [progress] {line_count} lines from subprocess\n")
         # Add timeout to prevent indefinite wait (use env var or default 15 minutes)
         subprocess_timeout = int(os.getenv("SUBPROCESS_TIMEOUT", "900"))
         try:
