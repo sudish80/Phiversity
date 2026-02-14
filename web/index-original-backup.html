@@ -1,0 +1,1096 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phiversity - AI Video Generation</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f172a 0%, #1a1f35 100%);
+      color: #e2e8f0;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Main Container */
+    .main-container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      width: 100px;
+      height: 100px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #3b82f6;
+      transition: all 0.3s ease;
+    }
+
+    .logo img {
+      width: 90%;
+      height: 90%;
+      object-fit: contain;
+    }
+
+    .logo:hover {
+      background: rgba(59, 130, 246, 0.2);
+      transform: scale(1.05);
+      box-shadow: 0 8px 16px rgba(59, 130, 246, 0.3);
+    }
+
+    .header-text {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .header h1 {
+      font-size: 42px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #60a5fa 0%, #a78bfa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin: 0;
+    }
+
+    .header p {
+      color: #cbd5e1;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin: 0;
+    }
+
+    /* Content Area */
+    .content-area {
+      flex: 1;
+      display: grid;
+      gap: 30px;
+      align-content: start;
+    }
+
+    /* Form Container */
+    .form-container {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .form-header {
+      padding: 16px 20px;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-bottom: none;
+      border-radius: 12px 12px 0 0;
+    }
+
+    .form-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #cbd5e1;
+    }
+
+    .input-area {
+      background: #0f172a;
+      border: 1px solid #334155;
+      border-top: none;
+      padding: 20px;
+      display: flex;
+      gap: 12px;
+    }
+
+    #problem {
+      flex: 1;
+      background: transparent;
+      border: none;
+      color: #e2e8f0;
+      font-size: 15px;
+      font-family: inherit;
+      resize: none;
+      outline: none;
+      max-height: 120px;
+      min-height: 80px;
+      padding: 0;
+    }
+
+    #problem::placeholder {
+      color: #64748b;
+    }
+
+    .send-button {
+      background: #22c55e;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      min-width: 100px;
+      align-self: flex-end;
+    }
+
+    .send-button:hover {
+      background: #16a34a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(34, 197, 94, 0.4);
+    }
+
+    .send-button:active {
+      transform: translateY(0);
+    }
+
+    .send-button:disabled {
+      background: #64748b;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Options Section */
+    .options-section {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px 20px;
+    }
+
+    .options-section h3 {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #cbd5e1;
+      margin-bottom: 12px;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .option-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: #3b82f6;
+    }
+
+    .option-item label {
+      font-size: 14px;
+      cursor: pointer;
+      margin: 0;
+    }
+
+    /* Video Section (Hidden by default) */
+    #video-section {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      overflow: hidden;
+      animation: slideInUp 0.4s ease-out;
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .video-header {
+      padding: 16px 20px;
+      background: #0f172a;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .video-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #cbd5e1;
+    }
+
+    .close-video {
+      background: none;
+      border: none;
+      color: #64748b;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .close-video:hover {
+      color: #e2e8f0;
+    }
+
+    .video-player {
+      width: 100%;
+      background: #000;
+      aspect-ratio: 16 / 9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    video {
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      border-radius: 8px;
+    }
+
+    .video-info {
+      padding: 16px 20px;
+      background: #0f172a;
+      border-top: 1px solid #334155;
+    }
+
+    .info-row {
+      margin-bottom: 8px;
+    }
+
+    .info-row h3 {
+      font-size: 12px;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .info-link {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .info-link a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-size: 13px;
+      word-break: break-all;
+      transition: color 0.2s;
+    }
+
+    .info-link a:hover {
+      color: #60a5fa;
+      text-decoration: underline;
+    }
+
+    .video-actions {
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      background: #1e293b;
+      border-top: 1px solid #334155;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .action-btn {
+      flex: 1;
+      padding: 10px 16px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+    }
+
+    .download-btn {
+      background: #3b82f6;
+      color: white;
+    }
+
+    .download-btn:hover {
+      background: #2563eb;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .share-btn {
+      background: #1e293b;
+      color: #3b82f6;
+      border: 1px solid #3b82f6;
+    }
+
+    .share-btn:hover {
+      background: #334155;
+    }
+
+    /* Error Section */
+    #error-section {
+      background: #7f1d1d;
+      border: 1px solid #dc2626;
+      border-radius: 12px;
+      overflow: hidden;
+      animation: slideInUp 0.4s ease-out;
+    }
+
+    .error-header {
+      padding: 16px 20px;
+      background: #5f0f0f;
+      border-bottom: 1px solid #dc2626;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .error-header h2 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fca5a5;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .close-error {
+      background: none;
+      border: none;
+      color: #fca5a5;
+      font-size: 24px;
+      cursor: pointer;
+      padding: 0;
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.2s;
+    }
+
+    .close-error:hover {
+      color: #fecaca;
+    }
+
+    .error-content {
+      padding: 16px 20px;
+      background: #450a0a;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .error-text {
+      color: #fca5a5;
+      font-size: 13px;
+      font-family: 'Monaco', 'Courier New', monospace;
+      line-height: 1.5;
+      word-break: break-word;
+      white-space: pre-wrap;
+    }
+
+    .error-actions {
+      display: flex;
+      gap: 12px;
+      padding: 12px 20px;
+      background: #5f0f0f;
+      border-top: 1px solid #dc2626;
+      border-radius: 0 0 12px 12px;
+    }
+
+    .copy-btn {
+      flex: 1;
+      padding: 8px 12px;
+      background: #dc2626;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.3s ease;
+    }
+
+    .copy-btn:hover {
+      background: #b91c1c;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+    }
+
+    .copy-btn.copied {
+      background: #16a34a;
+    }
+
+    /* Loading State */
+    .loading-state {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.95);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      flex-direction: column;
+      backdrop-filter: blur(4px);
+    }
+
+    .loading-state.active {
+      display: flex;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid #334155;
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .loading-message {
+      text-align: center;
+      color: #cbd5e1;
+    }
+
+    .loading-message h3 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .loading-message p {
+      font-size: 14px;
+      color: #64748b;
+    }
+
+    .progress-container {
+      margin-top: 20px;
+      width: 300px;
+      height: 6px;
+      background: #334155;
+      border-radius: 3px;
+      overflow: hidden;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 16px 20px;
+      border-radius: 8px;
+      border-left: 4px solid #3b82f6;
+      animation: slideInRight 0.3s ease-out;
+      z-index: 999;
+    }
+
+    .toast.success {
+      border-left-color: #22c55e;
+    }
+
+    .toast.error {
+      border-left-color: #dc2626;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Hidden State */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .main-container {
+        padding: 20px 16px;
+      }
+
+      .header {
+        margin-bottom: 30px;
+      }
+
+      .logo {
+        width: 80px;
+        height: 80px;
+      }
+
+      .header h1 {
+        font-size: 32px;
+      }
+
+      .input-area {
+        flex-direction: column;
+      }
+
+      .send-button {
+        width: 100%;
+      }
+
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .video-actions,
+      .error-actions {
+        flex-direction: column;
+      }
+
+      .action-btn,
+      .copy-btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="main-container">
+    <!-- Header -->
+    <div class="header">
+      <div class="logo">
+        <img src="/logo.png" alt="Phiversity Logo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22%3E%3Ccircle cx=%2250%22 cy=%2250%22 r=%2245%22 fill=%22none%22 stroke=%22%2360a5fa%22 stroke-width=%222%22/%3E%3Ctext x=%2250%22 y=%2260%22 font-size=%2224%22 fill=%22%2360a5fa%22 text-anchor=%22middle%22 font-style=%22italic%22%3E∫%3C/text%3E%3C/svg%3E'">
+      </div>
+      <div class="header-text">
+        <h1>Phiversity</h1>
+        <p>AI-Powered Educational Video Generation</p>
+      </div>
+    </div>
+
+    <!-- Content Area -->
+    <div class="content-area">
+      <!-- Input Form -->
+      <div class="form-container">
+        <div class="form-header">
+          <h2>Generate Video</h2>
+        </div>
+        <div class="input-area">
+          <textarea
+            id="problem"
+            placeholder="Ask something... (e.g., Explain quantum entanglement, Derive the quadratic formula)"
+            spellcheck="true"
+          ></textarea>
+          <button class="send-button" id="send-btn" type="button">Send</button>
+        </div>
+      </div>
+
+      <!-- Options Section -->
+      <div class="options-section">
+        <h3>⚙️ Settings</h3>
+        <div class="options-grid">
+          <div class="option-item">
+            <input type="checkbox" id="orchestrate" checked />
+            <label for="orchestrate">Use AI Orchestration</label>
+          </div>
+          <div class="option-item">
+            <input type="checkbox" id="voice-first" checked />
+            <label for="voice-first">Voice-First Timing</label>
+          </div>
+          <div class="option-item">
+            <input type="checkbox" id="element-audio" />
+            <label for="element-audio">Element Audio Sync</label>
+          </div>
+          <div class="option-item">
+            <input type="checkbox" id="custom-prompt-enabled" />
+            <label for="custom-prompt-enabled">Custom Prompt</label>
+          </div>
+        </div>
+        <!-- Custom Prompt Section (Hidden until enabled) -->
+        <div id="custom-prompt-section" class="hidden" style="margin-top: 16px; padding: 16px; background: rgba(59, 130, 246, 0.05); border-radius: 8px; border: 1px solid rgba(59, 130, 246, 0.2);">
+          <label for="custom-prompt-text" style="display: block; margin-bottom: 8px; color: #cbd5e1; font-size: 14px;">Custom System Prompt:</label>
+          <textarea 
+            id="custom-prompt-text" 
+            placeholder="Enter custom prompt to guide the LLM (optional)..."
+            style="width: 100%; min-height: 100px; background: #1e293b; border: 1px solid #334155; border-radius: 6px; padding: 12px; color: #e2e8f0; font-family: monospace; font-size: 13px; resize: vertical;"
+          ></textarea>
+        </div>
+      </div>
+
+      <!-- Video Section (Hidden until video is ready) -->
+      <div id="video-section" class="hidden">
+        <div class="video-header">
+          <h2>📹 Your Generated Video</h2>
+          <button class="close-video" id="close-video" type="button">×</button>
+        </div>
+        <div class="video-player">
+          <video id="result-video" controls></video>
+        </div>
+        <div class="video-info">
+          <div class="info-row">
+            <h3>Details</h3>
+          </div>
+          <div id="plan-link" class="info-link"></div>
+          <div id="log-link" class="info-link"></div>
+        </div>
+        <div class="video-actions">
+          <a id="download-video" href="#" download class="action-btn download-btn">Download Video</a>
+          <button id="share-video" class="action-btn share-btn" type="button">Share</button>
+        </div>
+      </div>
+
+      <!-- Error Section (Hidden until error occurs) -->
+      <div id="error-section" class="hidden">
+        <div class="error-header">
+          <h2>⚠️ Error</h2>
+          <button class="close-error" id="close-error" type="button">×</button>
+        </div>
+        <div class="error-content">
+          <div class="error-text" id="error-text"></div>
+        </div>
+        <div class="error-actions">
+          <button class="copy-btn" id="copy-error" type="button">📋 Copy Error</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-state" id="loading-state">
+    <div class="spinner"></div>
+    <div class="loading-message">
+      <h3>Generating Your Video</h3>
+      <p id="loading-status">Initializing...</p>
+      <div class="progress-container">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ===== API CONFIG =====
+    const API_BASE = window.location.origin;
+    const API_ENDPOINTS = {
+      run: `${API_BASE}/api/run`,
+      jobStatus: (jobId) => `${API_BASE}/api/jobs/${jobId}`,
+      health: `${API_BASE}/health`
+    };
+
+    // ===== UI CONTROLLER =====
+    class VideoGeneratorUI {
+      constructor() {
+        this.problemInput = document.getElementById('problem');
+        this.sendBtn = document.getElementById('send-btn');
+        this.videoSection = document.getElementById('video-section');
+        this.errorSection = document.getElementById('error-section');
+        this.loadingState = document.getElementById('loading-state');
+        this.resultVideo = document.getElementById('result-video');
+        this.closeVideoBtn = document.getElementById('close-video');
+        this.closeErrorBtn = document.getElementById('close-error');
+        this.copyErrorBtn = document.getElementById('copy-error');
+        
+        this.currentJobId = null;
+        this.pollInterval = null;
+        
+        this.setupEventListeners();
+        this.checkBackendHealth();
+      }
+
+      setupEventListeners() {
+        this.sendBtn.addEventListener('click', () => this.handleSubmit());
+        this.problemInput.addEventListener('keydown', (e) => {
+          if (e.ctrlKey && e.key === 'Enter') this.handleSubmit();
+        });
+        this.closeVideoBtn.addEventListener('click', () => this.hideVideo());
+        this.closeErrorBtn.addEventListener('click', () => this.hideError());
+        this.copyErrorBtn.addEventListener('click', () => this.copyError());
+        
+        // Share button handler
+        const shareVideoBtn = document.getElementById('share-video');
+        if (shareVideoBtn) {
+          shareVideoBtn.addEventListener('click', () => this.shareVideo());
+        }
+
+        // Custom prompt toggle
+        const customPromptCheckbox = document.getElementById('custom-prompt-enabled');
+        const customPromptSection = document.getElementById('custom-prompt-section');
+        if (customPromptCheckbox && customPromptSection) {
+          customPromptCheckbox.addEventListener('change', (e) => {
+            if (e.target.checked) {
+              customPromptSection.classList.remove('hidden');
+            } else {
+              customPromptSection.classList.add('hidden');
+            }
+          });
+        }
+      }
+
+      async checkBackendHealth() {
+        try {
+          const res = await fetch(API_ENDPOINTS.health);
+          if (!res.ok) throw new Error('Backend unhealthy');
+        } catch (err) {
+          console.warn('Backend health check failed:', err);
+          this.showToast('⚠️ Backend may be offline', 'error');
+        }
+      }
+
+      async handleSubmit() {
+        const problem = this.problemInput.value.trim();
+        if (!problem) {
+          this.showToast('Please enter a problem', 'error');
+          return;
+        }
+
+        if (problem.length > 5000) {
+          this.showToast('Problem text is too long (max 5000 characters)', 'error');
+          return;
+        }
+
+        const options = {
+          problem: problem,
+          orchestrate: document.getElementById('orchestrate').checked,
+          voice_first: document.getElementById('voice-first').checked,
+          element_audio: document.getElementById('element-audio').checked,
+        };
+
+        // Add custom prompt if enabled
+        const customPromptCheckbox = document.getElementById('custom-prompt-enabled');
+        const customPromptField = document.getElementById('custom-prompt-text');
+        if (customPromptCheckbox && customPromptCheckbox.checked && customPromptField) {
+          const customPrompt = customPromptField.value.trim();
+          if (customPrompt) {
+            options.custom_prompt = customPrompt;
+          }
+        }
+
+        this.hideError();
+        this.hideVideo();
+        this.showLoading();
+        this.sendBtn.disabled = true;
+
+        try {
+          // Submit job to backend with timeout
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+
+          const jobResponse = await fetch(API_ENDPOINTS.run, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(options),
+            signal: controller.signal
+          });
+          clearTimeout(timeoutId);
+
+          if (!jobResponse.ok) {
+            const contentType = jobResponse.headers.get('content-type');
+            let errorMsg = 'Failed to submit job';
+            
+            if (contentType && contentType.includes('application/json')) {
+              try {
+                const errData = await jobResponse.json();
+                errorMsg = errData.detail || errorMsg;
+              } catch (e) {
+                errorMsg = `Server error: ${jobResponse.status}`;
+              }
+            } else {
+              errorMsg = `Server error: ${jobResponse.status} ${jobResponse.statusText}`;
+            }
+            
+            throw new Error(errorMsg);
+          }
+
+          const jobData = await jobResponse.json();
+          if (!jobData.job_id) {
+            throw new Error('Invalid response: no job ID received');
+          }
+          
+          this.currentJobId = jobData.job_id;
+          console.log(`Job submitted: ${this.currentJobId}`);
+          this.showToast(`✓ Video generation started\nJob ID: ${this.currentJobId}`, 'success');
+
+          // Start polling
+          this.pollJobStatus();
+        } catch (error) {
+          this.hideLoading();
+          this.sendBtn.disabled = false;
+          
+          let errorMsg = error.message;
+          if (error.name === 'AbortError') {
+            errorMsg = 'Request timeout. Backend may be offline.';
+          }
+          
+          this.showError(`Submission failed: ${errorMsg}`);
+          this.showToast('❌ Could not submit video generation', 'error');
+        }
+      }
+
+      async pollJobStatus() {
+        if (!this.currentJobId) return;
+
+        // Clear any existing poll interval
+        if (this.pollInterval) clearInterval(this.pollInterval);
+
+        let failureCount = 0;
+        const maxFailures = 10; // Stop polling after 10 consecutive failures (20 seconds)
+        
+        // Poll every 2 seconds
+        this.pollInterval = setInterval(async () => {
+          try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout per request
+            
+            const res = await fetch(API_ENDPOINTS.jobStatus(this.currentJobId), {
+              signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+            
+            if (!res.ok) {
+              if (res.status === 404) {
+                throw new Error('Job not found. It may have expired.');
+              }
+              throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+            }
+
+            failureCount = 0; // Reset failure count on success
+            const jobData = await res.json();
+            console.log('Job status:', jobData);
+
+            // Update progress
+            document.getElementById('loading-status').textContent = this.getStatusMessage(jobData.status, jobData.progress);
+            document.getElementById('progress-bar').style.width = jobData.progress + '%';
+
+            // Handle completion
+            if (jobData.status === 'done') {
+              clearInterval(this.pollInterval);
+              this.hideLoading();
+              
+              if (jobData.video_url) {
+                this.showVideo(jobData.video_url);
+                this.populateVideoLinks(jobData);
+                this.showToast('✓ Video generated successfully!', 'success');
+              } else {
+                this.showError('Video was generated but URL is not available');
+              }
+              this.sendBtn.disabled = false;
+            } 
+            // Handle error
+            else if (jobData.status === 'error') {
+              clearInterval(this.pollInterval);
+              this.hideLoading();
+              const errorMsg = jobData.log || 'Unknown error occurred during video generation';
+              this.showError(errorMsg);
+              this.showToast('❌ Video generation failed', 'error');
+              this.sendBtn.disabled = false;
+            }
+          } catch (error) {
+            failureCount++;
+            console.error('Polling error:', error);
+            
+            if (failureCount >= maxFailures) {
+              clearInterval(this.pollInterval);
+              this.hideLoading();
+              this.showError(`Connection lost after ${failureCount} attempts. Job ID: ${this.currentJobId}`);
+              this.showToast('❌ Connection timeout. Please refresh to check status.', 'error');
+              this.sendBtn.disabled = false;
+            } else {
+              // Show warning after 3 failures (6 seconds)
+              if (failureCount === 3) {
+                this.showToast('⚠️ Connection issues detected', 'error');
+              }
+            }
+          }
+        }, 2000);
+      }
+
+      getStatusMessage(status, progress) {
+        const statusMap = {
+          'queued': 'Queued...',
+          'running': 'Generating video...',
+          'done': 'Finalizing...',
+          'error': 'Error occurred'
+        };
+        return `${statusMap[status] || status} (${progress}%)`;
+      }
+
+      populateVideoLinks(jobData) {
+        const planLinkDiv = document.getElementById('plan-link');
+        const logLinkDiv = document.getElementById('log-link');
+        const downloadLink = document.getElementById('download-video');
+
+        planLinkDiv.innerHTML = '';
+        logLinkDiv.innerHTML = '';
+
+        // Convert relative URLs to absolute
+        const makeAbsoluteUrl = (url) => {
+          if (!url) return null;
+          if (url.startsWith('http')) return url;
+          if (url.startsWith('/')) return window.location.origin + url;
+          return window.location.origin + '/' + url;
+        };
+
+        if (jobData.plan_url) {
+          const planUrl = makeAbsoluteUrl(jobData.plan_url);
+          planLinkDiv.innerHTML = `<a href="${planUrl}" target="_blank">📄 View Generation Plan</a>`;
+        }
+        if (jobData.log_url) {
+          const logUrl = makeAbsoluteUrl(jobData.log_url);
+          logLinkDiv.innerHTML = `<a href="${logUrl}" target="_blank">📋 View Full Log</a>`;
+        }
+        
+        // Set download link with proper filename
+        if (jobData.video_url) {
+          const videoUrl = makeAbsoluteUrl(jobData.video_url);
+          downloadLink.href = videoUrl;
+          downloadLink.download = `phiversity-${this.currentJobId}.mp4`;
+        }
+      }
+
+      showLoading() {
+        this.loadingState.classList.add('active');
+        document.getElementById('progress-bar').style.width = '0%';
+        document.getElementById('loading-status').textContent = 'Starting...';
+      }
+
+      hideLoading() {
+        this.loadingState.classList.remove('active');
+        if (this.pollInterval) clearInterval(this.pollInterval);
+      }
+
+      showVideo(videoUrl) {
+        this.resultVideo.src = videoUrl;
+        this.videoSection.classList.remove('hidden');
+      }
+
+      hideVideo() {
+        this.videoSection.classList.add('hidden');
+        this.resultVideo.pause();
+      }
+
+      showError(errorMessage) {
+        document.getElementById('error-text').textContent = errorMessage;
+        this.errorSection.classList.remove('hidden');
+      }
+
+      hideError() {
+        this.errorSection.classList.add('hidden');
+      }
+
+      async copyError() {
+        const errorText = document.getElementById('error-text').textContent;
+        try {
+          await navigator.clipboard.writeText(errorText);
+          const btn = this.copyErrorBtn;
+          const originalText = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          btn.classList.add('copied');
+          setTimeout(() => {
+            btn.textContent = originalText;
+            btn.classList.remove('copied');
+          }, 2000);
+          this.showToast('Error copied to clipboard', 'success');
+        } catch (err) {
+          this.showToast('Failed to copy', 'error');
+        }
+      }
+
+      showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.remove();
+        }, 4000);
+      }
+
+      async shareVideo() {
+        const videoUrl = this.resultVideo.src;
+        if (!videoUrl) {
+          this.showToast('No video to share', 'error');
+          return;
+        }
+
+        // Check if Web Share API is available
+        if (navigator.share) {
+          try {
+            await navigator.share({
+              title: 'Phiversity Video',
+              text: 'Check out this educational video generated by Phiversity!',
+              url: window.location.href
+            });
+            this.showToast('Video shared successfully!', 'success');
+          } catch (err) {
+            if (err.name !== 'AbortError') {
+              console.error('Share failed:', err);
+            }
+          }
+        } else {
+          // Fallback: copy current URL to clipboard
+          try {
+            await navigator.clipboard.writeText(window.location.href);
+            this.showToast('Video link copied to clipboard!', 'success');
+          } catch (err) {
+            this.showToast('Could not share video', 'error');
+          }
+        }
+      }
+    }
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      new VideoGeneratorUI();
+    });
+  </script>

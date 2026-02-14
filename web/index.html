@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phiversity - AI Video Generator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg-primary: #0f0f23;
+      --bg-secondary: #1a1a3e;
+      --bg-card: rgba(30, 30, 60, 0.7);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --border: rgba(99, 102, 241, 0.2);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+      perspective: 1500px;
+      perspective-origin: 50% 50%;
+    }
+
+    /* Animated Background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+      animation: backgroundPulse 20s ease infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes backgroundPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+      transform-style: preserve-3d;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease;
+      transform-style: preserve-3d;
+      transform: translateZ(50px);
+    }
+
+    .logo-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 30px;
+      margin-bottom: 20px;
+      box-shadow: 
+        0 20px 60px rgba(99, 102, 241, 0.4),
+        0 40px 100px rgba(99, 102, 241, 0.2),
+        inset 0 0 60px rgba(255, 255, 255, 0.1);
+      animation: float3d 3s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+      transform-style: preserve-3d;
+    }
+
+    .logo-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: rotate(45deg);
+      animation: shine 3s linear infinite;
+    }
+
+    .logo-container::after {
+      content: '🎬';
+      font-size: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes float3d {
+      0%, 100% { 
+        transform: translateY(0px) rotateX(0deg) rotateY(0deg) translateZ(20px); 
+      }
+      25% { 
+        transform: translateY(-15px) rotateX(5deg) rotateY(-5deg) translateZ(30px); 
+      }
+      50% { 
+        transform: translateY(-20px) rotateX(0deg) rotateY(5deg) translateZ(40px); 
+      }
+      75% { 
+        transform: translateY(-15px) rotateX(-5deg) rotateY(0deg) translateZ(30px); 
+      }
+    }
+
+    @keyframes shine {
+      0% { transform: rotate(45deg) translateX(-100%); }
+      100% { transform: rotate(45deg) translateX(100%); }
+    }
+
+    .header h1 {
+      font-size: 56px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+      transform: translateZ(30px);
+      text-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+      animation: titleFloat 4s ease-in-out infinite;
+    }
+
+    @keyframes titleFloat {
+      0%, 100% { transform: translateZ(30px) rotateX(0deg); }
+      50% { transform: translateZ(40px) rotateX(2deg); }
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+      transform-style: preserve-3d;
+      perspective: 1500px;
+    }
+
+    @media (max-width: 968px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Styles */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.3),
+        0 40px 100px rgba(0, 0, 0, 0.2),
+        inset 0 2px 20px rgba(255, 255, 255, 0.05);
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      animation: fadeInUp 0.8s ease;
+      transform-style: preserve-3d;
+      transform: translateZ(0);
+      position: relative;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent);
+      border-radius: 24px;
+      opacity: 0;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+
+    .card:hover {
+      transform: translateY(-15px) translateZ(30px) rotateX(2deg);
+      box-shadow: 
+        0 40px 100px rgba(99, 102, 241, 0.3),
+        0 60px 150px rgba(99, 102, 241, 0.2),
+        inset 0 2px 30px rgba(255, 255, 255, 0.1);
+      border-color: var(--primary);
+    }
+
+    .card:hover::before {
+      opacity: 1;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      transform: translateZ(20px);
+      box-shadow: 
+        0 10px 30px rgba(99, 102, 241, 0.4),
+        inset 0 2px 10px rgba(255, 255, 255, 0.2);
+      transition: all 0.3s ease;
+    }
+
+    .card:hover .card-icon {
+      transform: translateZ(40px) rotateY(10deg);
+    }
+
+    .card-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 16px 20px;
+      background: rgba(15, 15, 35, 0.8);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 16px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+      transform: translateZ(5px);
+      box-shadow: 
+        0 4px 15px rgba(0, 0, 0, 0.2),
+        inset 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 
+        0 0 0 4px rgba(99, 102, 241, 0.1),
+        0 8px 25px rgba(99, 102, 241, 0.3),
+        inset 0 2px 10px rgba(0, 0, 0, 0.3);
+      transform: translateZ(10px);
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Checkbox Styles */
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+      transform: translateZ(5px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .checkbox-label:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+      transform: translateZ(10px) translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + span {
+      color: var(--primary);
+    }
+
+    /* Custom Prompt Toggle */
+    .toggle-section {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 12px;
+      border: 2px dashed var(--border);
+    }
+
+    /* Button Styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      text-decoration: none;
+      font-family: inherit;
+      transform-style: preserve-3d;
+      position: relative;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
+      border-radius: 12px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .btn:hover::before {
+      opacity: 1;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      box-shadow: 
+        0 10px 30px rgba(99, 102, 241, 0.4),
+        0 20px 60px rgba(99, 102, 241, 0.2),
+        inset 0 2px 10px rgba(255, 255, 255, 0.2);
+      transform: translateZ(10px);
+    }
+
+    .btn-primary:hover {
+      transform: translateZ(20px) translateY(-5px) scale(1.02);
+      box-shadow: 
+        0 20px 50px rgba(99, 102, 241, 0.6),
+        0 30px 80px rgba(99, 102, 241, 0.4),
+        inset 0 2px 15px rgba(255, 255, 255, 0.3);
+    }
+
+    .btn-primary:active {
+      transform: translateZ(5px) translateY(-2px) scale(0.98);
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Progress Bar */
+    .progress-section {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .progress-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 12px;
+      background: rgba(15, 15, 35, 0.8);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+      background-size: 200% 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease;
+      animation: gradientShift 2s linear infinite;
+      position: relative;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.6);
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    .status-message {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Video Player */
+    .video-section {
+      display: none;
+    }
+
+    .video-section.active {
+      display: block;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    .video-player {
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        0 40px 100px rgba(0, 0, 0, 0.3);
+      margin-bottom: 20px;
+      transform: translateZ(20px);
+      transition: transform 0.4s ease;
+    }
+
+    .video-player:hover {
+      transform: translateZ(30px) scale(1.02);
+    }
+
+    .video-player video {
+      width: 100%;
+      display: block;
+    }
+
+    .video-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--text-primary);
+      border: 2px solid var(--border);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+      transform: translateZ(5px);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(99, 102, 241, 0.3);
+      border-color: var(--primary);
+      transform: translateZ(15px) translateY(-3px);
+      box-shadow: 0 12px 35px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+      transform-style: preserve-3d;
+      perspective: 1500px;
+    }
+
+    .feature-card {
+      padding: 24px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+      transform-style: preserve-3d;
+      transform: translateZ(0);
+      box-shadow: 
+        0 10px 30px rgba(0, 0, 0, 0.2),
+        inset 0 2px 10px rgba(255, 255, 255, 0.05);
+    }
+
+    .feature-card:hover {
+      transform: translateY(-10px) translateZ(20px) rotateX(5deg);
+      border-color: var(--primary);
+      box-shadow: 
+        0 20px 50px rgba(99, 102, 241, 0.3),
+        0 30px 80px rgba(99, 102, 241, 0.2),
+        inset 0 2px 15px rgba(255, 255, 255, 0.1);
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+      display: inline-block;
+      transform: translateZ(15px);
+      transition: transform 0.4s ease;
+    }
+
+    .feature-card:hover .feature-icon {
+      transform: translateZ(30px) scale(1.2) rotateY(10deg);
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 15, 35, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .loading-content {
+      text-align: center;
+      animation: fadeInScale 0.5s ease;
+      position: relative;
+    }
+
+    .spinner-container {
+      position: relative;
+      width: 160px;
+      height: 160px;
+      margin: 0 auto 24px;
+    }
+
+    .spinner {
+      width: 160px;
+      height: 160px;
+      border: 6px solid rgba(99, 102, 241, 0.1);
+      border-top-color: var(--primary);
+      border-right-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    .progress-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+    }
+
+    .progress-percentage {
+      font-size: 42px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+      margin-bottom: 8px;
+      text-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+    }
+
+    .progress-stage {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-content h3 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .loading-content p {
+      color: var(--text-secondary);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      animation: slideInRight 0.3s ease;
+      max-width: 400px;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--danger);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 36px;
+      }
+
+      .card {
+        padding: 24px;
+      }
+
+      .video-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+
+    /* Authentication Styles */
+    .auth-trigger {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      z-index: 999;
+      animation: slideIn 0.5s ease;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateY(100px) translateX(100px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0) translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .auth-btn-group {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .auth-mini-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+      transform: translateZ(10px);
+    }
+
+    .auth-mini-btn.email {
+      background: #ff6b6b;
+      color: white;
+    }
+
+    .auth-mini-btn.facebook {
+      background: #1877f2;
+      color: white;
+    }
+
+    .auth-mini-btn.google {
+      background: #ea4335;
+      color: white;
+    }
+
+    .auth-mini-btn:hover {
+      transform: translateZ(20px) scale(1.1);
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+    }
+
+    .auth-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 15, 35, 0.7);
+      backdrop-filter: blur(5px);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .auth-modal.active {
+      display: flex;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .auth-modal-content {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 420px;
+      padding: 40px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    @keyframes slideUp {
+      from {
+        transform: translateY(50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+
+    .auth-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      width: 32px;
+      height: 32px;
+      background: rgba(99, 102, 241, 0.1);
+      border: none;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .auth-close:hover {
+      background: rgba(99, 102, 241, 0.2);
+      transform: rotate(90deg);
+    }
+
+    .auth-header {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .auth-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+
+    .auth-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 32px;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 16px;
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 12px 16px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      transition: all 0.3s ease;
+      border-bottom: 3px solid transparent;
+      margin-bottom: -16px;
+      padding-bottom: 19px;
+    }
+
+    .auth-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+    }
+
+    .auth-form {
+      display: none;
+    }
+
+    .auth-form.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .auth-input-group {
+      margin-bottom: 16px;
+    }
+
+    .auth-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(15, 15, 35, 0.8);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .auth-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+
+    .auth-button {
+      width: 100%;
+      padding: 12px 16px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      margin-bottom: 12px;
+    }
+
+    .auth-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    }
+
+    .auth-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .auth-divider::before,
+    .auth-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    .auth-divider-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .auth-social-buttons {
+      display: flex;
+      gap: 12px;
+    }
+
+    .auth-social-btn {
+      flex: 1;
+      padding: 12px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .auth-social-btn:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.2);
+      transform: translateY(-2px);
+    }
+
+    .auth-toggle {
+      text-align: center;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .auth-toggle button {
+      background: none;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: underline;
+    }
+
+    .auth-toggle button:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 480px) {
+      .auth-modal-content {
+        padding: 24px;
+      }
+
+      .auth-title {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-container"></div>
+      <h1>Phiversity</h1>
+      <p>Transform your ideas into stunning educational videos with AI</p>
+    </header>
+
+    <!-- Main Content Grid -->
+    <div class="main-grid">
+      <!-- Input Form Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">✨</div>
+          <h2 class="card-title">Create Video</h2>
+        </div>
+        
+        <form id="videoForm">
+          <div class="form-group">
+            <label class="form-label" for="problem">What would you like to explain?</label>
+            <textarea 
+              class="form-control" 
+              id="problem" 
+              name="problem" 
+              placeholder="E.g., Explain quantum entanglement with visual examples..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Enhancement Options</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="orchestrate" id="orchestrate">
+                <span>🎯 AI Orchestration</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="voice_first" id="voice_first">
+                <span>🎤 Voice First</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="element_audio" id="element_audio">
+                <span>🔊 Element Audio</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="customPromptToggle">
+              <span>✏️ Custom Prompt (Advanced)</span>
+            </label>
+            <div id="customPromptSection" class="toggle-section" style="display: none;">
+              <textarea 
+                class="form-control" 
+                id="custom_prompt" 
+                name="custom_prompt"
+                placeholder="Enter your custom generation prompt here..."
+              ></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>🚀</span>
+            Generate Video
+          </button>
+
+          <!-- Progress Section -->
+          <div id="progressSection" class="progress-section">
+            <div class="progress-label">
+              <span id="progressStatus">Processing...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <div id="statusMessage" class="status-message">
+              Initializing video generation...
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Video Output Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">🎬</div>
+          <h2 class="card-title">Your Video</h2>
+        </div>
+        
+        <div id="videoSection" class="video-section">
+          <div class="video-player">
+            <video id="videoPlayer" controls></video>
+          </div>
+          <div class="video-actions">
+            <button class="btn btn-primary" onclick="downloadVideo()">
+              <span>⬇️</span>
+              Download
+            </button>
+            <button class="btn btn-secondary" onclick="shareVideo()">
+              <span>🔗</span>
+              Share
+            </button>
+            <button class="btn btn-secondary" onclick="resetForm()">
+              <span>🔄</span>
+              New Video
+            </button>
+          </div>
+        </div>
+
+        <div id="placeholderSection">
+          <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <div style="font-size: 64px; margin-bottom: 16px;">🎥</div>
+            <p style="font-size: 18px; margin-bottom: 8px;">Your video will appear here</p>
+            <p style="font-size: 14px;">Fill out the form and click "Generate Video" to start</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3 class="feature-title">AI-Powered</h3>
+        <p class="feature-desc">Advanced AI generates engaging educational content automatically</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Lightning Fast</h3>
+        <p class="feature-desc">Generate professional videos in minutes, not hours</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <h3 class="feature-title">Beautiful Visuals</h3>
+        <p class="feature-desc">Stunning animations powered by Manim</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔧</div>
+        <h3 class="feature-title">Customizable</h3>
+        <p class="feature-desc">Fine-tune every aspect with advanced options</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auth Trigger Buttons -->
+  <div class="auth-trigger">
+    <div class="auth-btn-group">
+      <button class="auth-mini-btn email" onclick="showAuthModal('email')" title="Email">✉️</button>
+      <button class="auth-mini-btn facebook" onclick="showAuthModal('facebook')" title="Facebook">f</button>
+      <button class="auth-mini-btn google" onclick="showAuthModal('google')" title="Google">G</button>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div id="authModal" class="auth-modal">
+    <div class="auth-modal-content">
+      <button class="auth-close" onclick="closeAuthModal()">✕</button>
+      
+      <div class="auth-header">
+        <h2 class="auth-title" id="authTitle">Welcome Back</h2>
+        <p class="auth-subtitle">Sign in or create an account to get started</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
+        <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" class="auth-form active">
+        <div class="auth-input-group">
+          <input type="email" class="auth-input" placeholder="Email address" required>
+        </div>
+        <div class="auth-input-group">
+          <input type="password" class="auth-input" placeholder="Password" required>
+        </div>
+        <button type="button" class="auth-button" onclick="handleEmailLogin()">Sign In</button>
+
+        <div class="auth-divider">
+          <span class="auth-divider-text">Or continue with</span>
+        </div>
+
+        <div class="auth-social-buttons">
+          <button type="button" class="auth-social-btn" onclick="handleFacebookAuth()">📘 Facebook</button>
+          <button type="button" class="auth-social-btn" onclick="handleGoogleAuth()">🔍 Google</button>
+        </div>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="signupForm" class="auth-form">
+        <div class="auth-input-group">
+          <input type="text" class="auth-input" placeholder="Full name" required>
+        </div>
+        <div class="auth-input-group">
+          <input type="email" class="auth-input" placeholder="Email address" required>
+        </div>
+        <div class="auth-input-group">
+          <input type="password" class="auth-input" placeholder="Password" required>
+        </div>
+        <button type="button" class="auth-button" onclick="handleEmailSignup()">Create Account</button>
+
+        <div class="auth-divider">
+          <span class="auth-divider-text">Or sign up with</span>
+        </div>
+
+        <div class="auth-social-buttons">
+          <button type="button" class="auth-social-btn" onclick="handleFacebookAuth()">📘 Facebook</button>
+          <button type="button" class="auth-social-btn" onclick="handleGoogleAuth()">🔍 Google</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner-container">
+        <div class="spinner"></div>
+        <div class="progress-circle">
+          <div class="progress-percentage" id="overlayPercent">0%</div>
+          <div class="progress-stage" id="overlayStage">Starting...</div>
+        </div>
+      </div>
+      <h3 id="overlayTitle">Creating Your Video</h3>
+      <p id="overlayDescription">This may take a few minutes...</p>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const API_BASE = window.location.origin;
+    let currentJobId = null;
+    let pollInterval = null;
+
+    // Custom prompt toggle
+    document.getElementById('customPromptToggle').addEventListener('change', (e) => {
+      const section = document.getElementById('customPromptSection');
+      section.style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // Form submission
+    document.getElementById('videoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        problem: document.getElementById('problem').value,
+        orchestrate: document.getElementById('orchestrate').checked,
+        voice_first: document.getElementById('voice_first').checked,
+        element_audio: document.getElementById('element_audio').checked,
+        custom_prompt: document.getElementById('customPromptToggle').checked 
+          ? document.getElementById('custom_prompt').value 
+          : null
+      };
+
+      try {
+        showProgress();
+        updateProgress(0, 'Submitting request...');
+
+        const response = await fetch(`${API_BASE}/api/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) throw new Error('Failed to start video generation');
+
+        const data = await response.json();
+        currentJobId = data.job_id;
+
+        showToast('Video generation started!', 'success');
+        startPolling();
+
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Failed to start video generation: ' + error.message, 'error');
+        hideProgress();
+      }
+    });
+
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      
+      pollInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`${API_BASE}/api/jobs/${currentJobId}`);
+          const data = await response.json();
+
+          updateProgress(data.progress || 0, data.stage || 'Processing...');
+
+          if (data.status === 'completed' && data.video_url) {
+            clearInterval(pollInterval);
+            showVideo(data.video_url);
+            showToast('Video generated successfully!', 'success');
+          } else if (data.status === 'failed') {
+            clearInterval(pollInterval);
+            hideProgress();
+            showToast('Video generation failed: ' + (data.error || 'Unknown error'), 'error');
+          }
+        } catch (error) {
+          console.error('Polling error:', error);
+        }
+      }, 2000);
+    }
+
+    function showProgress() {
+      document.getElementById('progressSection').classList.add('active');
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideProgress() {
+      document.getElementById('progressSection').classList.remove('active');
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    function updateProgress(percent, status) {
+      const roundedPercent = Math.round(percent);
+      
+      // Update progress bar
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressPercent').textContent = roundedPercent + '%';
+      document.getElementById('progressStatus').textContent = status;
+      document.getElementById('statusMessage').textContent = status;
+      
+      // Update loading overlay
+      document.getElementById('overlayPercent').textContent = roundedPercent + '%';
+      document.getElementById('overlayStage').textContent = status;
+      
+      // Update overlay description based on progress
+      const overlayDesc = document.getElementById('overlayDescription');
+      if (percent < 25) {
+        overlayDesc.textContent = 'Setting up your video generation...';
+      } else if (percent < 50) {
+        overlayDesc.textContent = 'Processing AI orchestration...';
+      } else if (percent < 75) {
+        overlayDesc.textContent = 'Rendering animations...';
+      } else if (percent < 100) {
+        overlayDesc.textContent = 'Almost done! Finalizing your video...';
+      }
+    }
+
+    function showVideo(videoUrl) {
+      hideProgress();
+      document.getElementById('placeholderSection').style.display = 'none';
+      document.getElementById('videoSection').classList.add('active');
+      document.getElementById('videoPlayer').src = videoUrl;
+    }
+
+    function downloadVideo() {
+      const video = document.getElementById('videoPlayer');
+      const a = document.createElement('a');
+      a.href = video.src;
+      a.download = 'phiversity-video.mp4';
+      a.click();
+      showToast('Download started!', 'success');
+    }
+
+    function shareVideo() {
+      const video = document.getElementById('videoPlayer');
+      if (navigator.share) {
+        navigator.share({
+          title: 'Check out my Phiversity video!',
+          url: video.src
+        });
+      } else {
+        navigator.clipboard.writeText(video.src);
+        showToast('Video link copied to clipboard!', 'success');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('videoForm').reset();
+      document.getElementById('videoSection').classList.remove('active');
+      document.getElementById('placeholderSection').style.display = 'block';
+      document.getElementById('customPromptSection').style.display = 'none';
+      hideProgress();
+      if (pollInterval) clearInterval(pollInterval);
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'slideInRight 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // ============= 3D TILT EFFECT =============
+    // Add interactive tilt effect to cards based on mouse position
+    document.addEventListener('DOMContentLoaded', () => {
+      const cards = document.querySelectorAll('.card, .feature-card');
+      
+      cards.forEach(card => {
+        card.addEventListener('mousemove', (e) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left;
+          const y = e.clientY - rect.top;
+          
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          
+          const rotateX = (y - centerY) / 10;
+          const rotateY = (centerX - x) / 10;
+          
+          card.style.transform = `
+            translateY(-15px) 
+            translateZ(30px) 
+            rotateX(${rotateX}deg) 
+            rotateY(${rotateY}deg)
+            scale(1.02)
+          `;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          card.style.transform = '';
+        });
+      });
+
+      // Parallax effect on scroll
+      window.addEventListener('scroll', () => {
+        const scrolled = window.pageYOffset;
+        const header = document.querySelector('.header');
+        if (header) {
+          header.style.transform = `translateZ(50px) translateY(${scrolled * 0.5}px)`;
+        }
+      });
+
+      // Add 3D depth to logo on mouse move
+      const logo = document.querySelector('.logo-container');
+      if (logo) {
+        document.addEventListener('mousemove', (e) => {
+          const x = (e.clientX / window.innerWidth - 0.5) * 20;
+          const y = (e.clientY / window.innerHeight - 0.5) * 20;
+          
+          logo.style.transform = `
+            translateY(-10px) 
+            rotateX(${-y}deg) 
+            rotateY(${x}deg) 
+            translateZ(40px)
+          `;
+        });
+      }
+    });
+
+    // ============= AUTHENTICATION SYSTEM =============
+    let isLoggedIn = false;
+    let currentUser = null;
+
+    // Initialize auth on page load
+    document.addEventListener('DOMContentLoaded', () => {
+      const savedUser = localStorage.getItem('phiversity_user');
+      if (savedUser) {
+        try {
+          currentUser = JSON.parse(savedUser);
+          isLoggedIn = true;
+          updateAuthUI();
+        } catch (e) {
+          console.log('Could not restore user session');
+        }
+      }
+      
+      // Close modal when clicking outside
+      const modal = document.getElementById('authModal');
+      if (modal) {
+        modal.addEventListener('click', (e) => {
+          if (e.target.id === 'authModal') closeAuthModal();
+        });
+      }
+    });
+
+    function showAuthModal(provider = null) {
+      document.getElementById('authModal').classList.add('active');
+      if (provider === 'facebook') setTimeout(() => handleFacebookAuth(), 300);
+      else if (provider === 'google') setTimeout(() => handleGoogleAuth(), 300);
+      else if (provider === 'email') switchAuthTab('login');
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.remove('active');
+    }
+
+    function switchAuthTab(tab) {
+      // Update tab buttons
+      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+      event.target.classList.add('active');
+      
+      // Update forms
+      document.getElementById('loginForm').classList.remove('active');
+      document.getElementById('signupForm').classList.remove('active');
+      
+      if (tab === 'login') {
+        document.getElementById('loginForm').classList.add('active');
+        document.getElementById('authTitle').textContent = 'Welcome Back';
+      } else {
+        document.getElementById('signupForm').classList.add('active');
+        document.getElementById('authTitle').textContent = 'Join Phiversity';
+      }
+    }
+
+    function handleEmailLogin() {
+      const email = document.querySelector('#loginForm input[type="email"]').value;
+      const password = document.querySelector('#loginForm input[type="password"]').value;
+      if (email && password) {
+        loginUser(email, 'email');
+      }
+    }
+
+    function handleEmailSignup() {
+      const name = document.querySelector('#signupForm input[type="text"]').value;
+      const email = document.querySelector('#signupForm input[type="email"]').value;
+      const password = document.querySelector('#signupForm input[type="password"]').value;
+      if (name && email && password) {
+        loginUser(email, 'email', name);
+      }
+    }
+
+    function handleFacebookAuth() {
+      loginUser('user@facebook.com', 'facebook', 'Facebook User');
+    }
+
+    function handleGoogleAuth() {
+      loginUser('user@google.com', 'google', 'Google User');
+    }
+
+    function loginUser(email, provider, name = 'User') {
+      isLoggedIn = true;
+      currentUser = { email, provider, name };
+      localStorage.setItem('phiversity_user', JSON.stringify(currentUser));
+      closeAuthModal();
+      showToast(`Welcome ${name}! 🎉`, 'success');
+      updateAuthUI();
+    }
+
+    function logoutUser() {
+      isLoggedIn = false;
+      currentUser = null;
+      localStorage.removeItem('phiversity_user');
+      showToast('Logged out successfully', 'success');
+      updateAuthUI();
+    }
+
+    function updateAuthUI() {
+      const trigger = document.querySelector('.auth-trigger');
+      if (!trigger) return;
+      
+      const btnGroup = trigger.querySelector('.auth-btn-group');
+      if (isLoggedIn && currentUser) {
+        const firstName = currentUser.name.split(' ')[0];
+        btnGroup.innerHTML = `
+          <div style="display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--text-secondary);font-size:12px;">
+            👤 ${firstName}
+          </div>
+          <button class="auth-mini-btn" onclick="logoutUser()" title="Logout" style="background: #6366f1;">🚪</button>
+        `;
+      } else {
+        btnGroup.innerHTML = `
+          <button class="auth-mini-btn email" onclick="showAuthModal('email')" title="Email">✉️</button>
+          <button class="auth-mini-btn facebook" onclick="showAuthModal('facebook')" title="Facebook">f</button>
+          <button class="auth-mini-btn google" onclick="showAuthModal('google')" title="Google">G</button>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>

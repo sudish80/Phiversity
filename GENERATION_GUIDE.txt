@@ -1,0 +1,145 @@
+# Comprehensive Guide to Perfect Manim Animation Generation
+
+This guide details the specific code structures, JSON schemas, and content formats required to generate high-quality Manim animations using this system.
+
+## 1. Overview
+The generation pipeline operates in two main stages:
+1.  **Orchestration (LLM)**: Takes a natural language question and produces a structured JSON plan containing the solution and animation details.
+2.  **Rendering (Manim)**: Reads the JSON plan and generates Python code for Manim, then renders the video.
+
+"Perfect generation" relies on the **JSON Plan** being rigorously formatted so the Python adapter can correctly interpret it.
+
+---
+
+## 2. The JSON Schema (The "Source of Truth")
+The LLM must output a JSON object with two top-level keys: `solution` and `animation_plan`.
+
+### 2.1 Solution Object
+Contains the educational content.
+```json
+"solution": {
+  "topic": "The Main Topic",
+  "steps": [
+    {
+       "title": "Step 1",
+       "explanation": "Detailed text explanation.",
+       "latex": "E = mc^2"  // Optional LaTeX
+    }
+  ],
+  "final_answer": "The final result."
+}
+```
+
+### 2.2 Animation Plan Object
+This is the critical part for video generation.
+```json
+"animation_plan": {
+  "overview": "Summary of the visual strategy",
+  "scenes": [
+    {
+      "id": "scene_1",
+      "description": "Visualizing the equation",
+      "voiceover": "First, consider the function f(x).",
+      "elements": [ ... ] 
+    }
+  ]
+}
+```
+
+---
+
+## 3. Element Types & Properties
+The `elements` array in each scene dictates what appears on screen. Each element has a `type`, `content`, `position`, and `style`.
+
+### 3.1 Text & Equations
+*   **Type**: `"Text"` or `"Latex"` or `"MathTex"`
+*   **Content**: The string to display. For LaTeX, omit standard delimiters like `$`; just write the math code (e.g., `\\frac{1}{2}`).
+*   **Position**: `"center"`, `"top"`, `"bottom"`, `"left"`, `"right"`, `"ORIGIN"`, or a coordinate vector `"[x, y, 0]"`. 
+    *   *Note*: Manim's coordinate system usually ranges from x: [-7, 7] and y: [-4, 4].
+*   **Style**: `{ "color": "RED" }` or hex codes `"#FF0000"`.
+
+### 3.2 Diagrammatic Shapes
+*   **Circle**: `content` (label, optional), `style: { "radius": 1.5, "color": "BLUE" }`
+*   **Rectangle**: `content` (label, optional), `style: { "width": 4, "height": 2, "color": "GREEN" }`
+*   **Polygon**: `content` must be a list of vertices, e.g., `"[(0,0), (2,0), (1, 1.73)]"`.
+*   **Annulus**: `style: { "inner_radius": 1, "outer_radius": 2 }`.
+
+### 3.3 Graphing & Plots
+This is the most complex element type.
+*   **Type**: `"Axes"`
+    *   **Style**: `{ "x_range": [-5, 5, 1], "y_range": [-3, 3, 1], "x_label": "Time", "y_label": "Distance" }`
+*   **Type**: `"Graph"`
+    *   **Content**: A Python-evaluatable string for the function, e.g., `"sin(x)"` or `"x**2"`.
+    *   **Style**:
+        *   `"curves"`: A list of curve objects to plot multiple functions on the same axes.
+        *   Each curve in `curves`: `{ "content": "cos(x)", "color": "YELLOW", "label": "cos(x)" }`
+    *   **Parametric Curves**: Set `"mode": "parametric"` inside a curve style and provide `"x"` and `"y"` functions of `t`.
+        *   Example: `{ "mode": "parametric", "x": "cos(t)", "y": "sin(t)", "t_range": [0, 6.28] }`
+
+### 3.4 Vector Fields
+*   **Type**: `"VectorField"`
+*   **Content**: `"[y, -x]"` (A string list representing the vector components).
+*   **Style**: `{ "fx": "y", "fy": "-x" }` (Alternative specification).
+
+### 3.5 3D Elements
+*   **Type**: `"Parametric3D"`
+*   **Content**: Function strings for x, y, z in terms of u (and optionally v for surfaces).
+*   **Style**: `{ "u_range": [0, 1], "v_range": [0, 1] }`
+*   *Effect*: Triggering a 3D element switches the entire scene to `ThreeDScene`.
+
+---
+
+## 4. Animation & Timing (The "Perfect" Flow)
+To make the animation feel natural, elements support a `timing` object in their style or root.
+
+```json
+{
+  "type": "Text",
+  "content": "Hello",
+  "timing": {
+    "start": 0.0,       // Seconds from start of scene
+    "duration_in": 1.0, // Duration of entry animation
+    "duration_out": 0.5,// Duration of exit
+    "transition_in": "Write", // Manim animation class
+    "transition_out": "FadeOut"
+  }
+}
+```
+
+**Supported Transitions:**
+*   `Write` (Default for text/math)
+*   `Create` (Default for graphs/shapes)
+*   `FadeIn`, `FadeOut`
+*   `GrowFromCenter`
+*   `Uncreate`
+
+**Synchronization:**
+If `start` is not provided, elements run sequentially. If `voice-first` mode is active, the system attempts to align these sequential chunks with the duration of the corresponding voiceover sentences.
+
+---
+
+## 5. Tips for Perfect Generation
+1.  **Explicit Coordinates**: Don't rely on "left" or "right" for complex diagrams. Use exact coordinates `[2, 3, 0]` to prevents overlaps.
+2.  **Modular Functions**: When plotting graphs, ensure the function string is valid Python (using `math.` or `np.`). Avoid implicit multiplication (write `2*x`, not `2x`).
+3.  **LaTeX Escaping**: In the JSON string, backslashes must be double-escaped. `\\frac` -> `\\\\frac`.
+4.  **Scene Brevity**: Keep scenes focused. Shorter scenes with specific voiceovers sync better than one giant scene with a paragraph of text.
+5.  **Camera**: Currently, custom camera moves are automated. 3D scenes get a fixed angle (`phi=60`, `theta=45`).
+
+## 6. Example JSON Fragment
+```json
+{
+  "type": "Graph",
+  "style": {
+    "curves": [
+      {
+        "content": "x**2",
+        "color": "#FF0000",
+        "label": "y = x^2"
+      }
+    ]
+  },
+  "timing": {
+    "transition_in": "Create"
+  }
+}
+```

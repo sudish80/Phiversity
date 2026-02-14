@@ -5,11 +5,23 @@ import subprocess
 import sys
 import textwrap
 from pathlib import Path
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any, List, Optional, Tuple
+
+# Layout and collision detection modules (Phase 3)
+from .layout_engine import (
+    LayoutEngine, LayoutStrategy, ScreenBounds, ContentBox, TextAnchor, LayoutZone
+)
+from .collision_detector import CollisionDetector, AABBCollider, CollisionResolver
+from .layer_manager import LayerManager, ElementType
+from .qa_metrics import QAMetricsEngine, FrameAnalysis
 
 # Consistent naming for video outputs
 # Used when render_with_manim() is called with out_path parameter
 FINAL_VIDEO_NAME = "final.mp4"
+
+# Manim screen dimensions (standard 16:9)
+MANIM_SCREEN_WIDTH = 8.0   # Manim units (pixels = units * 100)
+MANIM_SCREEN_HEIGHT = 4.5  # Manim units
 
 
 POSITION_MAP = {
@@ -23,6 +35,141 @@ POSITION_MAP = {
     "bottom-left": "DOWN+LEFT",
     "bottom-right": "DOWN+RIGHT",
 }
+
+
+def apply_layout_and_collision_detection(scene: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Apply dynamic layout, collision detection, and layer management to scene elements.
+    
+    This function:
+    1. Extracts elements from scene
+    2. Creates ContentBox objects for each
+    3. Applies layout algorithm to position elements
+    4. Detects and resolves collisions
+    5. Assigns z-indices based on layer hierarchy
+    
+    Args:
+        scene: Scene dict with elements
+    
+    Returns:
+        Updated scene dict with optimized positions and layer assignments
+    """
+    elements = scene.get("elements", [])
+    if not elements:
+        return scene
+    
+    try:
+        # Initialize layout engine with screen bounds
+        screen_bounds = ScreenBounds(
+            width=MANIM_SCREEN_WIDTH,
+            height=MANIM_SCREEN_HEIGHT,
+            margin=0.5  # 0.5% margin from edges
+        )
+        # Reserve space for the scene header at the top.
+        header_buffer = 0.6
+        screen_bounds.top -= header_buffer
+        layout_engine = LayoutEngine(screen_bounds, LayoutStrategy.FLOATING)
+        
+        # Initialize collision detector and resolver
+        collision_detector = CollisionDetector()
+        collision_resolver = CollisionResolver((screen_bounds.left, screen_bounds.right, 
+                                               screen_bounds.top, screen_bounds.bottom))
+        
+        # Initialize layer manager
+        layer_manager = LayerManager()
+        
+        # Convert scene elements to ContentBox objects
+        content_boxes: List[Tuple[ContentBox, int]] = []  # (box, original_index)
+        
+        for idx, element in enumerate(elements):
+            element_type = str(element.get("type", "text")).lower()
+            element_id = element.get("id", f"elem_{idx}")
+            content = str(element.get("content", ""))[:100]
+            
+            # Estimate dimensions based on type
+            if element_type in ("text", "mathtex", "label"):
+                lines = content.split("\n") if content else [""]
+                max_len = max(len(line) for line in lines)
+                width = min(6.5, 0.12 * max_len + 1.0)
+                height = max(0.5, 0.4 * len(lines))
+                element_class = ElementType.LABEL if element_type == "label" else ElementType.TEXT
+            elif element_type == "axes":
+                width = 3.0
+                height = 2.5
+                element_class = ElementType.GRAPH
+            elif element_type in ("graph", "parametric"):
+                width = 3.5
+                height = 3.0
+                element_class = ElementType.GRAPH
+            elif element_type in ("figure", "image"):
+                width = 2.5
+                height = 2.0
+                element_class = ElementType.FIGURE
+            else:
+                width = 2.0
+                height = 1.0
+                element_class = ElementType.DIAGRAM
+            
+            # Get timing info
+            timing = element.get("timing", {})
+            start_time = timing.get("start", 0.0) if isinstance(timing, dict) else 0.0
+            end_time = timing.get("end", float('inf')) if isinstance(timing, dict) else float('inf')
+            
+            # Create ContentBox
+            box = ContentBox(
+                id=element_id,
+                type=element_type,
+                content=content,
+                width=width,
+                height=height,
+                position=(0, 0),  # Will be updated by layout engine
+                anchor=TextAnchor.CENTER,
+                timestamp_start=start_time,
+                timestamp_end=end_time,
+                metadata={
+                    "original_position": element.get("position"),
+                    "style": element.get("style", {}),
+                }
+            )
+            
+            layout_engine.add_content(box)
+            content_boxes.append((box, idx))
+            
+            # Assign layer
+            layer_manager.assign_layer(element_id, element_class, priority=0)
+        
+        # Apply layout algorithm
+        positioned_boxes = layout_engine.layout()
+        # (Layout engine already handles collision detection and resolution internally)
+        
+        # Check for conflicts in layer assignments
+        layer_manager.detect_conflicts()
+        layer_manager.resolve_conflicts()
+        
+        # Update original scene with optimized positions and layers
+        for box, original_idx in content_boxes:
+            if original_idx < len(elements):
+                element = elements[original_idx]
+                
+                # Update position (convert from Manim units to string position)
+                x, y = box.position
+                
+                # Store optimized position for later use
+                element["_layout_position"] = (x, y)
+                element["_layout_width"] = box.width
+                element["_layout_height"] = box.height
+                
+                # Add z-index
+                z_index = layer_manager.get_z_index(box.id)
+                if z_index is not None:
+                    element["_layout_z_index"] = z_index
+        
+        return scene
+        
+    except Exception as e:
+        # If layout fails, return original scene unchanged
+        print(f"[manim_adapter] Layout warning: {str(e)}", file=sys.stderr)
+        return scene
 
 
 def _safe_str(s: str) -> str:
@@ -129,7 +276,7 @@ def generate_scene_script(
     lines: List[str] = [
         "from manim import *",
         "from manim import rate_functions as rf",
-        "from manim.utils.color import Color",
+        "from manim.utils.color import ManimColor as Color",
         "",
         f"class GeneratedScene({scene_cls}):",
         "    def construct(self):",
@@ -174,10 +321,22 @@ def generate_scene_script(
         dur_list = element_durations[sidx-1] if element_durations and len(element_durations) >= sidx else None
         acc = 0.0
 
-        for eidx, el in enumerate(sc.get("elements", []), start=1):
+        # PHASE 3: Apply layout and collision detection to scene elements
+        sc_with_layout = apply_layout_and_collision_detection(sc)
+
+        for eidx, el in enumerate(sc_with_layout.get("elements", []), start=1):
             etype = str(el.get("type") or "").lower()
             content = _safe_str(el.get("content") or "")
-            p = _pos_expr(el.get("position"))
+            
+            # Use layout-optimized position if available, otherwise use original position
+            if "_layout_position" in el:
+                layout_x, layout_y = el["_layout_position"]
+                p = f"np.array([{layout_x:.3f}, {layout_y:.3f}, 0.0])"
+                # Store layout position in element for later use if needed
+                el["_optimized_position"] = (layout_x, layout_y)
+            else:
+                p = _pos_expr(el.get("position"))
+            
             style = el.get("style") if isinstance(el, dict) else None
             color_e = _color_expr(style if isinstance(style, dict) else None)
             timing = el.get("timing") if isinstance(el, dict) else None
@@ -558,9 +717,9 @@ def render_with_manim(script_path: Path, scene_name: str, out_path: Optional[Pat
     try:
         print(f"[manim_adapter] Starting Manim render with {timeout_seconds}s timeout...")
         # Explicitly configure streams to prevent initialization errors on Windows
-        subprocess.run(
+        result = subprocess.run(
             cmd,
-            check=True,
+            check=False,
             env=env,
             timeout=timeout_seconds,
             stdin=subprocess.DEVNULL,
@@ -568,6 +727,13 @@ def render_with_manim(script_path: Path, scene_name: str, out_path: Optional[Pat
             stderr=subprocess.PIPE,
             text=True
         )
+        if result.returncode != 0:
+            print(f"[manim_adapter] Manim failed with return code {result.returncode}")
+            if result.stdout:
+                print(f"[manim_adapter] Manim stdout:\n{result.stdout}")
+            if result.stderr:
+                print(f"[manim_adapter] Manim stderr:\n{result.stderr}")
+            raise RuntimeError(f"Manim rendering failed with exit code {result.returncode}. See logs above.")
         print(f"[manim_adapter] Manim render completed successfully")
     except subprocess.TimeoutExpired:
         raise RuntimeError(f"Manim rendering exceeded timeout of {timeout_seconds} seconds. Try reducing scene complexity or quality.")

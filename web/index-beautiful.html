@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phiversity - AI Video Generator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --secondary: #ec4899;
+      --accent: #8b5cf6;
+      --success: #10b981;
+      --danger: #ef4444;
+      --bg-primary: #0f0f23;
+      --bg-secondary: #1a1a3e;
+      --bg-card: rgba(30, 30, 60, 0.7);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --border: rgba(99, 102, 241, 0.2);
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Animated Background */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 70%, rgba(236, 72, 153, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.1) 0%, transparent 50%);
+      animation: backgroundPulse 20s ease infinite;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    @keyframes backgroundPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    /* Container */
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    /* Header */
+    .header {
+      text-align: center;
+      margin-bottom: 60px;
+      animation: fadeInDown 0.8s ease;
+    }
+
+    .logo-container {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 20px 60px rgba(99, 102, 241, 0.4);
+      animation: float 3s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .logo-container::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+      transform: rotate(45deg);
+      animation: shine 3s linear infinite;
+    }
+
+    .logo-container::after {
+      content: '🎬';
+      font-size: 60px;
+      position: relative;
+      z-index: 1;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes shine {
+      0% { transform: rotate(45deg) translateX(-100%); }
+      100% { transform: rotate(45deg) translateX(100%); }
+    }
+
+    .header h1 {
+      font-size: 56px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #60a5fa, #a78bfa, #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+    }
+
+    .header p {
+      color: var(--text-secondary);
+      font-size: 18px;
+      font-weight: 400;
+    }
+
+    /* Main Grid */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 968px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Card Styles */
+    .card {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 32px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      transition: all 0.3s ease;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 30px 80px rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .card-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Form Styles */
+    .form-group {
+      margin-bottom: 24px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 16px 20px;
+      background: rgba(15, 15, 35, 0.8);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 16px;
+      font-family: inherit;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+
+    textarea.form-control {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    /* Checkbox Styles */
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .checkbox-label:hover {
+      background: rgba(99, 102, 241, 0.2);
+      border-color: var(--primary);
+    }
+
+    .checkbox-label input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      accent-color: var(--primary);
+      cursor: pointer;
+    }
+
+    .checkbox-label input[type="checkbox"]:checked + span {
+      color: var(--primary);
+    }
+
+    /* Custom Prompt Toggle */
+    .toggle-section {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: 12px;
+      border: 2px dashed var(--border);
+    }
+
+    /* Button Styles */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 16px 32px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(99, 102, 241, 0.6);
+    }
+
+    .btn-primary:active {
+      transform: translateY(0);
+    }
+
+    .btn-block {
+      width: 100%;
+    }
+
+    /* Progress Bar */
+    .progress-section {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .progress-section.active {
+      display: block;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .progress-bar-container {
+      width: 100%;
+      height: 12px;
+      background: rgba(15, 15, 35, 0.8);
+      border-radius: 6px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
+      background-size: 200% 100%;
+      border-radius: 6px;
+      transition: width 0.5s ease;
+      animation: gradientShift 2s linear infinite;
+    }
+
+    @keyframes gradientShift {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+
+    .status-message {
+      margin-top: 12px;
+      padding: 12px 16px;
+      background: rgba(99, 102, 241, 0.1);
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Video Player */
+    .video-section {
+      display: none;
+    }
+
+    .video-section.active {
+      display: block;
+      animation: fadeInUp 0.8s ease;
+    }
+
+    .video-player {
+      width: 100%;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      margin-bottom: 20px;
+    }
+
+    .video-player video {
+      width: 100%;
+      display: block;
+    }
+
+    .video-actions {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn-secondary {
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--text-primary);
+      border: 2px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(99, 102, 241, 0.3);
+      border-color: var(--primary);
+    }
+
+    /* Features Grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 24px;
+      margin-top: 40px;
+    }
+
+    .feature-card {
+      padding: 24px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+    }
+
+    .feature-icon {
+      font-size: 40px;
+      margin-bottom: 12px;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 15, 35, 0.95);
+      backdrop-filter: blur(10px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .loading-overlay.active {
+      display: flex;
+    }
+
+    .loading-content {
+      text-align: center;
+      animation: fadeInScale 0.5s ease;
+    }
+
+    .spinner {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 24px;
+      border: 4px solid rgba(99, 102, 241, 0.2);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-content h3 {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .loading-content p {
+      color: var(--text-secondary);
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInDown {
+      from {
+        opacity: 0;
+        transform: translateY(-30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeInScale {
+      from {
+        opacity: 0;
+        transform: scale(0.9);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    /* Toast Notifications */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 16px 24px;
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      z-index: 2000;
+      animation: slideInRight 0.3s ease;
+      max-width: 400px;
+    }
+
+    @keyframes slideInRight {
+      from {
+        transform: translateX(400px);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    .toast.success {
+      border-left: 4px solid var(--success);
+    }
+
+    .toast.error {
+      border-left: 4px solid var(--danger);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .header h1 {
+        font-size: 36px;
+      }
+
+      .card {
+        padding: 24px;
+      }
+
+      .video-actions {
+        flex-direction: column;
+      }
+
+      .btn {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo-container"></div>
+      <h1>Phiversity</h1>
+      <p>Transform your ideas into stunning educational videos with AI</p>
+    </header>
+
+    <!-- Main Content Grid -->
+    <div class="main-grid">
+      <!-- Input Form Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">✨</div>
+          <h2 class="card-title">Create Video</h2>
+        </div>
+        
+        <form id="videoForm">
+          <div class="form-group">
+            <label class="form-label" for="problem">What would you like to explain?</label>
+            <textarea 
+              class="form-control" 
+              id="problem" 
+              name="problem" 
+              placeholder="E.g., Explain quantum entanglement with visual examples..."
+              required
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Enhancement Options</label>
+            <div class="checkbox-group">
+              <label class="checkbox-label">
+                <input type="checkbox" name="orchestrate" id="orchestrate">
+                <span>🎯 AI Orchestration</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="voice_first" id="voice_first">
+                <span>🎤 Voice First</span>
+              </label>
+              <label class="checkbox-label">
+                <input type="checkbox" name="element_audio" id="element_audio">
+                <span>🔊 Element Audio</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="customPromptToggle">
+              <span>✏️ Custom Prompt (Advanced)</span>
+            </label>
+            <div id="customPromptSection" class="toggle-section" style="display: none;">
+              <textarea 
+                class="form-control" 
+                id="custom_prompt" 
+                name="custom_prompt"
+                placeholder="Enter your custom generation prompt here..."
+              ></textarea>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary btn-block">
+            <span>🚀</span>
+            Generate Video
+          </button>
+
+          <!-- Progress Section -->
+          <div id="progressSection" class="progress-section">
+            <div class="progress-label">
+              <span id="progressStatus">Processing...</span>
+              <span id="progressPercent">0%</span>
+            </div>
+            <div class="progress-bar-container">
+              <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <div id="statusMessage" class="status-message">
+              Initializing video generation...
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- Video Output Card -->
+      <div class="card">
+        <div class="card-header">
+          <div class="card-icon">🎬</div>
+          <h2 class="card-title">Your Video</h2>
+        </div>
+        
+        <div id="videoSection" class="video-section">
+          <div class="video-player">
+            <video id="videoPlayer" controls></video>
+          </div>
+          <div class="video-actions">
+            <button class="btn btn-primary" onclick="downloadVideo()">
+              <span>⬇️</span>
+              Download
+            </button>
+            <button class="btn btn-secondary" onclick="shareVideo()">
+              <span>🔗</span>
+              Share
+            </button>
+            <button class="btn btn-secondary" onclick="resetForm()">
+              <span>🔄</span>
+              New Video
+            </button>
+          </div>
+        </div>
+
+        <div id="placeholderSection">
+          <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
+            <div style="font-size: 64px; margin-bottom: 16px;">🎥</div>
+            <p style="font-size: 18px; margin-bottom: 8px;">Your video will appear here</p>
+            <p style="font-size: 14px;">Fill out the form and click "Generate Video" to start</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <h3 class="feature-title">AI-Powered</h3>
+        <p class="feature-desc">Advanced AI generates engaging educational content automatically</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚡</div>
+        <h3 class="feature-title">Lightning Fast</h3>
+        <p class="feature-desc">Generate professional videos in minutes, not hours</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🎨</div>
+        <h3 class="feature-title">Beautiful Visuals</h3>
+        <p class="feature-desc">Stunning animations powered by Manim</p>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔧</div>
+        <h3 class="feature-title">Customizable</h3>
+        <p class="feature-desc">Fine-tune every aspect with advanced options</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay">
+    <div class="loading-content">
+      <div class="spinner"></div>
+      <h3>Creating Your Video</h3>
+      <p>This may take a few minutes...</p>
+    </div>
+  </div>
+
+  <!-- JavaScript -->
+  <script>
+    const API_BASE = window.location.origin;
+    let currentJobId = null;
+    let pollInterval = null;
+
+    // Custom prompt toggle
+    document.getElementById('customPromptToggle').addEventListener('change', (e) => {
+      const section = document.getElementById('customPromptSection');
+      section.style.display = e.target.checked ? 'block' : 'none';
+    });
+
+    // Form submission
+    document.getElementById('videoForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const formData = {
+        problem: document.getElementById('problem').value,
+        orchestrate: document.getElementById('orchestrate').checked,
+        voice_first: document.getElementById('voice_first').checked,
+        element_audio: document.getElementById('element_audio').checked,
+        custom_prompt: document.getElementById('customPromptToggle').checked 
+          ? document.getElementById('custom_prompt').value 
+          : null
+      };
+
+      try {
+        showProgress();
+        updateProgress(0, 'Submitting request...');
+
+        const response = await fetch(`${API_BASE}/api/run`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(formData)
+        });
+
+        if (!response.ok) throw new Error('Failed to start video generation');
+
+        const data = await response.json();
+        currentJobId = data.job_id;
+
+        showToast('Video generation started!', 'success');
+        startPolling();
+
+      } catch (error) {
+        console.error('Error:', error);
+        showToast('Failed to start video generation: ' + error.message, 'error');
+        hideProgress();
+      }
+    });
+
+    function startPolling() {
+      if (pollInterval) clearInterval(pollInterval);
+      
+      pollInterval = setInterval(async () => {
+        try {
+          const response = await fetch(`${API_BASE}/api/jobs/${currentJobId}`);
+          const data = await response.json();
+
+          updateProgress(data.progress || 0, data.stage || 'Processing...');
+
+          if (data.status === 'completed' && data.video_url) {
+            clearInterval(pollInterval);
+            showVideo(data.video_url);
+            showToast('Video generated successfully!', 'success');
+          } else if (data.status === 'failed') {
+            clearInterval(pollInterval);
+            hideProgress();
+            showToast('Video generation failed: ' + (data.error || 'Unknown error'), 'error');
+          }
+        } catch (error) {
+          console.error('Polling error:', error);
+        }
+      }, 2000);
+    }
+
+    function showProgress() {
+      document.getElementById('progressSection').classList.add('active');
+      document.getElementById('loadingOverlay').classList.add('active');
+    }
+
+    function hideProgress() {
+      document.getElementById('progressSection').classList.remove('active');
+      document.getElementById('loadingOverlay').classList.remove('active');
+    }
+
+    function updateProgress(percent, status) {
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progressPercent').textContent = Math.round(percent) + '%';
+      document.getElementById('progressStatus').textContent = status;
+      document.getElementById('statusMessage').textContent = status;
+    }
+
+    function showVideo(videoUrl) {
+      hideProgress();
+      document.getElementById('placeholderSection').style.display = 'none';
+      document.getElementById('videoSection').classList.add('active');
+      document.getElementById('videoPlayer').src = videoUrl;
+    }
+
+    function downloadVideo() {
+      const video = document.getElementById('videoPlayer');
+      const a = document.createElement('a');
+      a.href = video.src;
+      a.download = 'phiversity-video.mp4';
+      a.click();
+      showToast('Download started!', 'success');
+    }
+
+    function shareVideo() {
+      const video = document.getElementById('videoPlayer');
+      if (navigator.share) {
+        navigator.share({
+          title: 'Check out my Phiversity video!',
+          url: video.src
+        });
+      } else {
+        navigator.clipboard.writeText(video.src);
+        showToast('Video link copied to clipboard!', 'success');
+      }
+    }
+
+    function resetForm() {
+      document.getElementById('videoForm').reset();
+      document.getElementById('videoSection').classList.remove('active');
+      document.getElementById('placeholderSection').style.display = 'block';
+      document.getElementById('customPromptSection').style.display = 'none';
+      hideProgress();
+      if (pollInterval) clearInterval(pollInterval);
+    }
+
+    function showToast(message, type = 'success') {
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.textContent = message;
+      document.body.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.animation = 'slideInRight 0.3s ease reverse';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+  </script>
+</body>
+</html>

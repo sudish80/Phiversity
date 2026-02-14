@@ -2,6 +2,11 @@ import argparse
 import os
 from pathlib import Path
 from typing import Dict, Any, List, Tuple
+from dotenv import load_dotenv
+
+# Load .env from project root so CLI usage sees the same config as the server.
+ROOT = Path(__file__).resolve().parents[1]
+load_dotenv(ROOT / ".env", override=True)
 
 
 def _tts_gtts(text: str, out_path: Path):
@@ -48,10 +53,18 @@ def _tts_elevenlabs(text: str, out_path: Path):
     out_path.write_bytes(audio)
 
 
+def _resolve_voice_engine() -> Tuple[str, bool]:
+    engine = os.getenv("VOICE_ENGINE", "gtts").lower()
+    key_present = bool(os.getenv("ELEVENLABS_API_KEY"))
+    if engine == "elevenlabs" and not key_present:
+        print("[voiceover] ELEVENLABS_API_KEY missing; falling back to gtts")
+        engine = "gtts"
+    return engine, key_present
+
+
 def synthesize_scene_wise(data: Dict[str, Any], out_dir: Path) -> List[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    engine = os.getenv("VOICE_ENGINE", "gtts").lower()
-    prefer_eleven = bool(os.getenv("ELEVENLABS_API_KEY"))
+    engine, prefer_eleven = _resolve_voice_engine()
 
     audio_paths: List[Path] = []
     for idx, sc in enumerate(data.get("animation_plan", {}).get("scenes", []), start=1):
@@ -102,8 +115,7 @@ def get_audio_durations(paths: List[Path]) -> List[float]:
 def synthesize_element_wise(data: Dict[str, Any], out_base: Path) -> List[List[Path]]:
     """Generate audio per element for each scene. Returns list[scene][element] -> audio path."""
     out_base.mkdir(parents=True, exist_ok=True)
-    engine = os.getenv("VOICE_ENGINE", "gtts").lower()
-    prefer_eleven = bool(os.getenv("ELEVENLABS_API_KEY"))
+    engine, prefer_eleven = _resolve_voice_engine()
 
     scenes = data.get("animation_plan", {}).get("scenes", [])
     all_paths: List[List[Path]] = []

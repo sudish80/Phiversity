@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LLM Compare - One Click</title>
+  <style>
+    :root {
+      --bg: #0f1419;
+      --panel: #19212a;
+      --panel-alt: #1f2a35;
+      --text: #e6edf3;
+      --muted: #9aa4ad;
+      --accent: #1fb6ff;
+      --accent-2: #26d9a9;
+      --danger: #ff6b6b;
+      --border: #2b3642;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      background: radial-gradient(1200px 800px at 10% 10%, #1a2430, #0f1419 55%);
+      color: var(--text);
+    }
+
+    header {
+      padding: 28px 24px 10px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 26px;
+      letter-spacing: 0.4px;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0;
+    }
+
+    .controls {
+      margin: 18px 24px 8px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+      display: grid;
+      gap: 12px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .row.single {
+      grid-template-columns: 1fr;
+    }
+
+    label {
+      font-size: 13px;
+      color: var(--muted);
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    textarea,
+    input[type="text"] {
+      width: 100%;
+      border: 1px solid var(--border);
+      background: var(--panel-alt);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px;
+      min-height: 42px;
+      font-size: 14px;
+    }
+
+    textarea {
+      min-height: 90px;
+      resize: vertical;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    button {
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #1778ff);
+      color: #081018;
+      font-weight: 700;
+      padding: 10px 16px;
+      border-radius: 10px;
+      cursor: pointer;
+      box-shadow: 0 8px 18px rgba(23, 120, 255, 0.35);
+    }
+
+    button.secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      box-shadow: none;
+    }
+
+    button:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      padding: 16px 24px 30px;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: var(--shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 320px;
+    }
+
+    .card-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .llm-name {
+      font-weight: 700;
+      font-size: 16px;
+    }
+
+    .status {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .question {
+      color: var(--accent-2);
+      font-size: 13px;
+      min-height: 36px;
+      border-left: 3px solid var(--accent-2);
+      padding-left: 8px;
+    }
+
+    .output {
+      background: #0c1116;
+      border-radius: 10px;
+      border: 1px solid #1c2630;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow: auto;
+      flex: 1;
+      white-space: pre-wrap;
+    }
+
+    .error {
+      color: var(--danger);
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 860px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>LLM Compare - One Click</h1>
+    <p class="sub">Gemini • GROQ • OpenRouter — same prompt, JSON output, and timing.</p>
+  </header>
+
+  <section class="controls">
+    <div class="row">
+      <div>
+        <label for="api-base">API base URL</label>
+        <input id="api-base" type="text" placeholder="http://localhost:8000" />
+      </div>
+      <div>
+        <label for="question">Question</label>
+        <input id="question" type="text" placeholder="Enter your question" />
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label for="prompt">Prompt (optional)</label>
+        <textarea id="prompt" placeholder="Paste a custom prompt or leave empty to use Prompt.txt"></textarea>
+      </div>
+      <div>
+        <label>Prompt source</label>
+        <div class="actions">
+          <label class="hint"><input id="use-prompt-file" type="checkbox" checked /> Use Prompt.txt if prompt is empty</label>
+          <button class="secondary" id="load-prompt" type="button">Load Prompt.txt</button>
+          <span class="hint" id="prompt-status"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="run-all" type="button">One Click</button>
+      <span class="hint" id="run-status"></span>
+    </div>
+  </section>
+
+  <section class="grid" id="output-grid"></section>
+
+  <script>
+    const providers = [
+      { id: "gemini", name: "Gemini" },
+      { id: "groq", name: "GROQ" },
+      { id: "openrouter", name: "OpenRouter" }
+    ];
+
+    const apiBaseInput = document.getElementById("api-base");
+    const questionInput = document.getElementById("question");
+    const promptInput = document.getElementById("prompt");
+    const usePromptFile = document.getElementById("use-prompt-file");
+    const runAllBtn = document.getElementById("run-all");
+    const runStatus = document.getElementById("run-status");
+    const outputGrid = document.getElementById("output-grid");
+    const loadPromptBtn = document.getElementById("load-prompt");
+    const promptStatus = document.getElementById("prompt-status");
+
+    function getDefaultBaseUrl() {
+      if (window.location.origin && window.location.origin !== "null") {
+        return window.location.origin;
+      }
+      return "http://localhost:8000";
+    }
+
+    apiBaseInput.value = getDefaultBaseUrl();
+
+    function renderCards() {
+      outputGrid.innerHTML = "";
+      providers.forEach(provider => {
+        const card = document.createElement("div");
+        card.className = "card";
+        card.id = `card-${provider.id}`;
+        card.innerHTML = `
+          <div class="card-header">
+            <div class="llm-name">${provider.name}</div>
+            <div class="status" id="status-${provider.id}">Idle</div>
+          </div>
+          <div class="question" id="question-${provider.id}">Question: —</div>
+          <div class="status" id="model-${provider.id}">Model: —</div>
+          <div class="status" id="time-${provider.id}">Response time: —</div>
+          <div class="output" id="output-${provider.id}">Awaiting output...</div>
+        `;
+        outputGrid.appendChild(card);
+      });
+    }
+
+    function setCardStatus(providerId, text, isError) {
+      const statusEl = document.getElementById(`status-${providerId}`);
+      if (!statusEl) return;
+      statusEl.textContent = text;
+      statusEl.classList.toggle("error", !!isError);
+    }
+
+    function setCardQuestion(providerId, question) {
+      const questionEl = document.getElementById(`question-${providerId}`);
+      if (questionEl) questionEl.textContent = `Question: ${question}`;
+    }
+
+    function setCardTime(providerId, ms) {
+      const timeEl = document.getElementById(`time-${providerId}`);
+      if (timeEl) timeEl.textContent = `Response time: ${ms} ms`;
+    }
+
+    function setCardModel(providerId, modelName) {
+      const modelEl = document.getElementById(`model-${providerId}`);
+      if (modelEl) modelEl.textContent = `Model: ${modelName || "—"}`;
+    }
+
+    function setCardOutput(providerId, text, isError) {
+      const outputEl = document.getElementById(`output-${providerId}`);
+      if (!outputEl) return;
+      outputEl.textContent = text;
+      outputEl.classList.toggle("error", !!isError);
+    }
+
+    async function loadPromptFile() {
+      promptStatus.textContent = "";
+      try {
+        const res = await fetch("../Prompt.txt");
+        if (!res.ok) {
+          throw new Error(`Prompt.txt not found (HTTP ${res.status})`);
+        }
+        const text = await res.text();
+        promptInput.value = text.trim();
+        promptStatus.textContent = "Loaded Prompt.txt";
+      } catch (err) {
+        promptStatus.textContent = `Failed to load Prompt.txt: ${err.message}`;
+      }
+    }
+
+    async function runProvider(provider, question, promptText, usePromptFileFlag) {
+      setCardStatus(provider.id, "Running...", false);
+      setCardQuestion(provider.id, question);
+      setCardTime(provider.id, "—");
+      setCardOutput(provider.id, "", false);
+
+      const start = performance.now();
+      try {
+        const res = await fetch(`${apiBaseInput.value}/api/llm-test`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            question: question,
+            provider: provider.id,
+            prompt_text: promptText || null,
+            use_prompt_file: usePromptFileFlag
+          })
+        });
+
+        const elapsed = Math.round(performance.now() - start);
+        setCardTime(provider.id, elapsed);
+
+        if (!res.ok) {
+          const detail = await res.text();
+          setCardStatus(provider.id, "Error", true);
+          setCardOutput(provider.id, detail, true);
+          return { provider: provider.id, elapsed_ms: elapsed, error: true };
+        }
+
+        const data = await res.json();
+        setCardStatus(provider.id, "Done", false);
+        setCardModel(provider.id, data.model || "—");
+        setCardOutput(provider.id, JSON.stringify(data.output, null, 2), false);
+        return { provider: provider.id, elapsed_ms: elapsed, error: false };
+      } catch (err) {
+        setCardStatus(provider.id, "Error", true);
+        setCardOutput(provider.id, err.message || String(err), true);
+        return { provider: provider.id, elapsed_ms: null, error: true };
+      }
+    }
+
+    async function runAll() {
+      runStatus.textContent = "";
+      const question = questionInput.value.trim();
+      if (!question) {
+        runStatus.textContent = "Enter a question to continue.";
+        return;
+      }
+
+      const promptText = promptInput.value.trim();
+      const usePromptFileFlag = usePromptFile.checked;
+
+      runAllBtn.disabled = true;
+      runStatus.textContent = "Running all LLMs...";
+
+      const overallStart = performance.now();
+      const results = await Promise.all(
+        providers.map(provider => runProvider(provider, question, promptText, usePromptFileFlag))
+      );
+      const overallElapsed = Math.round(performance.now() - overallStart);
+
+      const valid = results.filter(r => r && !r.error && typeof r.elapsed_ms === "number");
+      let fastestText = "Fastest: —";
+      if (valid.length) {
+        const fastest = valid.reduce((a, b) => (a.elapsed_ms <= b.elapsed_ms ? a : b));
+        const name = providers.find(p => p.id === fastest.provider)?.name || fastest.provider;
+        fastestText = `Fastest: ${name} (${fastest.elapsed_ms} ms)`;
+      }
+
+      runAllBtn.disabled = false;
+      runStatus.textContent = `Completed in ${overallElapsed} ms. ${fastestText}`;
+    }
+
+    loadPromptBtn.addEventListener("click", loadPromptFile);
+    runAllBtn.addEventListener("click", runAll);
+
+    renderCards();
+  </script>
+</body>
+</html>

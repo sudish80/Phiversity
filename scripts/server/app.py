@@ -20,6 +20,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from dotenv import load_dotenv
 
+from scripts.orchestrator.prompt_orchestrator import (
+    call_gemini_solver,
+    call_groq_solver,
+    call_openrouter_solver,
+)
+
 # Load environment variables from .env if present; allow overriding existing
 load_dotenv(override=True)
 
@@ -83,10 +89,24 @@ class RunRequest(BaseModel):
             raise ValueError("Custom prompt must be under 10000 characters")
 
 
+class LlmTestRequest(BaseModel):
+    question: str
+    provider: str
+    prompt_text: Optional[str] = None
+    use_prompt_file: bool = True
+
+    def validate_inputs(self):
+        if not self.question or len(self.question) > 5000:
+            raise ValueError("Question must be 1-5000 characters")
+        if self.prompt_text and len(self.prompt_text) > 20000:
+            raise ValueError("Prompt must be under 20000 characters")
+
+
 class Job:
     def __init__(self, job_id: str):
         self.id = job_id
-        self.status: str = "queued"  # queued | running | done | error
+        self.status: str = "queued"  # queued | running | completed | failed
+        self.error: str = ""  # Error message if status is failed
         self.log: str = ""
         self.video_path: Optional[Path] = None
         self.video_url: Optional[str] = None  # Cloud storage URL
@@ -111,6 +131,10 @@ class Job:
         with self._lock:
             self.status = status
 
+    def set_error(self, error: str):
+        with self._lock:
+            self.error = error
+
     def set_video(self, path: Optional[Path]):
         with self._lock:
             self.video_path = path
@@ -127,11 +151,25 @@ class Job:
         with self._lock:
             self.progress = max(0, min(100, percent))
 
+    def get_stage(self) -> str:
+        """Return stage text based on current progress percentage"""
+        if self.progress < 25:
+            return "Setting up video generation"
+        elif self.progress < 50:
+            return "Processing AI orchestration"
+        elif self.progress < 75:
+            return "Rendering animations"
+        elif self.progress < 100:
+            return "Finalizing video"
+        else:
+            return "Completed"
+
     def to_dict(self) -> Dict[str, Any]:
         with self._lock:
             return {
                 "job_id": self.id,
                 "status": self.status,
+                "error": self.error,
                 "video_path": str(self.video_path) if self.video_path else None,
                 "plan_path": str(self.plan_path) if self.plan_path else None,
                 "out_dir": str(self.out_dir) if self.out_dir else None,
@@ -187,6 +225,8 @@ def _run_and_capture(cmd: list[str], cwd: Path, job: Job) -> int:
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             bufsize=1,
             env=env,
         )
@@ -228,6 +268,47 @@ def _find_newest_mp4(base_dir: Path) -> Optional[Path]:
                 except FileNotFoundError:
                     continue
     return newest
+
+
+def _get_stage_from_progress(progress: int) -> str:
+    """Return stage text based on current progress percentage"""
+    if progress < 25:
+        return "Setting up video generation"
+    elif progress < 50:
+        return "Processing AI orchestration"
+    elif progress < 75:
+        return "Rendering animations"
+    elif progress < 100:
+        return "Finalizing video"
+    else:
+        return "Completed"
+
+
+def _load_prompt_text(req: LlmTestRequest) -> str:
+    if req.prompt_text and req.prompt_text.strip():
+        return req.prompt_text.strip()
+    if req.use_prompt_file:
+        for name in ("Prompt.txt", "prompt.txt"):
+            pth = ROOT / name
+            if pth.exists():
+                return pth.read_text(encoding="utf-8", errors="ignore").strip()
+    return ""
+
+
+def _build_solver_prompt(question: str, prompt_text: str) -> str:
+    if prompt_text:
+        return prompt_text + "\n\n" + f"User question: {question.strip()}"
+    return question.strip()
+
+
+def _get_provider_model_name(provider: str) -> str:
+    if provider == "gemini":
+        return os.getenv("GEMINI_MODEL", "gemini-1.5-flash-latest")
+    if provider == "groq":
+        return os.getenv("GROQ_MODEL", "mixtral-8x7b-32768")
+    if provider == "openrouter":
+        return os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.1-70b-instruct")
+    return "unknown"
 
 
 def _worker(job: Job, req: RunRequest):
@@ -282,15 +363,19 @@ def _worker(job: Job, req: RunRequest):
             job.append_log("[server] Starting LLM orchestration...\n")
             rc1 = _run_and_capture(cmd_1, ROOT, job)
             if rc1 != 0:
-                job.append_log("[server] Orchestration failed\n")
-                job.set_status("error")
+                err_msg = "Orchestration failed - LLM service encountered an error"
+                job.append_log(f"[server] {err_msg}\n")
+                job.set_error(err_msg)
+                job.set_status("failed")
                 return
             
             # Check timeout
             elapsed = time.time() - start_time
             if elapsed > job_timeout:
-                job.append_log(f"[server] Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)\n")
-                job.set_status("error")
+                err_msg = f"Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)"
+                job.append_log(f"[server] {err_msg}\n")
+                job.set_error(err_msg)
+                job.set_status("failed")
                 return
             job.set_progress(30)  # Orchestration completed
             job.append_log(f"[server] Orchestration completed ({elapsed:.1f}s elapsed)\n")
@@ -302,12 +387,16 @@ def _worker(job: Job, req: RunRequest):
                     plan_path = plan_candidate
                     job.set_plan(plan_path)
                 else:
-                    job.append_log(f"No orchestration and plan path invalid: {plan_candidate}\n")
-                    job.set_status("error")
+                    err_msg = f"Plan file not found: {plan_candidate}"
+                    job.append_log(f"{err_msg}\n")
+                    job.set_error(err_msg)
+                    job.set_status("failed")
                     return
-            except Exception:
-                job.append_log("Invalid plan path when orchestrate=False.\n")
-                job.set_status("error")
+            except Exception as e:
+                err_msg = f"Invalid plan path: {str(e)}"
+                job.append_log(f"{err_msg}\n")
+                job.set_error(err_msg)
+                job.set_status("failed")
                 return
 
         job.set_progress(40)
@@ -331,14 +420,18 @@ def _worker(job: Job, req: RunRequest):
         # Check timeout
         elapsed = time.time() - start_time
         if elapsed > job_timeout:
-            job.append_log(f"[server] Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)\n")
-            job.set_status("error")
+            err_msg = f"Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)"
+            job.append_log(f"[server] {err_msg}\n")
+            job.set_error(err_msg)
+            job.set_status("failed")
             _persist_job(job)
             return
             
         if rc2 != 0:
-            job.append_log("[server] Pipeline execution failed\n")
-            job.set_status("error")
+            err_msg = "Video rendering pipeline failed"
+            job.append_log(f"[server] {err_msg}\n")
+            job.set_error(err_msg)
+            job.set_status("failed")
             _persist_job(job)
             return
         
@@ -361,13 +454,17 @@ def _worker(job: Job, req: RunRequest):
                     job.append_log(f"[server] Using fallback video: {newest.name}\n")
                     job.set_video(newest)
                 else:
-                    job.append_log("[server] No video files found in output directory.\n")
-                    job.set_status("error")
+                    err_msg = "No video files found in output directory"
+                    job.append_log(f"[server] {err_msg}\n")
+                    job.set_error(err_msg)
+                    job.set_status("failed")
                     _persist_job(job)
                     return
             else:
-                job.append_log(f"[server] Output directory does not exist: {out_dir}\n")
-                job.set_status("error")
+                err_msg = f"Output directory does not exist: {out_dir}"
+                job.append_log(f"[server] {err_msg}\n")
+                job.set_error(err_msg)
+                job.set_status("failed")
                 _persist_job(job)
                 return
         else:
@@ -392,12 +489,14 @@ def _worker(job: Job, req: RunRequest):
         total_elapsed = time.time() - start_time
         job.append_log(f"[server] Job completed successfully in {total_elapsed:.1f}s\n")
         job.set_progress(100)  # Job completed
-        job.set_status("done")
+        job.set_status("completed")
         _persist_job(job)
     except Exception as e:
         elapsed = time.time() - start_time
-        job.append_log(f"[server] Unhandled exception after {elapsed:.1f}s: {e}\n")
-        job.set_status("error")
+        err_msg = f"Unhandled exception: {str(e)}"
+        job.append_log(f"[server] {err_msg} after {elapsed:.1f}s\n")
+        job.set_error(err_msg)
+        job.set_status("failed")
         _persist_job(job)
         
 @app.get("/health")
@@ -415,7 +514,44 @@ def run(req: RunRequest):
     job = jobs.create()
     t = threading.Thread(target=_worker, args=(job, req), daemon=True)
     t.start()
-    return {"job_id": job.id}
+    return {
+        "job_id": job.id,
+        "status_url": f"/api/jobs/{job.id}",
+    }
+
+
+@app.post("/api/llm-test")
+def llm_test(req: LlmTestRequest):
+    try:
+        req.validate_inputs()
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    provider = (req.provider or "").strip().lower()
+    if provider not in {"gemini", "groq", "openrouter"}:
+        raise HTTPException(status_code=400, detail="Invalid provider")
+
+    prompt_text = _load_prompt_text(req)
+    solver_prompt = _build_solver_prompt(req.question, prompt_text)
+
+    start = time.time()
+    try:
+        if provider == "gemini":
+            output = call_gemini_solver(solver_prompt, context_question=req.question)
+        elif provider == "groq":
+            output = call_groq_solver(solver_prompt, context_question=req.question)
+        else:
+            output = call_openrouter_solver(solver_prompt, context_question=req.question)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+    elapsed_ms = int((time.time() - start) * 1000)
+    return {
+        "provider": provider,
+        "model": _get_provider_model_name(provider),
+        "elapsed_ms": elapsed_ms,
+        "output": output,
+    }
 
 @app.get("/api/jobs/{job_id}")
 def job_status(job_id: str):
@@ -474,8 +610,10 @@ def job_status(job_id: str):
         return JSONResponse(
             content={
                 "job_id": job_id,
-                "status": data.get("status", "error"),
+                "status": data.get("status", "failed"),
+                "error": data.get("error", ""),
                 "progress": data.get("progress", 0),
+                "stage": _get_stage_from_progress(data.get("progress", 0)),
                 "video_url": video_url,
                 "plan_path": plan_path,
                 "plan_url": plan_url,
@@ -528,7 +666,9 @@ def job_status(job_id: str):
         content={
             "job_id": job.id,
             "status": job.status,
+            "error": job.error,
             "progress": job.progress,
+            "stage": job.get_stage(),
             "video_url": video_url,
             "plan_path": str(job.plan_path) if job.plan_path else None,
             "plan_url": plan_url,

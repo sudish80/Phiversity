@@ -1,0 +1,39 @@
+======================================
+PHIVERSITY - HOW TO START
+======================================
+
+If run_app.bat opens in Notepad, use one of these options:
+
+OPTION 1: Double-click run_app.vbs (EASIEST!)
+- This will properly execute the app
+- Your browser will open automatically
+
+OPTION 2: Right-click run_app.bat -> "Run as Administrator"
+- Right-click on run_app.bat
+- Select "Run as Administrator"
+
+OPTION 3: Use Command Prompt
+- Open Command Prompt (cmd.exe)
+- Type: run_app.bat
+- Press Enter
+
+OPTION 4: Use PowerShell
+- Open PowerSh
+- Press Enter
+
+======================================
+
+If .bat files keep opening in Notepad:
+1. Right-click any .bat file
+2. Select "Open with" -> "Choose another app"
+3. Select "Command Prompt" or "Windows Command Processor"
+4. Check "Always use this app to open .bat files"
+5. Click OK
+
+======================================
+
+After starting, the app will be at:
+http://127.0.0.1:8000
+
+======================================
+

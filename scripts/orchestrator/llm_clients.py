@@ -46,6 +46,24 @@ def get_ollama_client(base_url: Optional[str] = None, api_key: Optional[str] = N
     return OpenAI(api_key=key, base_url=url)
 
 
+def get_groq_client(api_key: Optional[str] = None, base_url: Optional[str] = None) -> OpenAI:
+    """Return an OpenAI-compatible client for GROQ."""
+    key = api_key or os.getenv("GROQ_API_KEY")
+    if not key:
+        raise RuntimeError("GROQ_API_KEY is not set")
+    url = base_url or os.getenv("GROQ_BASE_URL", "https://api.groq.com/openai/v1")
+    return OpenAI(api_key=key, base_url=url)
+
+
+def get_openrouter_client(api_key: Optional[str] = None, base_url: Optional[str] = None) -> OpenAI:
+    """Return an OpenAI-compatible client for OpenRouter."""
+    key = api_key or os.getenv("OPENROUTER_API_KEY")
+    if not key:
+        raise RuntimeError("OPENROUTER_API_KEY is not set")
+    url = base_url or os.getenv("OPENROUTER_BASE_URL", "https://openrouter.ai/api/v1")
+    return OpenAI(api_key=key, base_url=url)
+
+
 def get_gemini_model(api_key: Optional[str] = None, model_name: Optional[str] = None):
     """Return a configured Google Generative AI (Gemini) model instance.
 

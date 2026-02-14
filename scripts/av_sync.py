@@ -109,7 +109,10 @@ def combine_video_with_audio(video_path: Path, audio_paths: List[Path], out_path
             else:
                 # Large difference - trim video to match audio
                 print(f"[av_sync] Trimming video to match audio duration")
-                video = video.subclip(0, audio_duration)
+                if hasattr(video, "subclip"):
+                    video = video.subclip(0, audio_duration)
+                else:
+                    video = video.subclipped(0, audio_duration)
                 print(f"[av_sync] Video trimmed to {video.duration:.3f}s")
     else:
         print(f"[av_sync] ✓ Audio and video durations match (diff: {duration_diff:.3f}s)")
@@ -208,7 +211,11 @@ def prepend_intro_to_video(intro_path: Path, main_video_path: Path, out_path: Pa
         target_fps = main_clip.fps
         if abs(intro_clip.fps - main_clip.fps) > 0.1:
             print(f"[av_sync] Adjusting intro FPS from {intro_clip.fps} to {target_fps} for sync")
-            intro_clip = intro_clip.set_fps(target_fps)
+            # MoviePy v2 uses with_fps; v1 uses set_fps
+            if hasattr(intro_clip, "with_fps"):
+                intro_clip = intro_clip.with_fps(target_fps)
+            else:
+                intro_clip = intro_clip.set_fps(target_fps)
         
         print(f"[av_sync] Concatenating intro ({intro_clip.duration:.2f}s) + main ({main_clip.duration:.2f}s)")
         
