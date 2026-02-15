@@ -63,53 +63,152 @@ def _resolve_voice_engine() -> Tuple[str, bool]:
 
 
 def _clean_latex_from_voiceover(text: str) -> str:
-    """Remove or convert LaTeX formulas to readable text for TTS."""
+    """Convert LaTeX formulas to natural mathematical speech for TTS."""
     import re
     
-    # Replace common LaTeX commands with readable equivalents
+    # Special patterns for derivatives and calculus
+    # Match derivatives: d something / dt or d something / dx
+    result = re.sub(
+        r'\\frac\{d\s*\\mathbf\{([^}]+)\}\}\{d([^}]+)\}',
+        r'derivative of \1 with respect to \2',
+        text
+    )
+    result = re.sub(
+        r'\\frac\{d\s*([^}]+)\}\{d([^}]+)\}',
+        r'derivative of \1 with respect to \2',
+        result
+    )
+    
+    # Match partial derivatives: ∂something/∂t
+    result = re.sub(
+        r'\\frac\{\\partial\s*([^}]+)\}\{\\partial\s*([^}]+)\}',
+        r'partial derivative of \1 with respect to \2',
+        result
+    )
+    
+    # Match second derivatives
+    result = re.sub(
+        r'\\frac\{d\^2\s*([^}]+)\}\{d([^}]+)\^2\}',
+        r'second derivative of \1 with respect to \2',
+        result
+    )
+    
+    # General fractions (after derivatives to avoid conflicts)
+    result = re.sub(
+        r'\\frac\{([^}]+)\}\{([^}]+)\}',
+        r'\1 over \2',
+        result
+    )
+    
+    # Mathematical operators
     replacements = {
-        r'\\frac\{([^}]+)\}\{([^}]+)\}': r'\1 over \2',
         r'\\mathbf\{([^}]+)\}': r'\1',
         r'\\mathit\{([^}]+)\}': r'\1',
         r'\\mathrm\{([^}]+)\}': r'\1',
+        r'\\vec\{([^}]+)\}': r'vector \1',
+        r'\\hat\{([^}]+)\}': r'\1 hat',
+        r'\\bar\{([^}]+)\}': r'\1 bar',
+        r'\\dot\{([^}]+)\}': r'\1 dot',
+        r'\\ddot\{([^}]+)\}': r'\1 double dot',
+        r'\\sqrt\{([^}]+)\}': r'square root of \1',
+        r'\\int': 'integral',
+        r'\\sum': 'sum',
+        r'\\prod': 'product',
+        r'\\lim': 'limit',
+        r'\\nabla': 'del',
+        r'\\partial': 'partial',
         r'\\cdot': 'times',
         r'\\times': 'times',
         r'\\div': 'divided by',
+        r'\\pm': 'plus or minus',
+        r'\\mp': 'minus or plus',
         r'\\\{': '{',
         r'\\\}': '}',
-        r'\^': 'to the power',
-        r'\\Rightarrow': 'implies',
-        r'\\rightarrow': 'approaches',
-        r'\\approx': 'approximately equals',
-        r'\\neq': 'not equal to',
-        r'\\leq': 'less than or equal to',
-        r'\\geq': 'greater than or equal to',
-        r'\\infty': 'infinity',
-        r'\\alpha': 'alpha',
-        r'\\beta': 'beta',
-        r'\\gamma': 'gamma',
-        r'\\delta': 'delta',
-        r'\\epsilon': 'epsilon',
-        r'\\lambda': 'lambda',
-        r'\\mu': 'mu',
-        r'\\nu': 'nu',
-        r'\\pi': 'pi',
-        r'\\sigma': 'sigma',
-        r'\\tau': 'tau',
-        r'\\phi': 'phi',
-        r'\\omega': 'omega',
+        r'\^2': 'squared',
+        r'\^3': 'cubed',
+        r'\^': ' to the power of ',
+        r'_\{([^}]+)\}': r' sub \1',
+        r'_([a-zA-Z0-9])': r' sub \1',
+        r'\{\\rm\s+([^}]+)\}': r'\1',
     }
     
-    result = text
     for latex_pattern, readable in replacements.items():
         result = re.sub(latex_pattern, readable, result, flags=re.IGNORECASE)
     
-    # Remove any remaining backslashes and braces
-    result = re.sub(r'\\[a-zA-Z]+', '', result)
-    result = re.sub(r'[{}]', '', result)
-    result = re.sub(r'\s+', ' ', result).strip()
+    # Comparison and logic operators
+    operators = {
+        r'\\Rightarrow': 'implies that',
+        r'\\rightarrow': 'approaches',
+        r'\\Leftrightarrow': 'if and only if',
+        r'\\approx': 'is approximately equal to',
+        r'\\equiv': 'is equivalent to',
+        r'\\neq': 'is not equal to',
+        r'\\leq': 'is less than or equal to',
+        r'\\geq': 'is greater than or equal to',
+        r'\\ll': 'is much less than',
+        r'\\gg': 'is much greater than',
+        r'\\propto': 'is proportional to',
+        r'\\in': 'is in',
+        r'\\subset': 'is a subset of',
+        r'\\infty': 'infinity',
+    }
     
-    return result
+    for latex_op, readable_op in operators.items():
+        result = re.sub(latex_op, readable_op, result, flags=re.IGNORECASE)
+    
+    # Greek letters
+    greek_letters = {
+        r'\\alpha': 'alpha',
+        r'\\beta': 'beta',
+        r'\\gamma': 'gamma',
+        r'\\Gamma': 'capital gamma',
+        r'\\delta': 'delta',
+        r'\\Delta': 'delta',
+        r'\\epsilon': 'epsilon',
+        r'\\zeta': 'zeta',
+        r'\\eta': 'eta',
+        r'\\theta': 'theta',
+        r'\\Theta': 'capital theta',
+        r'\\kappa': 'kappa',
+        r'\\lambda': 'lambda',
+        r'\\Lambda': 'capital lambda',
+        r'\\mu': 'mu',
+        r'\\nu': 'nu',
+        r'\\xi': 'xi',
+        r'\\pi': 'pi',
+        r'\\Pi': 'capital pi',
+        r'\\rho': 'rho',
+        r'\\sigma': 'sigma',
+        r'\\Sigma': 'capital sigma',
+        r'\\tau': 'tau',
+        r'\\phi': 'phi',
+        r'\\Phi': 'capital phi',
+        r'\\chi': 'chi',
+        r'\\psi': 'psi',
+        r'\\Psi': 'capital psi',
+        r'\\omega': 'omega',
+        r'\\Omega': 'capital omega',
+    }
+    
+    for greek_latex, greek_name in greek_letters.items():
+        result = re.sub(greek_latex, greek_name, result, flags=re.IGNORECASE)
+    
+    # Remove any remaining LaTeX commands
+    result = re.sub(r'\\[a-zA-Z]+\*?', '', result)
+    
+    # Clean up braces, parentheses conversion
+    result = re.sub(r'\{', '', result)
+    result = re.sub(r'\}', '', result)
+    
+    # Clean up spacing
+    result = re.sub(r'\s+', ' ', result)
+    result = re.sub(r'\s*=\s*', ' equals ', result)
+    result = re.sub(r'\s*<\s*', ' is less than ', result)
+    result = re.sub(r'\s*>\s*', ' is greater than ', result)
+    result = re.sub(r'\s*\+\s*', ' plus ', result)
+    result = re.sub(r'\s*-\s*', ' minus ', result)
+    
+    return result.strip()
 
 
 def synthesize_scene_wise(data: Dict[str, Any], out_dir: Path) -> List[Path]:
