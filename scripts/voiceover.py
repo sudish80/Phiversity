@@ -62,6 +62,56 @@ def _resolve_voice_engine() -> Tuple[str, bool]:
     return engine, key_present
 
 
+def _clean_latex_from_voiceover(text: str) -> str:
+    """Remove or convert LaTeX formulas to readable text for TTS."""
+    import re
+    
+    # Replace common LaTeX commands with readable equivalents
+    replacements = {
+        r'\\frac\{([^}]+)\}\{([^}]+)\}': r'\1 over \2',
+        r'\\mathbf\{([^}]+)\}': r'\1',
+        r'\\mathit\{([^}]+)\}': r'\1',
+        r'\\mathrm\{([^}]+)\}': r'\1',
+        r'\\cdot': 'times',
+        r'\\times': 'times',
+        r'\\div': 'divided by',
+        r'\\\{': '{',
+        r'\\\}': '}',
+        r'\^': 'to the power',
+        r'\\Rightarrow': 'implies',
+        r'\\rightarrow': 'approaches',
+        r'\\approx': 'approximately equals',
+        r'\\neq': 'not equal to',
+        r'\\leq': 'less than or equal to',
+        r'\\geq': 'greater than or equal to',
+        r'\\infty': 'infinity',
+        r'\\alpha': 'alpha',
+        r'\\beta': 'beta',
+        r'\\gamma': 'gamma',
+        r'\\delta': 'delta',
+        r'\\epsilon': 'epsilon',
+        r'\\lambda': 'lambda',
+        r'\\mu': 'mu',
+        r'\\nu': 'nu',
+        r'\\pi': 'pi',
+        r'\\sigma': 'sigma',
+        r'\\tau': 'tau',
+        r'\\phi': 'phi',
+        r'\\omega': 'omega',
+    }
+    
+    result = text
+    for latex_pattern, readable in replacements.items():
+        result = re.sub(latex_pattern, readable, result, flags=re.IGNORECASE)
+    
+    # Remove any remaining backslashes and braces
+    result = re.sub(r'\\[a-zA-Z]+', '', result)
+    result = re.sub(r'[{}]', '', result)
+    result = re.sub(r'\s+', ' ', result).strip()
+    
+    return result
+
+
 def synthesize_scene_wise(data: Dict[str, Any], out_dir: Path) -> List[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
     engine, prefer_eleven = _resolve_voice_engine()
@@ -69,6 +119,8 @@ def synthesize_scene_wise(data: Dict[str, Any], out_dir: Path) -> List[Path]:
     audio_paths: List[Path] = []
     for idx, sc in enumerate(data.get("animation_plan", {}).get("scenes", []), start=1):
         text = sc.get("voiceover") or sc.get("description") or ""
+        # Clean LaTeX from voiceover for TTS
+        text = _clean_latex_from_voiceover(text)
         if not text.strip():
             # Fallback: synthesize from solution steps if available
             steps = (data.get("solution", {}) or {}).get("steps") or []
