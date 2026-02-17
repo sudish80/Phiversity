@@ -41,6 +41,23 @@ from .voiceover import (
 from .av_sync import combine_video_with_audio, prepend_intro_to_video, add_logo_watermark
 from .pipeline_validator import validate_animation_plan
 from .step_to_scene_mapper import StepToSceneMapper
+# Import enhanced step mapper for complete fix
+try:
+    from .step_mapper_fixed import EnhancedStepMapper
+except ImportError:
+    EnhancedStepMapper = None
+
+# Import ultimate overlap fixer (V4)
+try:
+    from .overlap_fix_v4 import UltimateOverlapFixer
+except ImportError:
+    UltimateOverlapFixer = None
+
+# Import optimized overlap fixer
+try:
+    from .optimized_overlap_fixer import OptimizedOverlapFixer
+except ImportError:
+    OptimizedOverlapFixer = None
 
 
 class TimeoutError(Exception):
@@ -78,12 +95,46 @@ def run_pipeline(
     json_path = workdir / "solution_plan.json"
     json_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
     
-    # Step 1A: Ensure every solution step has a scene and fix timeline overlaps
-    print("[pipeline] Step 1A/5: Mapping solution steps to scenes...")
-    data, mapper_warnings = StepToSceneMapper.validate_and_fix_all(data)
-    if mapper_warnings:
-        for warning in mapper_warnings:
-            print(f"[pipeline]   {warning}")
+    # Step 1A: Ensure every solution step has a scene and fix timeline/spatial overlaps
+    print("[pipeline] Step 1A/5: Validating and fixing steps, timelines, and overlaps...")
+    
+    # Use enhanced mapper if available for complete fix
+    if EnhancedStepMapper:
+        print("[pipeline] Using ENHANCED step mapper for complete fix...")
+        mapper = EnhancedStepMapper()
+        data, mapper_warnings = mapper.process_solution(data)
+        if mapper_warnings:
+            for warning in mapper_warnings:
+                print(f"[pipeline]   {warning}")
+    else:
+        data, mapper_warnings = StepToSceneMapper.validate_and_fix_all(data)
+        if mapper_warnings:
+            for warning in mapper_warnings:
+                print(f"[pipeline]   {warning}")
+    
+    # Step 1B: Apply ULTIMATE overlap fixer for guaranteed no overlaps
+    if UltimateOverlapFixer:
+        print("[pipeline] Applying ULTIMATE overlap fixer (V4)...")
+        fixer = UltimateOverlapFixer()
+        data, overlap_fixes = fixer.process_animation_plan(data)
+        if overlap_fixes:
+            print(f"[pipeline] Applied {len(overlap_fixes)} overlap fixes:")
+            for fix in overlap_fixes[:10]:  # Show first 10
+                print(f"[pipeline]   {fix}")
+            if len(overlap_fixes) > 10:
+                print(f"[pipeline]   ... and {len(overlap_fixes) - 10} more fixes")
+    
+    # Step 1C: Apply OPTIMIZED overlap fixer for final guarantee
+    if OptimizedOverlapFixer:
+        print("[pipeline] Applying OPTIMIZED overlap fixer...")
+        fixer = OptimizedOverlapFixer()
+        data, opt_fixes = fixer.process(data)
+        if opt_fixes:
+            print(f"[pipeline] Applied {len(opt_fixes)} optimized fixes:")
+            for fix in opt_fixes[:10]:
+                print(f"[pipeline]   {fix}")
+            if len(opt_fixes) > 10:
+                print(f"[pipeline]   ... and {len(opt_fixes) - 10} more fixes")
     
     # Save fixed JSON
     json_path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")

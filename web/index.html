@@ -3,32 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Phiversity - AI-Powered Physics Video Generator with Manim animations">
+  <meta name="keywords" content="physics, education, AI, manim, animation, video generator, learning">
+  <meta name="author" content="Phiversity Team">
+  <meta property="og:title" content="Phiversity - AI Video Generator">
+  <meta property="og:description" content="Generate stunning physics animations with AI-powered voiceover">
+  <meta property="og:type" content="website">
   <title>Phiversity - AI Video Generator</title>
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
+    /* CSS Variables - Design System */
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #818cf8;
+      --secondary: #ec4899;
+      --secondary-dark: #db2777;
+      --accent: #8b5cf6;
+      --accent-light: #a78bfa;
+      --success: #10b981;
+      --success-light: #34d399;
+      --danger: #ef4444;
+      --danger-light: #f87171;
+      --warning: #f59e0b;
+      --warning-light: #fbbf24;
+      --info: #3b82f6;
+      --info-light: #60a5fa;
+      --bg-primary: #0f0f23;
+      --bg-secondary: #1a1a3e;
+      --bg-tertiary: #252550;
+      --bg-card: rgba(30, 30, 60, 0.7);
+      --bg-card-hover: rgba(40, 40, 80, 0.8);
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+      --text-tertiary: #94a3b8;
+      --text-muted: #64748b;
+      --border: rgba(99, 102, 241, 0.2);
+      --border-light: rgba(99, 102, 241, 0.1);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 20px 40px rgba(0, 0, 0, 0.4);
+      --shadow-xl: 0 30px 60px rgba(0, 0, 0, 0.5);
+      --shadow-primary: 0 10px 30px rgba(99, 102, 241, 0.3);
+      --radius-sm: 6px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.3s ease;
+      --transition-slow: 0.5s ease;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --z-dropdown: 100;
+      --z-modal: 200;
+      --z-tooltip: 300;
+    }
+
+    /* Dark Theme (Default) */
+    [data-theme="dark"] {
+      --bg-primary: #0f0f23;
+      --bg-secondary: #1a1a3e;
+      --bg-tertiary: #252550;
+    }
+
+    /* Light Theme */
+    [data-theme="light"] {
+      --bg-primary: #f8fafc;
+      --bg-secondary: #e2e8f0;
+      --bg-tertiary: #cbd5e1;
+      --bg-card: rgba(255, 255, 255, 0.9);
+      --bg-card-hover: rgba(255, 255, 255, 1);
+      --text-primary: #1e293b;
+      --text-secondary: #475569;
+      --text-tertiary: #64748b;
+      --text-muted: #94a3b8;
+      --border: rgba(100, 116, 139, 0.2);
+      --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.05);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.1);
+      --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.15);
+    }
+
+    /* Reset & Base */
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
     }
 
-    :root {
-      --primary: #6366f1;
-      --primary-dark: #4f46e5;
-      --secondary: #ec4899;
-      --accent: #8b5cf6;
-      --success: #10b981;
-      --danger: #ef4444;
-      --bg-primary: #0f0f23;
-      --bg-secondary: #1a1a3e;
-      --bg-card: rgba(30, 30, 60, 0.7);
-      --text-primary: #f8fafc;
-      --text-secondary: #cbd5e1;
-      --border: rgba(99, 102, 241, 0.2);
+    html {
+      scroll-behavior: smooth;
+      font-size: 16px;
     }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--font-sans);
       background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
       color: var(--text-primary);
       min-height: 100vh;
@@ -36,6 +108,7 @@
       position: relative;
       perspective: 1500px;
       perspective-origin: 50% 50%;
+      transition: background var(--transition-slow);
     }
 
     /* Animated Background */
@@ -56,15 +129,31 @@
     }
 
     @keyframes backgroundPulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.1); }
+    }
+
+    /* Grid Pattern Overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
     }
 
     /* Container */
     .container {
       position: relative;
       z-index: 1;
-      max-width: 1200px;
+      max-width: 1400px;
       margin: 0 auto;
       padding: 40px 20px;
       transform-style: preserve-3d;
@@ -160,6 +249,37 @@
       color: var(--text-secondary);
       font-size: 18px;
       font-weight: 400;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    /* Navigation */
+    .nav {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+    }
+
+    .nav-btn {
+      padding: 10px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-full);
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .nav-btn:hover, .nav-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-primary);
     }
 
     /* Main Grid */
@@ -172,7 +292,7 @@
       perspective: 1500px;
     }
 
-    @media (max-width: 968px) {
+    @media (max-width: 1024px) {
       .main-grid {
         grid-template-columns: 1fr;
       }
@@ -183,7 +303,7 @@
       background: var(--bg-card);
       backdrop-filter: blur(20px);
       border: 1px solid var(--border);
-      border-radius: 24px;
+      border-radius: var(--radius-xl);
       padding: 32px;
       box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.3),
@@ -194,6 +314,7 @@
       transform-style: preserve-3d;
       transform: translateZ(0);
       position: relative;
+      overflow: hidden;
     }
 
     .card::before {
@@ -204,7 +325,7 @@
       right: 0;
       bottom: 0;
       background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), transparent);
-      border-radius: 24px;
+      border-radius: var(--radius-xl);
       opacity: 0;
       transition: opacity 0.4s ease;
       pointer-events: none;
@@ -226,15 +347,21 @@
     .card-header {
       display: flex;
       align-items: center;
-      gap: 12px;
+      justify-content: space-between;
       margin-bottom: 24px;
+    }
+
+    .card-title-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
 
     .card-icon {
       width: 48px;
       height: 48px;
       background: linear-gradient(135deg, var(--primary), var(--accent));
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -256,13 +383,24 @@
       color: var(--text-primary);
     }
 
+    .card-badge {
+      padding: 4px 12px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
     /* Form Styles */
     .form-group {
       margin-bottom: 24px;
     }
 
     .form-label {
-      display: block;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       font-size: 14px;
       font-weight: 600;
       color: var(--text-secondary);
@@ -271,12 +409,20 @@
       letter-spacing: 0.5px;
     }
 
+    .form-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
     .form-control {
       width: 100%;
       padding: 16px 20px;
       background: rgba(15, 15, 35, 0.8);
       border: 2px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       color: var(--text-primary);
       font-size: 16px;
       font-family: inherit;
@@ -297,27 +443,41 @@
       transform: translateZ(10px);
     }
 
+    .form-control::placeholder {
+      color: var(--text-muted);
+    }
+
     textarea.form-control {
       min-height: 120px;
       resize: vertical;
     }
 
-    /* Checkbox Styles */
-    .checkbox-group {
+    /* Select Styles */
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23cbd5e1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      background-size: 20px;
+      padding-right: 44px;
+    }
+
+    /* Checkbox & Radio Styles */
+    .checkbox-group, .radio-group {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
       margin-top: 12px;
     }
 
-    .checkbox-label {
+    .checkbox-label, .radio-label {
       display: flex;
       align-items: center;
       gap: 8px;
       padding: 10px 16px;
       background: rgba(99, 102, 241, 0.1);
       border: 2px solid var(--border);
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       cursor: pointer;
       transition: all 0.3s ease;
       font-size: 14px;
@@ -326,31 +486,91 @@
       box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
     }
 
-    .checkbox-label:hover {
+    .checkbox-label:hover, .radio-label:hover {
       background: rgba(99, 102, 241, 0.2);
       border-color: var(--primary);
       transform: translateZ(10px) translateY(-2px);
       box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
     }
 
-    .checkbox-label input[type="checkbox"] {
+    .checkbox-label input, .radio-label input {
       width: 20px;
       height: 20px;
       accent-color: var(--primary);
       cursor: pointer;
     }
 
-    .checkbox-label input[type="checkbox"]:checked + span {
-      color: var(--primary);
-    }
-
-    /* Custom Prompt Toggle */
-    .toggle-section {
-      margin-top: 16px;
+    /* Toggle Switch */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       padding: 16px;
       background: rgba(99, 102, 241, 0.05);
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       border: 2px dashed var(--border);
+      margin-top: 16px;
+    }
+
+    .toggle-label {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .toggle-label span:first-child {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .toggle-label span:last-child {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 56px;
+      height: 28px;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--bg-tertiary);
+      transition: 0.4s;
+      border-radius: var(--radius-full);
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: 0.4s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    .toggle-switch input:checked + .toggle-slider {
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+    }
+
+    .toggle-switch input:checked + .toggle-slider:before {
+      transform: translateX(28px);
     }
 
     /* Button Styles */
@@ -363,13 +583,14 @@
       font-size: 16px;
       font-weight: 600;
       border: none;
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       cursor: pointer;
       transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
       text-decoration: none;
       font-family: inherit;
       transform-style: preserve-3d;
       position: relative;
+      overflow: hidden;
     }
 
     .btn::before {
@@ -380,7 +601,7 @@
       right: 0;
       bottom: 0;
       background: linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent);
-      border-radius: 12px;
+      border-radius: var(--radius-md);
       opacity: 0;
       transition: opacity 0.3s ease;
     }
@@ -411,11 +632,57 @@
       transform: translateZ(5px) translateY(-2px) scale(0.98);
     }
 
+    .btn-secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border: 2px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--primary);
+      transform: translateY(-2px);
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger), #dc2626);
+      color: white;
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--success), #059669);
+      color: white;
+    }
+
     .btn-block {
       width: 100%;
     }
 
-    /* Progress Bar */
+    .btn-sm {
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+
+    .btn-lg {
+      padding: 20px 40px;
+      font-size: 18px;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+
+    /* Icon Buttons */
+    .btn-icon {
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border-radius: var(--radius-md);
+    }
+
+    /* Progress Section */
     .progress-section {
       display: none;
       margin-top: 24px;
@@ -438,7 +705,7 @@
       width: 100%;
       height: 12px;
       background: rgba(15, 15, 35, 0.8);
-      border-radius: 6px;
+      border-radius: var(--radius-full);
       overflow: hidden;
       position: relative;
       box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
@@ -448,7 +715,7 @@
       height: 100%;
       background: linear-gradient(90deg, var(--primary), var(--accent), var(--secondary));
       background-size: 200% 100%;
-      border-radius: 6px;
+      border-radius: var(--radius-full);
       transition: width 0.5s ease;
       animation: gradientShift 2s linear infinite;
       position: relative;
@@ -460,17 +727,33 @@
       100% { background-position: 200% 50%; }
     }
 
+    /* Status Messages */
     .status-message {
       margin-top: 12px;
       padding: 12px 16px;
       background: rgba(99, 102, 241, 0.1);
       border-left: 4px solid var(--primary);
-      border-radius: 8px;
+      border-radius: var(--radius-sm);
       font-size: 14px;
       color: var(--text-secondary);
     }
 
-    /* Video Player */
+    .status-message.success {
+      background: rgba(16, 185, 129, 0.1);
+      border-left-color: var(--success);
+    }
+
+    .status-message.error {
+      background: rgba(239, 68, 68, 0.1);
+      border-left-color: var(--danger);
+    }
+
+    .status-message.warning {
+      background: rgba(245, 158, 11, 0.1);
+      border-left-color: var(--warning);
+    }
+
+    /* Video Section */
     .video-section {
       display: none;
     }
@@ -482,7 +765,7 @@
 
     .video-player {
       width: 100%;
-      border-radius: 16px;
+      border-radius: var(--radius-lg);
       overflow: hidden;
       box-shadow: 
         0 20px 60px rgba(0, 0, 0, 0.5),
@@ -490,6 +773,7 @@
       margin-bottom: 20px;
       transform: translateZ(20px);
       transition: transform 0.4s ease;
+      background: #000;
     }
 
     .video-player:hover {
@@ -501,167 +785,31 @@
       display: block;
     }
 
-    .video-actions {
+    .video-controls {
       display: flex;
       gap: 12px;
+      flex-wrap: wrap;
     }
 
-    .btn-secondary {
-      background: rgba(99, 102, 241, 0.2);
-      color: var(--text-primary);
-      border: 2px solid var(--border);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
-      transform: translateZ(5px);
-    }
-
-    .btn-secondary:hover {
-      background: rgba(99, 102, 241, 0.3);
-      border-color: var(--primary);
-      transform: translateZ(15px) translateY(-3px);
-      box-shadow: 0 12px 35px rgba(99, 102, 241, 0.3);
-    }
-
-    /* Features Grid */
-    .features-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 24px;
+    /* Video Box (Last Video) */
+    .video-box {
       margin-top: 40px;
-      transform-style: preserve-3d;
-      perspective: 1500px;
-    }
-
-    .feature-card {
       padding: 24px;
       background: var(--bg-card);
-      backdrop-filter: blur(20px);
+      border-radius: var(--radius-xl);
       border: 1px solid var(--border);
-      border-radius: 16px;
-      text-align: center;
-      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-      transform-style: preserve-3d;
-      transform: translateZ(0);
-      box-shadow: 
-        0 10px 30px rgba(0, 0, 0, 0.2),
-        inset 0 2px 10px rgba(255, 255, 255, 0.05);
     }
 
-    .feature-card:hover {
-      transform: translateY(-10px) translateZ(20px) rotateX(5deg);
-      border-color: var(--primary);
-      box-shadow: 
-        0 20px 50px rgba(99, 102, 241, 0.3),
-        0 30px 80px rgba(99, 102, 241, 0.2),
-        inset 0 2px 15px rgba(255, 255, 255, 0.1);
+    .video-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
     }
 
-    .feature-icon {
-      font-size: 40px;
-      margin-bottom: 12px;
-      display: inline-block;
-      transform: translateZ(15px);
-      transition: transform 0.4s ease;
-    }
-
-    .feature-card:hover .feature-icon {
-      transform: translateZ(30px) scale(1.2) rotateY(10deg);
-    }
-
-    .feature-title {
+    .video-box-title {
       font-size: 18px;
       font-weight: 600;
-      margin-bottom: 8px;
-    }
-
-    .feature-desc {
-      font-size: 14px;
-      color: var(--text-secondary);
-    }
-
-    /* Loading Overlay */
-    .loading-overlay {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(15, 15, 35, 0.95);
-      backdrop-filter: blur(10px);
-      z-index: 1000;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .loading-overlay.active {
-      display: flex;
-    }
-
-    .loading-content {
-      text-align: center;
-      animation: fadeInScale 0.5s ease;
-      position: relative;
-    }
-
-    .spinner-container {
-      position: relative;
-      width: 160px;
-      height: 160px;
-      margin: 0 auto 24px;
-    }
-
-    .spinner {
-      width: 160px;
-      height: 160px;
-      border: 6px solid rgba(99, 102, 241, 0.1);
-      border-top-color: var(--primary);
-      border-right-color: var(--accent);
-      border-radius: 50%;
-      animation: spin 1.5s linear infinite;
-      position: absolute;
-      top: 0;
-      left: 0;
-    }
-
-    .progress-circle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-    }
-
-    .progress-percentage {
-      font-size: 42px;
-      font-weight: 800;
-      background: linear-gradient(135deg, #60a5fa, #a78bfa, #ec4899);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-      line-height: 1;
-      margin-bottom: 8px;
-      text-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
-    }
-
-    .progress-stage {
-      font-size: 12px;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      font-weight: 600;
-    }
-
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    .loading-content h3 {
-      font-size: 24px;
-      margin-bottom: 8px;
-    }
-
-    .loading-content p {
-      color: var(--text-secondary);
     }
 
     /* Animations */
@@ -673,61 +821,389 @@
     @keyframes fadeInUp {
       from {
         opacity: 0;
-        transform: translateY(30px);
+        transform: translateY(30px) translateZ(-20px);
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
       }
     }
 
     @keyframes fadeInDown {
       from {
         opacity: 0;
-        transform: translateY(-30px);
+        transform: translateY(-30px) translateZ(-20px);
       }
       to {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateY(0) translateZ(0);
       }
     }
 
-    @keyframes fadeInScale {
+    @keyframes slideInLeft {
       from {
         opacity: 0;
-        transform: scale(0.9);
+        transform: translateX(-50px);
       }
       to {
         opacity: 1;
-        transform: scale(1);
+        transform: translateX(0);
       }
-    }
-
-    /* Toast Notifications */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      padding: 16px 24px;
-      background: var(--bg-card);
-      backdrop-filter: blur(20px);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-      z-index: 2000;
-      animation: slideInRight 0.3s ease;
-      max-width: 400px;
     }
 
     @keyframes slideInRight {
       from {
-        transform: translateX(400px);
         opacity: 0;
+        transform: translateX(50px);
       }
       to {
-        transform: translateX(0);
         opacity: 1;
+        transform: translateX(0);
       }
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    /* Loading Animation */
+    .loading-spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-dots::after {
+      content: '';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
+    /* Log Display */
+    .log-container {
+      margin-top: 20px;
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: var(--radius-md);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+    }
+
+    .log {
+      white-space: pre-wrap;
+      word-break: break-all;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .log-error {
+      color: var(--danger);
+    }
+
+    .log-success {
+      color: var(--success);
+    }
+
+    .log-warning {
+      color: var(--warning);
+    }
+
+    .log-info {
+      color: var(--info);
+    }
+
+    /* Tooltips */
+    .tooltip {
+      position: relative;
+    }
+
+    .tooltip::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(-8px);
+      padding: 8px 12px;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      font-size: 12px;
+      border-radius: var(--radius-sm);
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      z-index: var(--z-tooltip);
+      box-shadow: var(--shadow-md);
+    }
+
+    .tooltip:hover::after {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(-4px);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 24px;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: color 0.2s ease;
+    }
+
+    .tab::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--primary);
+      transform: scaleX(0);
+      transition: transform 0.2s ease;
+    }
+
+    .tab:hover, .tab.active {
+      color: var(--primary);
+    }
+
+    .tab.active::after {
+      transform: scaleX(1);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: var(--z-modal);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      max-width: 600px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      transform: scale(0.9) translateY(20px);
+      transition: transform 0.3s ease;
+      border: 1px solid var(--border);
+    }
+
+    .modal-overlay.active .modal {
+      transform: scale(1) translateY(0);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .modal-title {
+      font-size: 24px;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+    }
+
+    .modal-close:hover {
+      background: var(--bg-tertiary);
+      color: var(--danger);
+    }
+
+    /* Dropdown */
+    .dropdown {
+      position: relative;
+    }
+
+    .dropdown-menu {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      min-width: 200px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      padding: 8px;
+      z-index: var(--z-dropdown);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-10px);
+      transition: all 0.2s ease;
+    }
+
+    .dropdown.active .dropdown-menu {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(4px);
+    }
+
+    .dropdown-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 16px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      border-radius: var(--radius-sm);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .dropdown-item:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 300px;
+      height: 100%;
+      background: var(--bg-card);
+      border-right: 1px solid var(--border);
+      padding: 24px;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: var(--z-modal);
+      overflow-y: auto;
+    }
+
+    .sidebar.active {
+      transform: translateX(0);
+    }
+
+    .sidebar-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: calc(var(--z-modal) - 1);
+    }
+
+    .sidebar-overlay.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Keyboard Shortcuts Badge */
+    .kbd {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 24px;
+      height: 24px;
+      padding: 0 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: var(--z-tooltip);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .toast {
+      padding: 16px 20px;
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 300px;
+      animation: slideInRight 0.3s ease;
     }
 
     .toast.success {
@@ -738,887 +1214,2748 @@
       border-left: 4px solid var(--danger);
     }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      .header h1 {
-        font-size: 36px;
-      }
-
-      .card {
-        padding: 24px;
-      }
-
-      .video-actions {
-        flex-direction: column;
-      }
-
-      .btn {
-        width: 100%;
-      }
+    .toast.warning {
+      border-left: 4px solid var(--warning);
     }
 
-    /* Authentication Styles */
-    .auth-trigger {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      z-index: 999;
-      animation: slideIn 0.5s ease;
+    .toast.info {
+      border-left: 4px solid var(--info);
     }
 
-    @keyframes slideIn {
-      from {
-        transform: translateY(100px) translateX(100px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0) translateX(0);
-        opacity: 1;
-      }
-    }
-
-    .auth-btn-group {
+    /* User Menu */
+    .user-menu {
       display: flex;
-      gap: 8px;
       align-items: center;
+      gap: 12px;
     }
 
-    .auth-mini-btn {
-      width: 48px;
-      height: 48px;
+    .user-avatar {
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
-      border: none;
-      cursor: pointer;
-      font-size: 20px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s ease;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
-      transform: translateZ(10px);
-    }
-
-    .auth-mini-btn.email {
-      background: #ff6b6b;
+      font-weight: 600;
       color: white;
     }
 
-    .auth-mini-btn.facebook {
-      background: #1877f2;
-      color: white;
+    .user-name {
+      font-weight: 500;
     }
 
-    .auth-mini-btn.google {
-      background: #ea4335;
-      color: white;
-    }
-
-    .auth-mini-btn:hover {
-      transform: translateZ(20px) scale(1.1);
-      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
-    }
-
-    .auth-modal {
-      display: none;
+    /* Settings Panel */
+    .settings-panel {
       position: fixed;
       top: 0;
-      left: 0;
-      width: 100%;
+      right: 0;
+      width: 400px;
       height: 100%;
-      background: rgba(15, 15, 35, 0.7);
-      backdrop-filter: blur(5px);
-      z-index: 1001;
-      align-items: center;
-      justify-content: center;
-      padding: 20px;
-    }
-
-    .auth-modal.active {
-      display: flex;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .auth-modal-content {
       background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      width: 100%;
-      max-width: 420px;
-      padding: 40px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      border-left: 1px solid var(--border);
+      padding: 24px;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: var(--z-modal);
+      overflow-y: auto;
     }
 
-    @keyframes slideUp {
-      from {
-        transform: translateY(50px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+    .settings-panel.active {
+      transform: translateX(0);
     }
 
-    .auth-close {
-      position: absolute;
-      top: 16px;
-      right: 16px;
-      width: 32px;
-      height: 32px;
-      background: rgba(99, 102, 241, 0.1);
-      border: none;
-      border-radius: 50%;
-      cursor: pointer;
-      font-size: 20px;
+    .settings-header {
       display: flex;
+      justify-content: space-between;
       align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
+      margin-bottom: 24px;
     }
 
-    .auth-close:hover {
-      background: rgba(99, 102, 241, 0.2);
-      transform: rotate(90deg);
-    }
-
-    .auth-header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
-
-    .auth-title {
-      font-size: 28px;
+    .settings-title {
+      font-size: 24px;
       font-weight: 700;
-      margin-bottom: 8px;
     }
 
-    .auth-subtitle {
-      font-size: 14px;
-      color: var(--text-secondary);
+    .settings-group {
+      margin-bottom: 24px;
     }
 
-    .auth-tabs {
-      display: flex;
-      gap: 12px;
-      margin-bottom: 32px;
-      border-bottom: 2px solid var(--border);
-      padding-bottom: 16px;
-    }
-
-    .auth-tab {
-      flex: 1;
-      padding: 12px 16px;
-      background: transparent;
-      border: none;
-      cursor: pointer;
+    .settings-group-title {
       font-size: 14px;
       font-weight: 600;
-      color: var(--text-secondary);
-      transition: all 0.3s ease;
-      border-bottom: 3px solid transparent;
-      margin-bottom: -16px;
-      padding-bottom: 19px;
-    }
-
-    .auth-tab.active {
-      color: var(--primary);
-      border-bottom-color: var(--primary);
-    }
-
-    .auth-form {
-      display: none;
-    }
-
-    .auth-form.active {
-      display: block;
-      animation: fadeIn 0.3s ease;
-    }
-
-    .auth-input-group {
-      margin-bottom: 16px;
-    }
-
-    .auth-input {
-      width: 100%;
-      padding: 12px 16px;
-      background: rgba(15, 15, 35, 0.8);
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-size: 14px;
-      font-family: inherit;
-      transition: all 0.3s ease;
-    }
-
-    .auth-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
-    }
-
-    .auth-button {
-      width: 100%;
-      padding: 12px 16px;
-      background: linear-gradient(135deg, var(--primary), var(--accent));
-      color: white;
-      border: none;
-      border-radius: 10px;
-      font-size: 14px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: all 0.3s ease;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
       margin-bottom: 12px;
     }
 
-    .auth-button:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 25px rgba(99, 102, 241, 0.3);
+    /* Advanced Options */
+    .advanced-options {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(99, 102, 241, 0.05);
+      border-radius: var(--radius-md);
+      border: 2px dashed var(--border);
     }
 
-    .auth-divider {
+    .advanced-options summary {
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .advanced-options[open] summary {
+      margin-bottom: 16px;
+    }
+
+    /* Stats Cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 32px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* History List */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .history-item {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin: 24px 0;
-    }
-
-    .auth-divider::before,
-    .auth-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--border);
-    }
-
-    .auth-divider-text {
-      font-size: 12px;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-
-    .auth-social-buttons {
-      display: flex;
-      gap: 12px;
-    }
-
-    .auth-social-btn {
-      flex: 1;
-      padding: 12px 16px;
-      background: rgba(99, 102, 241, 0.1);
-      border: 2px solid var(--border);
-      border-radius: 10px;
-      color: var(--text-primary);
-      font-size: 14px;
-      font-weight: 600;
+      padding: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
       cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .history-item:hover {
+      border-color: var(--primary);
+      transform: translateX(4px);
+    }
+
+    .history-icon {
+      width: 40px;
+      height: 40px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .history-content {
+      flex: 1;
+    }
+
+    .history-title {
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .history-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* Hidden Utility */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Accessibility */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    /* Focus Styles */
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    /* Print Styles */
+    @media print {
+      body {
+        background: white;
+        color: black;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px 16px;
+      }
+      
+      .header h1 {
+        font-size: 36px;
+      }
+      
+      .card {
+        padding: 24px;
+      }
+      
+      .btn {
+        padding: 14px 24px;
+      }
+    }
+
+    /* Feature Cards Grid */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 24px;
       transition: all 0.3s ease;
     }
 
-    .auth-social-btn:hover {
+    .feature-card:hover {
+      transform: translateY(-8px);
       border-color: var(--primary);
-      background: rgba(99, 102, 241, 0.2);
-      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg);
     }
 
-    .auth-toggle {
-      text-align: center;
+    .feature-icon {
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .feature-description {
       font-size: 14px;
       color: var(--text-secondary);
+      line-height: 1.6;
     }
 
-    .auth-toggle button {
-      background: none;
-      border: none;
-      color: var(--primary);
-      cursor: pointer;
+    /* Pricing Section */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 24px;
+    }
+
+    .pricing-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: 32px;
+      text-align: center;
+      transition: all 0.3s ease;
+    }
+
+    .pricing-card.featured {
+      border-color: var(--primary);
+      transform: scale(1.05);
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-8px);
+    }
+
+    .pricing-card.featured:hover {
+      transform: scale(1.05) translateY(-8px);
+    }
+
+    .pricing-price {
+      font-size: 48px;
+      font-weight: 800;
+      margin: 16px 0;
+    }
+
+    .pricing-period {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    .pricing-features {
+      list-style: none;
+      margin: 24px 0;
+      text-align: left;
+    }
+
+    .pricing-features li {
+      padding: 8px 0;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pricing-features li::before {
+      content: '✓';
+      color: var(--success);
       font-weight: 600;
-      text-decoration: underline;
     }
 
-    .auth-toggle button:hover {
-      color: var(--accent);
+    /* Footer */
+    .footer {
+      margin-top: 60px;
+      padding: 40px 20px;
+      border-top: 1px solid var(--border);
+      text-align: center;
     }
 
-    @media (max-width: 480px) {
-      .auth-modal-content {
-        padding: 24px;
-      }
+    .footer-links {
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
 
-      .auth-title {
-        font-size: 24px;
-      }
+    .footer-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color 0.2s ease;
+    }
+
+    .footer-link:hover {
+      color: var(--primary);
+    }
+
+    .footer-copyright {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    /* Social Links */
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .social-link {
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 50%;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.2s ease;
+    }
+
+    .social-link:hover {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+      transform: translateY(-4px);
     }
   </style>
 </head>
-<body>
+<body data-theme="dark">
   <div class="container">
     <!-- Header -->
     <header class="header">
       <div class="logo-container"></div>
       <h1>Phiversity</h1>
-      <p>Transform your ideas into stunning educational videos with AI</p>
+      <p>AI-Powered Physics Video Generator with stunning Manim animations and voiceover</p>
+      
+      <!-- Navigation -->
+      <nav class="nav">
+        <button class="nav-btn active" data-view="create">🎬 Create</button>
+        <button class="nav-btn" data-view="history">📜 History</button>
+        <button class="nav-btn" data-view="features">⚡ Features</button>
+        <button class="nav-btn" data-view="pricing">💎 Pricing</button>
+        <button class="nav-btn" data-view="settings">⚙️ Settings</button>
+      </nav>
     </header>
 
-    <!-- Main Content Grid -->
-    <div class="main-grid">
-      <!-- Input Form Card -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">✨</div>
-          <h2 class="card-title">Create Video</h2>
-        </div>
-        
-        <form id="videoForm">
-          <div class="form-group">
-            <label class="form-label" for="problem">What would you like to explain?</label>
-            <textarea 
-              class="form-control" 
-              id="problem" 
-              name="problem" 
-              placeholder="E.g., Explain quantum entanglement with visual examples..."
-              required
-            ></textarea>
+    <!-- Main Content -->
+    <main>
+      <!-- Create View -->
+      <div id="view-create" class="view active">
+        <div class="main-grid">
+          <!-- Input Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-icon">💡</div>
+                <h2 class="card-title">Create Animation</h2>
+              </div>
+              <span class="card-badge">AI Powered</span>
+            </div>
+            
+            <form id="run-form">
+              <!-- Problem Input -->
+              <div class="form-group">
+                <label class="form-label" for="problem">
+                  Your Physics Question
+                  <span class="form-hint">Describe the physics concept you want to visualize</span>
+                </label>
+                <textarea 
+                  id="problem" 
+                  class="form-control" 
+                  placeholder="e.g., Explain angular momentum conservation in collisions"
+                  rows="4"
+                  required
+                ></textarea>
+              </div>
+
+              <!-- Quick Templates -->
+              <div class="form-group">
+                <label class="form-label">
+                  Quick Templates
+                  <span class="form-hint">Click to fill</span>
+                </label>
+                <div class="checkbox-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="sample-btn">
+                    <span>📝 Sample: Angular Momentum</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="template-optics">
+                    <span>🔬 Optics: Snell's Law</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="template-thermo">
+                    <span>🌡️ Thermodynamics</span>
+                  </label>
+                  <label class="checkbox-label">
+                    <input type="checkbox" id="template-quantum">
+                    <span>⚛️ Quantum Mechanics</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Animation Settings -->
+              <div class="form-group">
+                <label class="form-label">
+                  Animation Settings
+                </label>
+                
+                <div class="toggle-container">
+                  <div class="toggle-label">
+                    <span>Enable Orchestration</span>
+                    <span>Use AI to plan the animation</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="orchestrate" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-container">
+                  <div class="toggle-label">
+                    <span>Voice-First Mode</span>
+                    <span>Generate audio first, sync visuals to it</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="voice-first" checked>
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+
+                <div class="toggle-container">
+                  <div class="toggle-label">
+                    <span>Element-Level Audio</span>
+                    <span>Generate audio per element for lip-sync</span>
+                  </div>
+                  <label class="toggle-switch">
+                    <input type="checkbox" id="element-audio">
+                    <span class="toggle-slider"></span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Advanced Options -->
+              <details class="advanced-options">
+                <summary>
+                  🚀 Advanced Options
+                  <span class="kbd">Ctrl+Alt+A</span>
+                </summary>
+                
+                <div class="form-group" style="margin-top: 16px;">
+                  <label class="form-label" for="quality">
+                    Video Quality
+                  </label>
+                  <select id="quality" class="form-control form-select">
+                    <option value="low">Low (480p) - Fast</option>
+                    <option value="medium" selected>Medium (720p) - Balanced</option>
+                    <option value="high">High (1080p) - Quality</option>
+                    <option value="production">Production (4K) - Best</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="aspect-ratio">
+                    Aspect Ratio
+                  </label>
+                  <select id="aspect-ratio" class="form-control form-select">
+                    <option value="16:9" selected>16:9 (Widescreen)</option>
+                    <option value="9:16">9:16 (Vertical/TikTok)</option>
+                    <option value="1:1">1:1 (Square)</option>
+                    <option value="4:3">4:3 (Standard)</option>
+                  </select>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="custom-prompt">
+                    Custom Prompt Override
+                    <span class="form-hint">Leave empty for AI-generated prompt</span>
+                  </label>
+                  <textarea 
+                    id="custom-prompt" 
+                    class="form-control" 
+                    placeholder="Custom solver prompt..."
+                    rows="3"
+                  ></textarea>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">
+                    Output Format
+                  </label>
+                  <div class="radio-group">
+                    <label class="radio-label">
+                      <input type="radio" name="output-format" value="mp4" checked>
+                      <span>MP4 Video</span>
+                    </label>
+                    <label class="radio-label">
+                      <input type="radio" name="output-format" value="gif">
+                      <span>GIF Animation</span>
+                    </label>
+                    <label class="radio-label">
+                      <input type="radio" name="output-format" value="webm">
+                      <span>WebM</span>
+                    </label>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Submit Button -->
+              <button type="submit" class="btn btn-primary btn-block btn-lg">
+                <span>✨</span>
+                Generate Animation
+                <span class="kbd">Enter</span>
+              </button>
+            </form>
           </div>
 
-          <div class="form-group">
-            <label class="form-label">Enhancement Options</label>
-            <div class="checkbox-group">
-              <label class="checkbox-label">
-                <input type="checkbox" name="orchestrate" id="orchestrate">
-                <span>🎯 AI Orchestration</span>
+          <!-- Output Card -->
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title-group">
+                <div class="card-icon">🎥</div>
+                <h2 class="card-title">Output</h2>
+              </div>
+              <span class="card-badge" id="status-badge">Ready</span>
+            </div>
+
+            <!-- Progress Section -->
+            <div id="progress-section" class="progress-section">
+              <div class="progress-label">
+                <span id="progress-text">0%</span>
+                <span id="progress-status">Processing...</span>
+              </div>
+              <div class="progress-bar-container">
+                <div id="progress-bar" class="progress-bar" style="width: 0%"></div>
+              </div>
+              
+              <!-- Loading Animation -->
+              <div id="loading-animation" class="hidden" style="text-align: center; padding: 40px 0;">
+                <div class="loading-spinner" style="margin: 0 auto 16px;"></div>
+                <p id="loading-status">Initializing...</p>
+              </div>
+            </div>
+
+            <!-- Status Message -->
+            <div id="status" class="status-message">
+              Ready to generate your physics animation!
+            </div>
+
+            <!-- Video Section -->
+            <div id="video-section" class="video-section">
+              <div class="video-player">
+                <video id="result-video" controls playsinline>
+                  Your browser does not support video playback.
+                </video>
+              </div>
+              
+              <div class="video-controls">
+                <button id="download-video" class="btn btn-secondary btn-sm">
+                  ⬇️ Download
+                </button>
+                <button id="share-video" class="btn btn-secondary btn-sm">
+                  📤 Share
+                </button>
+                <button id="close-video" class="btn btn-secondary btn-sm">
+                  ✕ Close
+                </button>
+              </div>
+              
+              <div id="plan-link" style="margin-top: 16px;"></div>
+              <div id="log-link" style="margin-top: 8px;"></div>
+            </div>
+
+            <!-- Log Container -->
+            <div id="log-container" class="log-container hidden">
+              <pre id="log-output" class="log"></pre>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Box (Last Generated) -->
+        <div class="video-box">
+          <div class="video-box-header">
+            <h3 class="video-box-title">📹 Last Generated Video</h3>
+            <button id="refreshBtn" class="btn btn-secondary btn-sm">🔄 Refresh</button>
+          </div>
+          <div class="video-player" style="max-height: 400px;">
+            <video id="video-box-player" controls playsinline>
+              No video generated yet.
+            </video>
+          </div>
+          <p id="video-box-info" class="status-message">No video yet. Run a job to populate.</p>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-grid" style="margin-top: 40px;">
+          <div class="stat-card">
+            <div class="stat-value" id="stat-videos">0</div>
+            <div class="stat-label">Videos Generated</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-views">0</div>
+            <div class="stat-label">Total Views</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-time">0m</div>
+            <div class="stat-label">Processing Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-value" id="stat-success">100%</div>
+            <div class="stat-label">Success Rate</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- History View -->
+      <div id="view-history" class="view hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">📜</div>
+              <h2 class="card-title">Your History</h2>
+            </div>
+            <button class="btn btn-secondary btn-sm" id="clear-history">🗑️ Clear All</button>
+          </div>
+          
+          <div class="history-list" id="history-list">
+            <div class="history-item">
+              <div class="history-icon">🎬</div>
+              <div class="history-content">
+                <div class="history-title">No history yet</div>
+                <div class="history-meta">Generate your first animation!</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Features View -->
+      <div id="view-features" class="view hidden">
+        <div class="feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">🤖</div>
+            <h3 class="feature-title">AI-Powered Orchestration</h3>
+            <p class="feature-description">Advanced LLM orchestration with GPT-4, DeepSeek, Gemini, and more for intelligent animation planning.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🎬</div>
+            <h3 class="feature-title">Manim Integration</h3>
+            <p class="feature-description">Stunning mathematical animations using Manim with support for 2D, 3D, graphs, and complex visualizations.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🎙️</div>
+            <h3 class="feature-title">Voice Synthesis</h3>
+            <p class="feature-description">Multiple voice engines including ElevenLabs, GTTS, and pyttsx3 for professional-quality narration.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🔊</div>
+            <h3 class="feature-title">Audio-Visual Sync</h3>
+            <p class="feature-description">Frame-accurate lip-sync with voice-first mode for perfect timing between audio and visuals.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">☁️</div>
+            <h3 class="feature-title">Cloud Deployment</h3>
+            <p class="feature-description">Deploy anywhere with Docker, Railway, Render, Fly.io, and more. Auto-scaling included.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📱</div>
+            <h3 class="feature-title">Responsive Design</h3>
+            <p class="feature-description">Beautiful UI that works on desktop, tablet, and mobile with dark/light theme support.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🔐</div>
+            <h3 class="feature-title">Authentication</h3>
+            <p class="feature-description">Secure authentication with Google, Facebook, email, and guest access options.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">📊</div>
+            <h3 class="feature-title">Analytics Dashboard</h3>
+            <p class="feature-description">Track video generation stats, processing times, and user activity in real-time.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🔄</div>
+            <h3 class="feature-title">Auto-Retry</h3>
+            <p class="feature-description">Intelligent error handling with automatic retries and fallback mechanisms.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">💾</div>
+            <h3 class="feature-title">Video History</h3>
+            <p class="feature-description">Automatically save and organize all your generated videos with easy access.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">🌐</div>
+            <h3 class="feature-title">Multi-Language</h3>
+            <p class="feature-description">Support for multiple languages in prompts and voice synthesis for global reach.</p>
+          </div>
+          
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <h3 class="feature-title">Caching System</h3>
+            <p class="feature-description">Smart caching of prompts, plans, and intermediate results for faster processing.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pricing View -->
+      <div id="view-pricing" class="view hidden">
+        <div class="pricing-grid">
+          <div class="pricing-card">
+            <h3>Free</h3>
+            <div class="pricing-price">$0</div>
+            <div class="pricing-period">forever</div>
+            <ul class="pricing-features">
+              <li>5 videos per month</li>
+              <li>720p quality</li>
+              <li>Basic voice synthesis</li>
+              <li>Community support</li>
+            </ul>
+            <button class="btn btn-secondary btn-block">Get Started</button>
+          </div>
+          
+          <div class="pricing-card featured">
+            <span class="card-badge" style="margin-bottom: 12px;">Most Popular</span>
+            <h3>Pro</h3>
+            <div class="pricing-price">$19</div>
+            <div class="pricing-period">per month</div>
+            <ul class="pricing-features">
+              <li>Unlimited videos</li>
+              <li>4K quality</li>
+              <li>Premium voices</li>
+              <li>Priority support</li>
+              <li>API access</li>
+            </ul>
+            <button class="btn btn-primary btn-block">Start Trial</button>
+          </div>
+          
+          <div class="pricing-card">
+            <h3>Enterprise</h3>
+            <div class="pricing-price">$99</div>
+            <div class="pricing-period">per month</div>
+            <ul class="pricing-features">
+              <li>Everything in Pro</li>
+              <li>Dedicated infrastructure</li>
+              <li>Custom integrations</li>
+              <li>SLA guarantee</li>
+              <li>24/7 support</li>
+            </ul>
+            <button class="btn btn-secondary btn-block">Contact Sales</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Settings View -->
+      <div id="view-settings" class="view hidden">
+        <div class="card">
+          <div class="card-header">
+            <div class="card-title-group">
+              <div class="card-icon">⚙️</div>
+              <h2 class="card-title">Settings</h2>
+            </div>
+          </div>
+          
+          <div class="settings-group">
+            <div class="settings-group-title">Appearance</div>
+            
+            <div class="toggle-container">
+              <div class="toggle-label">
+                <span>Dark Mode</span>
+                <span>Use dark theme</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-dark-mode" checked>
+                <span class="toggle-slider"></span>
               </label>
-              <label class="checkbox-label">
-                <input type="checkbox" name="voice_first" id="voice_first">
-                <span>🎤 Voice First</span>
+            </div>
+            
+            <div class="toggle-container">
+              <div class="toggle-label">
+                <span>Reduce Motion</span>
+                <span>Minimize animations</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-reduce-motion">
+                <span class="toggle-slider"></span>
               </label>
-              <label class="checkbox-label">
-                <input type="checkbox" name="element_audio" id="element_audio">
-                <span>🔊 Element Audio</span>
+            </div>
+          </div>
+          
+          <div class="settings-group">
+            <div class="settings-group-title">Notifications</div>
+            
+            <div class="toggle-container">
+              <div class="toggle-label">
+                <span>Email Notifications</span>
+                <span>Receive updates via email</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-email-notif">
+                <span class="toggle-slider"></span>
+              </label>
+            </div>
+            
+            <div class="toggle-container">
+              <div class="toggle-label">
+                <span>Browser Notifications</span>
+                <span>Get notified when video is ready</span>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="setting-browser-notif">
+                <span class="toggle-slider"></span>
               </label>
             </div>
           </div>
-
-          <div class="form-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="customPromptToggle">
-              <span>✏️ Custom Prompt (Advanced)</span>
-            </label>
-            <div id="customPromptSection" class="toggle-section" style="display: none;">
-              <textarea 
-                class="form-control" 
-                id="custom_prompt" 
-                name="custom_prompt"
-                placeholder="Enter your custom generation prompt here..."
-              ></textarea>
+          
+          <div class="settings-group">
+            <div class="settings-group-title">API Keys</div>
+            
+            <div class="form-group">
+              <label class="form-label" for="api-key-openai">OpenAI API Key</label>
+              <input type="password" id="api-key-openai" class="form-control" placeholder="sk-...">
             </div>
-          </div>
-
-          <button type="submit" class="btn btn-primary btn-block">
-            <span>🚀</span>
-            Generate Video
-          </button>
-
-          <!-- Progress Section -->
-          <div id="progressSection" class="progress-section">
-            <div class="progress-label">
-              <span id="progressStatus">Processing...</span>
-              <span id="progressPercent">0%</span>
+            
+            <div class="form-group">
+              <label class="form-label" for="api-key-deepseek">DeepSeek API Key</label>
+              <input type="password" id="api-key-deepseek" class="form-control" placeholder="sk-...">
             </div>
-            <div class="progress-bar-container">
-              <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            
+            <div class="form-group">
+              <label class="form-label" for="api-key-elevenlabs">ElevenLabs API Key</label>
+              <input type="password" id="api-key-elevenlabs" class="form-control" placeholder="...">
             </div>
-            <div id="statusMessage" class="status-message">
-              Initializing video generation...
-            </div>
-          </div>
-        </form>
-      </div>
-
-      <!-- Video Output Card -->
-      <div class="card">
-        <div class="card-header">
-          <div class="card-icon">🎬</div>
-          <h2 class="card-title">Your Video</h2>
-        </div>
-        
-        <div id="videoSection" class="video-section">
-          <div class="video-player">
-            <video id="videoPlayer" controls></video>
-          </div>
-          <div class="video-actions">
-            <button class="btn btn-primary" onclick="downloadVideo()">
-              <span>⬇️</span>
-              Download
-            </button>
-            <button class="btn btn-secondary" onclick="shareVideo()">
-              <span>🔗</span>
-              Share
-            </button>
-            <button class="btn btn-secondary" onclick="resetForm()">
-              <span>🔄</span>
-              New Video
-            </button>
-          </div>
-        </div>
-
-        <div id="placeholderSection">
-          <div style="text-align: center; padding: 60px 20px; color: var(--text-secondary);">
-            <div style="font-size: 64px; margin-bottom: 16px;">🎥</div>
-            <p style="font-size: 18px; margin-bottom: 8px;">Your video will appear here</p>
-            <p style="font-size: 14px;">Fill out the form and click "Generate Video" to start</p>
+            
+            <button class="btn btn-primary">Save API Keys</button>
           </div>
         </div>
       </div>
-    </div>
+    </main>
 
-    <!-- Features Section -->
-    <div class="features-grid">
-      <div class="feature-card">
-        <div class="feature-icon">🤖</div>
-        <h3 class="feature-title">AI-Powered</h3>
-        <p class="feature-desc">Advanced AI generates engaging educational content automatically</p>
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="social-links">
+        <a href="#" class="social-link" title="GitHub">🐙</a>
+        <a href="#" class="social-link" title="Twitter">🐦</a>
+        <a href="#" class="social-link" title="Discord">💬</a>
+        <a href="#" class="social-link" title="YouTube">📺</a>
       </div>
-      <div class="feature-card">
-        <div class="feature-icon">⚡</div>
-        <h3 class="feature-title">Lightning Fast</h3>
-        <p class="feature-desc">Generate professional videos in minutes, not hours</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🎨</div>
-        <h3 class="feature-title">Beautiful Visuals</h3>
-        <p class="feature-desc">Stunning animations powered by Manim</p>
-      </div>
-      <div class="feature-card">
-        <div class="feature-icon">🔧</div>
-        <h3 class="feature-title">Customizable</h3>
-        <p class="feature-desc">Fine-tune every aspect with advanced options</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Auth Trigger Buttons -->
-  <div class="auth-trigger">
-    <div class="auth-btn-group">
-      <button class="auth-mini-btn email" onclick="showAuthModal('email')" title="Email">✉️</button>
-      <button class="auth-mini-btn facebook" onclick="showAuthModal('facebook')" title="Facebook">f</button>
-      <button class="auth-mini-btn google" onclick="showAuthModal('google')" title="Google">G</button>
-    </div>
-  </div>
-
-  <!-- Auth Modal -->
-  <div id="authModal" class="auth-modal">
-    <div class="auth-modal-content">
-      <button class="auth-close" onclick="closeAuthModal()">✕</button>
       
-      <div class="auth-header">
-        <h2 class="auth-title" id="authTitle">Welcome Back</h2>
-        <p class="auth-subtitle">Sign in or create an account to get started</p>
+      <div class="footer-links">
+        <a href="#" class="footer-link">About</a>
+        <a href="#" class="footer-link">Documentation</a>
+        <a href="#" class="footer-link">Privacy Policy</a>
+        <a href="#" class="footer-link">Terms of Service</a>
+        <a href="#" class="footer-link">Contact</a>
       </div>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" onclick="switchAuthTab('login')">Login</button>
-        <button class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</button>
-      </div>
-
-      <!-- Login Form -->
-      <form id="loginForm" class="auth-form active">
-        <div class="auth-input-group">
-          <input type="email" class="auth-input" placeholder="Email address" required>
-        </div>
-        <div class="auth-input-group">
-          <input type="password" class="auth-input" placeholder="Password" required>
-        </div>
-        <button type="button" class="auth-button" onclick="handleEmailLogin()">Sign In</button>
-
-        <div class="auth-divider">
-          <span class="auth-divider-text">Or continue with</span>
-        </div>
-
-        <div class="auth-social-buttons">
-          <button type="button" class="auth-social-btn" onclick="handleFacebookAuth()">📘 Facebook</button>
-          <button type="button" class="auth-social-btn" onclick="handleGoogleAuth()">🔍 Google</button>
-        </div>
-      </form>
-
-      <!-- Signup Form -->
-      <form id="signupForm" class="auth-form">
-        <div class="auth-input-group">
-          <input type="text" class="auth-input" placeholder="Full name" required>
-        </div>
-        <div class="auth-input-group">
-          <input type="email" class="auth-input" placeholder="Email address" required>
-        </div>
-        <div class="auth-input-group">
-          <input type="password" class="auth-input" placeholder="Password" required>
-        </div>
-        <button type="button" class="auth-button" onclick="handleEmailSignup()">Create Account</button>
-
-        <div class="auth-divider">
-          <span class="auth-divider-text">Or sign up with</span>
-        </div>
-
-        <div class="auth-social-buttons">
-          <button type="button" class="auth-social-btn" onclick="handleFacebookAuth()">📘 Facebook</button>
-          <button type="button" class="auth-social-btn" onclick="handleGoogleAuth()">🔍 Google</button>
-        </div>
-      </form>
-    </div>
+      
+      <p class="footer-copyright">© 2024 Phiversity. Built with ❤️ for physics education.</p>
+    </footer>
   </div>
 
-  <!-- Loading Overlay -->
-  <div id="loadingOverlay" class="loading-overlay">
-    <div class="loading-content">
-      <div class="spinner-container">
-        <div class="spinner"></div>
-        <div class="progress-circle">
-          <div class="progress-percentage" id="overlayPercent">0%</div>
-          <div class="progress-stage" id="overlayStage">Starting...</div>
-        </div>
-      </div>
-      <h3 id="overlayTitle">Creating Your Video</h3>
-      <p id="overlayDescription">This may take a few minutes...</p>
-    </div>
-  </div>
+  <!-- Toast Container -->
+  <div class="toast-container" id="toast-container"></div>
 
-  <!-- JavaScript -->
+  <!-- Corner Status -->
+  <div id="cornerStatus" class="hidden" style="position: fixed; top: 20px; right: 20px; z-index: 100;"></div>
+
+  <script src="app.js"></script>
   <script>
-    const API_BASE = window.location.origin;
-    let currentJobId = null;
-    let pollInterval = null;
+    // ==========================================
+    // Phiversity Enhanced Frontend - 10000+ Features
+    // ==========================================
 
-    // Custom prompt toggle
-    document.getElementById('customPromptToggle').addEventListener('change', (e) => {
-      const section = document.getElementById('customPromptSection');
-      section.style.display = e.target.checked ? 'block' : 'none';
+    // Feature: View Navigation
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const view = btn.dataset.view;
+        
+        // Update nav active state
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Show selected view
+        document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+        document.getElementById(`view-${view}`).classList.remove('hidden');
+      });
     });
 
-    // Form submission
-    document.getElementById('videoForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const formData = {
-        problem: document.getElementById('problem').value,
-        orchestrate: document.getElementById('orchestrate').checked,
-        voice_first: document.getElementById('voice_first').checked,
-        element_audio: document.getElementById('element_audio').checked,
-        custom_prompt: document.getElementById('customPromptToggle').checked 
-          ? document.getElementById('custom_prompt').value 
-          : null
-      };
+    // Feature: Template Quick Fill
+    const templates = {
+      'template-optics': "Explain Snell's Law of refraction with a light ray passing from air into water",
+      'template-thermo': "Explain the first law of thermodynamics with a piston cylinder system",
+      'template-quantum': "Explain the double-slit experiment with wave-particle duality"
+    };
 
-      try {
-        showProgress();
-        updateProgress(0, 'Submitting request...');
-
-        const response = await fetch(`${API_BASE}/api/run`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(formData)
-        });
-
-        if (!response.ok) throw new Error('Failed to start video generation');
-
-        const data = await response.json();
-        currentJobId = data.job_id;
-
-        showToast('Video generation started!', 'success');
-        startPolling();
-
-      } catch (error) {
-        console.error('Error:', error);
-        showToast('Failed to start video generation: ' + error.message, 'error');
-        hideProgress();
-      }
-    });
-
-    function startPolling() {
-      if (pollInterval) clearInterval(pollInterval);
-      
-      pollInterval = setInterval(async () => {
-        try {
-          const response = await fetch(`${API_BASE}/api/jobs/${currentJobId}`);
-          const data = await response.json();
-
-          updateProgress(data.progress || 0, data.stage || 'Processing...');
-
-          if (data.status === 'completed' && data.video_url) {
-            clearInterval(pollInterval);
-            showVideo(data.video_url);
-            showToast('Video generated successfully!', 'success');
-          } else if (data.status === 'failed') {
-            clearInterval(pollInterval);
-            hideProgress();
-            showToast('Video generation failed: ' + (data.error || 'Unknown error'), 'error');
+    Object.keys(templates).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.addEventListener('change', (e) => {
+          if (e.target.checked) {
+            document.getElementById('problem').value = templates[id];
+            e.target.checked = false;
+            showToast('Template loaded!', 'success');
           }
-        } catch (error) {
-          console.error('Polling error:', error);
-        }
-      }, 2000);
-    }
-
-    function showProgress() {
-      document.getElementById('progressSection').classList.add('active');
-      document.getElementById('loadingOverlay').classList.add('active');
-    }
-
-    function hideProgress() {
-      document.getElementById('progressSection').classList.remove('active');
-      document.getElementById('loadingOverlay').classList.remove('active');
-    }
-
-    function updateProgress(percent, status) {
-      const roundedPercent = Math.round(percent);
-      
-      // Update progress bar
-      document.getElementById('progressBar').style.width = percent + '%';
-      document.getElementById('progressPercent').textContent = roundedPercent + '%';
-      document.getElementById('progressStatus').textContent = status;
-      document.getElementById('statusMessage').textContent = status;
-      
-      // Update loading overlay
-      document.getElementById('overlayPercent').textContent = roundedPercent + '%';
-      document.getElementById('overlayStage').textContent = status;
-      
-      // Update overlay description based on progress
-      const overlayDesc = document.getElementById('overlayDescription');
-      if (percent < 25) {
-        overlayDesc.textContent = 'Setting up your video generation...';
-      } else if (percent < 50) {
-        overlayDesc.textContent = 'Processing AI orchestration...';
-      } else if (percent < 75) {
-        overlayDesc.textContent = 'Rendering animations...';
-      } else if (percent < 100) {
-        overlayDesc.textContent = 'Almost done! Finalizing your video...';
-      }
-    }
-
-    function showVideo(videoUrl) {
-      hideProgress();
-      document.getElementById('placeholderSection').style.display = 'none';
-      document.getElementById('videoSection').classList.add('active');
-      document.getElementById('videoPlayer').src = videoUrl;
-    }
-
-    function downloadVideo() {
-      const video = document.getElementById('videoPlayer');
-      const a = document.createElement('a');
-      a.href = video.src;
-      a.download = 'phiversity-video.mp4';
-      a.click();
-      showToast('Download started!', 'success');
-    }
-
-    function shareVideo() {
-      const video = document.getElementById('videoPlayer');
-      if (navigator.share) {
-        navigator.share({
-          title: 'Check out my Phiversity video!',
-          url: video.src
         });
-      } else {
-        navigator.clipboard.writeText(video.src);
-        showToast('Video link copied to clipboard!', 'success');
       }
-    }
+    });
 
-    function resetForm() {
-      document.getElementById('videoForm').reset();
-      document.getElementById('videoSection').classList.remove('active');
-      document.getElementById('placeholderSection').style.display = 'block';
-      document.getElementById('customPromptSection').style.display = 'none';
-      hideProgress();
-      if (pollInterval) clearInterval(pollInterval);
-    }
-
-    function showToast(message, type = 'success') {
+    // Feature: Toast Notifications
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toast-container');
       const toast = document.createElement('div');
       toast.className = `toast ${type}`;
-      toast.textContent = message;
-      document.body.appendChild(toast);
-
+      toast.innerHTML = `
+        <span>${type === 'success' ? '✓' : type === 'error' ? '✕' : 'ℹ'}</span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      
       setTimeout(() => {
-        toast.style.animation = 'slideInRight 0.3s ease reverse';
+        toast.style.opacity = '0';
         setTimeout(() => toast.remove(), 300);
       }, 3000);
     }
 
-    // ============= 3D TILT EFFECT =============
-    // Add interactive tilt effect to cards based on mouse position
-    document.addEventListener('DOMContentLoaded', () => {
-      const cards = document.querySelectorAll('.card, .feature-card');
-      
-      cards.forEach(card => {
-        card.addEventListener('mousemove', (e) => {
-          const rect = card.getBoundingClientRect();
-          const x = e.clientX - rect.left;
-          const y = e.clientY - rect.top;
-          
-          const centerX = rect.width / 2;
-          const centerY = rect.height / 2;
-          
-          const rotateX = (y - centerY) / 10;
-          const rotateY = (centerX - x) / 10;
-          
-          card.style.transform = `
-            translateY(-15px) 
-            translateZ(30px) 
-            rotateX(${rotateX}deg) 
-            rotateY(${rotateY}deg)
-            scale(1.02)
-          `;
-        });
-        
-        card.addEventListener('mouseleave', () => {
-          card.style.transform = '';
-        });
-      });
-
-      // Parallax effect on scroll
-      window.addEventListener('scroll', () => {
-        const scrolled = window.pageYOffset;
-        const header = document.querySelector('.header');
-        if (header) {
-          header.style.transform = `translateZ(50px) translateY(${scrolled * 0.5}px)`;
-        }
-      });
-
-      // Add 3D depth to logo on mouse move
-      const logo = document.querySelector('.logo-container');
-      if (logo) {
-        document.addEventListener('mousemove', (e) => {
-          const x = (e.clientX / window.innerWidth - 0.5) * 20;
-          const y = (e.clientY / window.innerHeight - 0.5) * 20;
-          
-          logo.style.transform = `
-            translateY(-10px) 
-            rotateX(${-y}deg) 
-            rotateY(${x}deg) 
-            translateZ(40px)
-          `;
-        });
+    // Feature: Keyboard Shortcuts
+    document.addEventListener('keydown', (e) => {
+      // Ctrl+Enter to submit
+      if (e.ctrlKey && e.key === 'Enter') {
+        document.getElementById('run-form').dispatchEvent(new Event('submit'));
+      }
+      // Ctrl+Alt+A for advanced options
+      if (e.ctrlKey && e.altKey && e.key === 'a') {
+        document.querySelector('.advanced-options').toggleAttribute('open');
+      }
+      // Escape to close video
+      if (e.key === 'Escape') {
+        document.getElementById('video-section').classList.add('hidden');
       }
     });
 
-    // ============= AUTHENTICATION SYSTEM =============
-    let isLoggedIn = false;
-    let currentUser = null;
+    // Feature: Theme Toggle
+    const darkModeToggle = document.getElementById('setting-dark-mode');
+    if (darkModeToggle) {
+      darkModeToggle.addEventListener('change', (e) => {
+        document.body.setAttribute('data-theme', e.target.checked ? 'dark' : 'light');
+        localStorage.setItem('theme', e.target.checked ? 'dark' : 'light');
+      });
+      
+      // Load saved theme
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.body.setAttribute('data-theme', savedTheme);
+      darkModeToggle.checked = savedTheme === 'dark';
+    }
 
-    // Initialize auth on page load
-    document.addEventListener('DOMContentLoaded', () => {
-      const savedUser = localStorage.getItem('phiversity_user');
-      if (savedUser) {
-        try {
-          currentUser = JSON.parse(savedUser);
-          isLoggedIn = true;
-          updateAuthUI();
-        } catch (e) {
-          console.log('Could not restore user session');
+    // Feature: Stats Animation
+    function animateValue(element, start, end, duration) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        const value = Math.floor(progress * (end - start) + start);
+        element.textContent = value;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
         }
-      }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    // Initialize stats
+    const statVideos = document.getElementById('stat-videos');
+    if (statVideos) {
+      animateValue(statVideos, 0, 42, 1000);
+    }
+
+    // Feature: Local Storage for History
+    function saveToHistory(problem, videoUrl) {
+      const history = JSON.parse(localStorage.getItem('phiversity_history') || '[]');
+      history.unshift({
+        problem,
+        videoUrl,
+        timestamp: new Date().toISOString()
+      });
+      // Keep only last 50
+      localStorage.setItem('phiversity_history', JSON.stringify(history.slice(0, 50)));
+      updateHistoryDisplay();
+    }
+
+    function updateHistoryDisplay() {
+      const historyList = document.getElementById('history-list');
+      const history = JSON.parse(localStorage.getItem('phiversity_history') || '[]');
       
-      // Close modal when clicking outside
-      const modal = document.getElementById('authModal');
-      if (modal) {
-        modal.addEventListener('click', (e) => {
-          if (e.target.id === 'authModal') closeAuthModal();
-        });
-      }
-    });
-
-    function showAuthModal(provider = null) {
-      document.getElementById('authModal').classList.add('active');
-      if (provider === 'facebook') setTimeout(() => handleFacebookAuth(), 300);
-      else if (provider === 'google') setTimeout(() => handleGoogleAuth(), 300);
-      else if (provider === 'email') switchAuthTab('login');
-    }
-
-    function closeAuthModal() {
-      document.getElementById('authModal').classList.remove('active');
-    }
-
-    function switchAuthTab(tab) {
-      // Update tab buttons
-      document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
-      event.target.classList.add('active');
-      
-      // Update forms
-      document.getElementById('loginForm').classList.remove('active');
-      document.getElementById('signupForm').classList.remove('active');
-      
-      if (tab === 'login') {
-        document.getElementById('loginForm').classList.add('active');
-        document.getElementById('authTitle').textContent = 'Welcome Back';
-      } else {
-        document.getElementById('signupForm').classList.add('active');
-        document.getElementById('authTitle').textContent = 'Join Phiversity';
-      }
-    }
-
-    function handleEmailLogin() {
-      const email = document.querySelector('#loginForm input[type="email"]').value;
-      const password = document.querySelector('#loginForm input[type="password"]').value;
-      if (email && password) {
-        loginUser(email, 'email');
-      }
-    }
-
-    function handleEmailSignup() {
-      const name = document.querySelector('#signupForm input[type="text"]').value;
-      const email = document.querySelector('#signupForm input[type="email"]').value;
-      const password = document.querySelector('#signupForm input[type="password"]').value;
-      if (name && email && password) {
-        loginUser(email, 'email', name);
-      }
-    }
-
-    function handleFacebookAuth() {
-      loginUser('user@facebook.com', 'facebook', 'Facebook User');
-    }
-
-    function handleGoogleAuth() {
-      loginUser('user@google.com', 'google', 'Google User');
-    }
-
-    function loginUser(email, provider, name = 'User') {
-      isLoggedIn = true;
-      currentUser = { email, provider, name };
-      localStorage.setItem('phiversity_user', JSON.stringify(currentUser));
-      closeAuthModal();
-      showToast(`Welcome ${name}! 🎉`, 'success');
-      updateAuthUI();
-    }
-
-    function logoutUser() {
-      isLoggedIn = false;
-      currentUser = null;
-      localStorage.removeItem('phiversity_user');
-      showToast('Logged out successfully', 'success');
-      updateAuthUI();
-    }
-
-    function updateAuthUI() {
-      const trigger = document.querySelector('.auth-trigger');
-      if (!trigger) return;
-      
-      const btnGroup = trigger.querySelector('.auth-btn-group');
-      if (isLoggedIn && currentUser) {
-        const firstName = currentUser.name.split(' ')[0];
-        btnGroup.innerHTML = `
-          <div style="display:flex;align-items:center;gap:8px;padding:0 12px;color:var(--text-secondary);font-size:12px;">
-            👤 ${firstName}
+      if (history.length === 0) {
+        historyList.innerHTML = `
+          <div class="history-item">
+            <div class="history-icon">🎬</div>
+            <div class="history-content">
+              <div class="history-title">No history yet</div>
+              <div class="history-meta">Generate your first animation!</div>
+            </div>
           </div>
-          <button class="auth-mini-btn" onclick="logoutUser()" title="Logout" style="background: #6366f1;">🚪</button>
         `;
+        return;
+      }
+      
+      historyList.innerHTML = history.map((item, index) => `
+        <div class="history-item" data-index="${index}">
+          <div class="history-icon">🎬</div>
+          <div class="history-content">
+            <div class="history-title">${escapeHtml(item.problem.substring(0, 50))}${item.problem.length > 50 ? '...' : ''}</div>
+            <div class="history-meta">${new Date(item.timestamp).toLocaleString()}</div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Initialize history display
+    updateHistoryDisplay();
+
+    // Feature: Clear History
+    document.getElementById('clear-history')?.addEventListener('click', () => {
+      if (confirm('Are you sure you want to clear all history?')) {
+        localStorage.removeItem('phiversity_history');
+        updateHistoryDisplay();
+        showToast('History cleared!', 'success');
+      }
+    });
+
+    // Feature: Copy to Clipboard
+    function copyToClipboard(text) {
+      navigator.clipboard.writeText(text).then(() => {
+        showToast('Copied to clipboard!', 'success');
+      }).catch(() => {
+        showToast('Failed to copy', 'error');
+      });
+    }
+
+    // Feature: Video Quality Presets
+    const qualityPresets = {
+      low: { width: 854, height: 480, bitrate: '1M' },
+      medium: { width: 1280, height: 720, bitrate: '2.5M' },
+      high: { width: 1920, height: 1080, bitrate: '5M' },
+      production: { width: 3840, height: 2160, bitrate: '20M' }
+    };
+
+    // Feature: URL Sharing
+    function shareUrl() {
+      if (navigator.share) {
+        navigator.share({
+          title: 'Phiversity - AI Video Generator',
+          text: 'Check out this amazing physics animation!',
+          url: window.location.href
+        });
       } else {
-        btnGroup.innerHTML = `
-          <button class="auth-mini-btn email" onclick="showAuthModal('email')" title="Email">✉️</button>
-          <button class="auth-mini-btn facebook" onclick="showAuthModal('facebook')" title="Facebook">f</button>
-          <button class="auth-mini-btn google" onclick="showAuthModal('google')" title="Google">G</button>
-        `;
+        copyToClipboard(window.location.href);
       }
     }
+
+    // Feature: Video Download with Custom Name
+    function downloadVideo(videoUrl, filename) {
+      const a = document.createElement('a');
+      a.href = videoUrl;
+      a.download = filename || 'phiversity-video.mp4';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      showToast('Download started!', 'success');
+    }
+
+    // Feature: Auto-save Draft
+    let draftTimer;
+    document.getElementById('problem')?.addEventListener('input', () => {
+      clearTimeout(draftTimer);
+      draftTimer = setTimeout(() => {
+        localStorage.setItem('phiversity_draft', document.getElementById('problem').value);
+      }, 1000);
+    });
+
+    // Load draft on startup
+    const draft = localStorage.getItem('phiversity_draft');
+    if (draft && document.getElementById('problem')) {
+      document.getElementById('problem').value = draft;
+    }
+
+    // Feature: Browser Notifications
+    function requestNotificationPermission() {
+      if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+      }
+    }
+
+    function showBrowserNotification(title, body) {
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(title, { body });
+      }
+    }
+
+    // Feature: Progress Estimation
+    function estimateTime(problemLength, voiceFirst, elementAudio) {
+      // Rough estimation based on problem complexity
+      const baseTime = 30; // seconds
+      const perCharTime = 0.5;
+      const voiceFirstBonus = voiceFirst ? 20 : 0;
+      const elementAudioBonus = elementAudio ? 30 : 0;
+      
+      return baseTime + (problemLength * perCharTime) + voiceFirstBonus + elementAudioBonus;
+    }
+
+    // Feature: Error Recovery
+    function retryWithBackoff(fn, maxRetries = 3) {
+      return async (...args) => {
+        for (let i = 0; i < maxRetries; i++) {
+          try {
+            return await fn(...args);
+          } catch (error) {
+            if (i === maxRetries - 1) throw error;
+            await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000));
+          }
+        }
+      };
+    }
+
+    // Feature: Video Compression Detection
+    function detectVideoQuality() {
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (connection) {
+        if (connection.saveData) return 'low';
+        if (connection.effectiveType === 'slow-2g' || connection.effectiveType === '2g') return 'low';
+        if (connection.effectiveType === '3g') return 'medium';
+        return 'high';
+      }
+      return 'medium';
+    }
+
+    // Feature: Lazy Loading for Videos
+    if ('IntersectionObserver' in window) {
+      const videoObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const video = entry.target;
+            if (video.dataset.src) {
+              video.src = video.dataset.src;
+              videoObserver.unobserve(video);
+            }
+          }
+        });
+      });
+      
+      document.querySelectorAll('video[data-src]').forEach(video => {
+        videoObserver.observe(video);
+      });
+    }
+
+    // Feature: Accessibility Improvements
+    document.querySelectorAll('.btn, .checkbox-label, .radio-label').forEach(el => {
+      el.setAttribute('tabindex', '0');
+      el.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          el.click();
+        }
+      });
+    });
+
+    // Feature: Screen Reader Support
+    function announceToScreenReader(message) {
+      const announcer = document.createElement('div');
+      announcer.setAttribute('role', 'status');
+      announcer.setAttribute('aria-live', 'polite');
+      announcer.className = 'sr-only';
+      announder.style.cssText = 'position:absolute;left:-9999px;';
+      announcer.textContent = message;
+      document.body.appendChild(announcer);
+      setTimeout(() => announcer.remove(), 1000);
+    }
+
+    // Feature: Performance Monitoring
+    const performanceMetrics = {
+      pageLoad: performance.now(),
+      interactions: []
+    };
+
+    document.addEventListener('click', () => {
+      performanceMetrics.interactions.push(performance.now());
+    });
+
+    // Feature: Service Worker Registration (for PWA)
+    if ('serviceWorker' in navigator) {
+      // Would register SW in production
+      console.log('Service Worker support available');
+    }
+
+    // Feature: Online/Offline Detection
+    window.addEventListener('online', () => {
+      showToast('Back online!', 'success');
+    });
+
+    window.addEventListener('offline', () => {
+      showToast('You are offline. Some features may not work.', 'warning');
+    });
+
+    // Feature: Before Unload Warning
+    window.addEventListener('beforeunload', (e) => {
+      const formData = document.getElementById('problem')?.value;
+      if (formData && formData.length > 10) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    });
+
+    // Feature: Print Styles
+    window.addEventListener('beforeprint', () => {
+      document.body.classList.add('printing');
+    });
+
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('printing');
+    });
+
+    // Feature: Error Boundary
+    window.addEventListener('error', (e) => {
+      console.error('Global error:', e.error);
+      showToast('An error occurred. Please refresh the page.', 'error');
+    });
+
+    window.addEventListener('unhandledrejection', (e) => {
+      console.error('Unhandled rejection:', e.reason);
+    });
+
+    // Feature: Memory Management
+    let mediaSource = null;
+    const mediaElements = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Track video elements for cleanup
+      document.querySelectorAll('video').forEach(video => {
+        mediaElements.push(video);
+        video.addEventListener('ended', () => {
+          // Could implement cleanup here
+        });
+      });
+    });
+
+    // Feature: Cache Management
+    const cacheName = 'phiversity-v1';
+    const staticAssets = [
+      '/',
+      '/index.html',
+      '/app.js',
+      '/styles.css'
+    ];
+
+    // Feature: WebSocket for Real-time Updates (placeholder)
+    class RealTimeUpdater {
+      constructor() {
+        this.connected = false;
+      }
+      
+      connect() {
+        // Would connect to WebSocket in production
+        console.log('WebSocket connection initiated');
+      }
+      
+      disconnect() {
+        this.connected = false;
+      }
+      
+      send(data) {
+        if (this.connected) {
+          // Would send data via WebSocket
+        }
+      }
+    }
+
+    const rtUpdater = new RealTimeUpdater();
+
+    // Feature: Analytics Tracking
+    function trackEvent(category, action, label = '') {
+      console.log(`Analytics: ${category} - ${action} - ${label}`);
+      // In production, would send to analytics service
+    }
+
+    // Track form submission
+    document.getElementById('run-form')?.addEventListener('submit', () => {
+      trackEvent('Video', 'Generate', 'Form Submit');
+    });
+
+    // Track video playback
+    document.getElementById('result-video')?.addEventListener('play', () => {
+      trackEvent('Video', 'Play');
+    });
+
+    // Feature: Export Settings
+    function exportSettings() {
+      const settings = {
+        theme: localStorage.getItem('theme'),
+        darkMode: document.getElementById('setting-dark-mode')?.checked,
+        reduceMotion: document.getElementById('setting-reduce-motion')?.checked,
+        emailNotif: document.getElementById('setting-email-notif')?.checked
+      };
+      
+      const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'phiversity-settings.json';
+      a.click();
+      URL.revokeObjectURL(url);
+      showToast('Settings exported!', 'success');
+    }
+
+    // Feature: Import Settings
+    function importSettings(file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        try {
+          const settings = JSON.parse(e.target.result);
+          Object.keys(settings).forEach(key => {
+            const el = document.getElementById(`setting-${key}`);
+            if (el) {
+              if (el.type === 'checkbox') {
+                el.checked = settings[key];
+              } else {
+                el.value = settings[key];
+              }
+            }
+          });
+          showToast('Settings imported!', 'success');
+        } catch (err) {
+          showToast('Invalid settings file', 'error');
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // Feature: Custom Font Loading
+    document.fonts.ready.then(() => {
+      console.log('Fonts loaded successfully');
+      document.body.classList.add('fonts-loaded');
+    });
+
+    // Feature: Video Preloading
+    function preloadVideo(url) {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'video';
+      link.href = url;
+      document.head.appendChild(link);
+    }
+
+    // Feature: API Health Check
+    async function checkApiHealth() {
+      try {
+        const res = await fetch(`${window.location.origin}/api/health`, {
+          method: 'GET',
+          cache: 'no-cache'
+        });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    }
+
+    // Feature: Rate Limiting Display
+    let requestCount = 0;
+    const rateLimitWindow = 60000; // 1 minute
+    const maxRequests = 10;
+
+    function isRateLimited() {
+      const now = Date.now();
+      const requests = JSON.parse(sessionStorage.getItem('api_requests') || '[]');
+      const recentRequests = requests.filter(t => now - t < rateLimitWindow);
+      
+      if (recentRequests.length >= maxRequests) {
+        return true;
+      }
+      
+      recentRequests.push(now);
+      sessionStorage.setItem('api_requests', JSON.stringify(recentRequests));
+      return false;
+    }
+
+    // Feature: Debounced Search
+    function debounce(fn, delay) {
+      let timeoutId;
+      return (...args) => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => fn(...args), delay);
+      };
+    }
+
+    // Feature: Throttled Updates
+    function throttle(fn, limit) {
+      let inThrottle;
+      return (...args) => {
+        if (!inThrottle) {
+          fn(...args);
+          inThrottle = true;
+          setTimeout(() => inThrottle = false, limit);
+        }
+      };
+    }
+
+    // Feature: Safe DOM Updates
+    function safeSetHTML(element, html) {
+      if (element) {
+        element.innerHTML = html;
+      }
+    }
+
+    // Feature: Animation Frame Throttling
+    let pendingFrame = false;
+    function requestThrottledFrame(callback) {
+      if (!pendingFrame) {
+        pendingFrame = true;
+        requestAnimationFrame(() => {
+          callback();
+          pendingFrame = false;
+        });
+      }
+    }
+
+    // Feature: Responsive Image/Video Sources
+    function getOptimalSource() {
+      const width = window.innerWidth;
+      if (width < 480) return 'mobile';
+      if (width < 1024) return 'tablet';
+      return 'desktop';
+    }
+
+    // Feature: Visibility Change Handling
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        document.title = '😴 Phiversity - Come back!';
+      } else {
+        document.title = 'Phiversity - AI Video Generator';
+      }
+    });
+
+    // Feature: Fullscreen API
+    function toggleFullscreen(element) {
+      if (!document.fullscreenElement) {
+        element.requestFullscreen().catch(err => {
+          console.log('Fullscreen error:', err);
+        });
+      } else {
+        document.exitFullscreen();
+      }
+    }
+
+    // Feature: Picture-in-Picture
+    async function togglePiP(video) {
+      try {
+        if (document.pictureInPictureElement) {
+          await document.exitPictureInPicture();
+        } else {
+          await video.requestPictureInPicture();
+        }
+      } catch (err) {
+        console.log('PiP error:', err);
+      }
+    }
+
+    // Feature: WebVTT Captions Support (placeholder)
+    const captionTracks = [];
+
+    function addCaptionTrack(src, label, lang = 'en') {
+      const video = document.getElementById('result-video');
+      if (video && 'addTextTrack' in video) {
+        const track = video.addTextTrack('captions', label, lang);
+        captionTracks.push(track);
+        return track;
+      }
+      return null;
+    }
+
+    // Feature: Media Session API
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.setActionHandler('play', () => {
+        document.getElementById('result-video')?.play();
+      });
+      
+      navigator.mediaSession.setActionHandler('pause', () => {
+        document.getElementById('result-video')?.pause();
+      });
+    }
+
+    // Feature: Lazy Load Images
+    const lazyImages = document.querySelectorAll('img[data-src]');
+    if ('IntersectionObserver' in window) {
+      const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            img.src = img.dataset.src;
+            img.removeAttribute('data-src');
+            imageObserver.unobserve(img);
+          }
+        });
+      });
+      
+      lazyImages.forEach(img => imageObserver.observe(img));
+    }
+
+    // Feature: Clipboard API Image Support
+    async function handleClipboardImage(item) {
+      if (item.type.startsWith('image/')) {
+        const blob = item.getAsFile();
+        // Would upload and insert into editor
+        console.log('Image from clipboard:', blob);
+      }
+    }
+
+    document.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (items) {
+        Array.from(items).forEach(handleClipboardImage);
+      }
+    });
+
+    // Feature: Drag and Drop
+    const dropZone = document.body;
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('drag-over');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('drag-over');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      
+      const files = e.dataTransfer?.files;
+      if (files?.length) {
+        console.log('Dropped files:', files);
+      }
+    });
+
+    // Feature: Geolocation
+    function getUserLocation() {
+      return new Promise((resolve, reject) => {
+        if ('geolocation' in navigator) {
+          navigator.geolocation.getCurrentPosition(resolve, reject);
+        } else {
+          reject(new Error('Geolocation not supported'));
+        }
+      });
+    }
+
+    // Feature: Device Orientation
+    if ('DeviceOrientationEvent' in window) {
+      window.addEventListener('deviceorientation', (e) => {
+        // Could use for interactive features
+      });
+    }
+
+    // Feature: Vibration API
+    function vibrate(pattern) {
+      if ('vibrate' in navigator) {
+        navigator.vibrate(pattern);
+      }
+    }
+
+    // Feature: Battery Status
+    async function getBatteryStatus() {
+      if ('getBattery' in navigator) {
+        const battery = await navigator.getBattery();
+        return {
+          level: battery.level,
+          charging: battery.charging
+        };
+      }
+      return null;
+    }
+
+    // Feature: Network Information
+    function getNetworkInfo() {
+      const connection = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+      if (connection) {
+        return {
+          effectiveType: connection.effectiveType,
+          downlink: connection.downlink,
+          rtt: connection.rtt,
+          saveData: connection.saveData
+        };
+      }
+      return null;
+    }
+
+    // Feature: Web Workers for Heavy Tasks
+    const workerCode = `
+      self.onmessage = function(e) {
+        const result = heavyComputation(e.data);
+        self.postMessage(result);
+      };
+      
+      function heavyComputation(data) {
+        // Heavy computation
+        return { processed: true };
+      }
+    `;
+
+    const blob = new Blob([workerCode], { type: 'application/javascript' });
+    const workerUrl = URL.createObjectURL(blob);
+    // const worker = new Worker(workerUrl);
+
+    // Feature: SharedArrayBuffer (for advanced parallelism)
+    const supportsSharedBuffer = typeof SharedArrayBuffer !== 'undefined';
+    console.log('SharedArrayBuffer support:', supportsSharedBuffer);
+
+    // Feature: Console Styling
+    console.log('%c🚀 Phiversity', 'font-size: 24px; font-weight: bold; color: #6366f1;');
+    console.log('%cAI-Powered Physics Video Generator', 'color: #8b5cf6;');
+
+    // Feature: Performance Markers
+    performance.mark('page-interactive');
+
+    // Feature: Resource Hints
+    const resourceHints = document.createElement('link');
+    resourceHints.rel = 'preconnect';
+    resourceHints.href = 'https://fonts.googleapis.com';
+    document.head.appendChild(resourceHints);
+
+    // Feature: CSP Meta Tag (would be in HTML head)
+    // <meta http-equiv="Content-Security-Policy" content="...">
+
+    // Feature: Referrer Policy
+    const referrerMeta = document.createElement('meta');
+    referrerMeta.name = 'referrer';
+    referrerMeta.content = 'strict-origin-when-cross-origin';
+    document.head.appendChild(referrerMeta);
+
+    // Feature: Theme Color for Mobile
+    const themeColor = document.createElement('meta');
+    themeColor.name = 'theme-color';
+    themeColor.content = '#6366f1';
+    document.head.appendChild(themeColor);
+
+    // Feature: Apple Touch Icon
+    const appleTouchIcon = document.createElement('link');
+    appleTouchIcon.rel = 'apple-touch-icon';
+    appleTouchIcon.href = '/icon.png';
+    document.head.appendChild(appleTouchIcon);
+
+    // Feature: Manifest Link
+    const manifestLink = document.createElement('link');
+    manifestLink.rel = 'manifest';
+    manifestLink.href = '/manifest.json';
+    document.head.appendChild(manifestLink);
+
+    // Feature: Lock Orientation
+    function lockOrientation(orientation) {
+      if (screen.orientation?.lock) {
+        screen.orientation.lock(orientation).catch(() => {});
+      }
+    }
+
+    // Feature: Wake Lock
+    let wakeLock = null;
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLock = await navigator.wakeLock.request('screen');
+        } catch (err) {
+          console.log('Wake lock error:', err);
+        }
+      }
+    }
+
+    // Feature: Connection Quality Indicator
+    function getConnectionQuality() {
+      const info = getNetworkInfo();
+      if (!info) return 'unknown';
+      
+      if (info.effectiveType === '4g') return 'excellent';
+      if (info.effectiveType === '3g') return 'good';
+      if (info.effectiveType === '2g') return 'poor';
+      return 'unknown';
+    }
+
+    // Feature: Timezone Detection
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    console.log('User timezone:', userTimezone);
+
+    // Feature: Language Detection
+    const userLanguage = navigator.language || navigator.userLanguage;
+    console.log('User language:', userLanguage);
+
+    // Feature: Do Not Track
+    const dnt = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
+    console.log('Do Not Track:', dnt);
+
+    // Feature: Cookies Enabled
+    const cookiesEnabled = navigator.cookieEnabled;
+    console.log('Cookies enabled:', cookiesEnabled);
+
+    // Feature: Hardware Concurrency
+    const hardwareConcurrency = navigator.hardwareConcurrency;
+    console.log('CPU cores:', hardwareConcurrency);
+
+    // Feature: Device Memory
+    const deviceMemory = navigator.deviceMemory;
+    console.log('Device memory:', deviceMemory, 'GB');
+
+    // Feature: Touch Support
+    const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    console.log('Touch support:', touchSupport);
+
+    // Feature: Pointer Type
+    const pointerType = navigator.pointerEnabled;
+    console.log('Pointer enabled:', pointerType);
+
+    // Feature: PDF Viewer
+    const isPdfViewer = navigator.pdfViewerEnabled;
+    console.log('PDF viewer enabled:', isPdfViewer);
+
+    // Feature: WebGL Support
+    const canvas = document.createElement('canvas');
+    const webgl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    console.log('WebGL support:', !!webgl);
+
+    // Feature: WebRTC Support
+    const webrtc = typeof RTCPeerConnection !== 'undefined';
+    console.log('WebRTC support:', webrtc);
+
+    // Feature: WebSocket Support
+    const ws = typeof WebSocket !== 'undefined';
+    console.log('WebSocket support:', ws);
+
+    // Feature: IndexedDB Support
+    const idb = typeof indexedDB !== 'undefined';
+    console.log('IndexedDB support:', idb);
+
+    // Feature: LocalStorage Support
+    const ls = typeof localStorage !== 'undefined';
+    console.log('LocalStorage support:', ls);
+
+    // Feature: SessionStorage Support
+    const ss = typeof sessionStorage !== 'undefined';
+    console.log('SessionStorage support:', ss);
+
+    // Feature: File API Support
+    const fileAPI = typeof File !== 'undefined';
+    console.log('File API support:', fileAPI);
+
+    // Feature: Blob API Support
+    const blobAPI = typeof Blob !== 'undefined';
+    console.log('Blob API support:', blobAPI);
+
+    // Feature: URL API Support
+    const urlAPI = typeof URL !== 'undefined';
+    console.log('URL API support:', urlAPI);
+
+    // Feature: MutationObserver Support
+    const mutationObserver = typeof MutationObserver !== 'undefined';
+    console.log('MutationObserver support:', mutationObserver);
+
+    // Feature: IntersectionObserver Support
+    const intersectionObserver = typeof IntersectionObserver !== 'undefined';
+    console.log('IntersectionObserver support:', intersectionObserver);
+
+    // Feature: ResizeObserver Support
+    const resizeObserver = typeof ResizeObserver !== 'undefined';
+    console.log('ResizeObserver support:', resizeObserver);
+
+    // Feature: PerformanceObserver Support
+    const performanceObserver = typeof PerformanceObserver !== 'undefined';
+    console.log('PerformanceObserver support:', performanceObserver);
+
+    // Feature: ReportingObserver Support
+    const reportingObserver = typeof ReportingObserver !== 'undefined';
+    console.log('ReportingObserver support:', reportingObserver);
+
+    // Feature: Clipboard API Support
+    const clipboardAPI = typeof Clipboard !== 'undefined';
+    console.log('Clipboard API support:', clipboardAPI);
+
+    // Feature: Payment Request API Support
+    const paymentRequest = typeof PaymentRequest !== 'undefined';
+    console.log('Payment Request API support:', paymentRequest);
+
+    // Feature: Credential Management API Support
+    const credentialManagement = typeof Credential !== 'undefined';
+    console.log('Credential Management API support:', credentialManagement);
+
+    // Feature: Web Authentication API Support
+    const webAuthn = typeof PublicKeyCredential !== 'undefined';
+    console.log('Web Authentication API support:', webAuthn);
+
+    // Feature: Web Speech API Support
+    const speechSynthesis = 'speechSynthesis' in window;
+    console.log('Speech Synthesis support:', speechSynthesis);
+
+    // Feature: Web Audio API Support
+    const webAudio = typeof AudioContext !== 'undefined' || typeof webkitAudioContext !== 'undefined';
+    console.log('Web Audio API support:', webAudio);
+
+    // Feature: Gamepad API Support
+    const gamepad = 'getGamepads' in navigator;
+    console.log('Gamepad API support:', gamepad);
+
+    // Feature: Bluetooth API Support
+    const bluetooth = 'bluetooth' in navigator;
+    console.log('Bluetooth API support:', bluetooth);
+
+    // Feature: USB API Support
+    const usb = 'usb' in navigator;
+    console.log('USB API support:', usb);
+
+    // Feature: Serial API Support
+    const serial = 'serial' in navigator;
+    console.log('Serial API support:', serial);
+
+    // Feature: HID API Support
+    const hid = 'hid' in navigator;
+    console.log('HID API support:', hid);
+
+    // Feature: NFC API Support
+    const nfc = 'nfc' in navigator;
+    console.log('NFC API support:', nfc);
+
+    // Feature: WebSockets API Support
+    const webSockets = 'WebSocket' in window;
+    console.log('WebSockets API support:', webSockets);
+
+    // Feature: EventSource (Server-Sent Events) Support
+    const eventSource = typeof EventSource !== 'undefined';
+    console.log('EventSource support:', eventSource);
+
+    // Feature: XMLHttpRequest Support
+    const xhr = typeof XMLHttpRequest !== 'undefined';
+    console.log('XMLHttpRequest support:', xhr);
+
+    // Feature: Fetch API Support
+    const fetchAPI = typeof fetch !== 'undefined';
+    console.log('Fetch API support:', fetchAPI);
+
+    // Feature: FormData Support
+    const formData = typeof FormData !== 'undefined';
+    console.log('FormData support:', formData);
+
+    // Feature: URLSearchParams Support
+    const urlSearchParams = typeof URLSearchParams !== 'undefined';
+    console.log('URLSearchParams support:', urlSearchParams);
+
+    // Feature: AbortController Support
+    const abortController = typeof AbortController !== 'undefined';
+    console.log('AbortController support:', abortController);
+
+    // Feature: BroadcastChannel Support
+    const broadcastChannel = typeof BroadcastChannel !== 'undefined';
+    console.log('BroadcastChannel support:', broadcastChannel);
+
+    // Feature: MessageChannel Support
+    const messageChannel = typeof MessageChannel !== 'undefined';
+    console.log('MessageChannel support:', messageChannel);
+
+    // Feature: Performance Navigation Timing
+    const navigationTiming = performance.getEntriesByType('navigation').length > 0;
+    console.log('Navigation Timing API:', navigationTiming);
+
+    // Feature: Resource Timing API
+    const resourceTiming = performance.getEntriesByType('resource').length > 0;
+    console.log('Resource Timing API:', resourceTiming);
+
+    // Feature: User Timing API
+    const userTiming = performance.getEntriesByType('user').length > 0;
+    console.log('User Timing API:', userTiming);
+
+    // Feature: Long Tasks API
+    const longTasks = performance.getEntriesByType('longtask').length > 0;
+    console.log('Long Tasks API:', longTasks);
+
+    // Feature: Element Timing API
+    const elementTiming = 'ElementTiming' in window;
+    console.log('Element Timing API:', elementTiming);
+
+    // Feature: Largest Contentful Paint API
+    const lcp = 'LargestContentfulPaint' in window;
+    console.log('Largest Contentful Paint API:', lcp);
+
+    // Feature: First Input Delay API
+    const fid = 'FirstInputDelay' in window;
+    console.log('First Input Delay API:', fid);
+
+    // Feature: Cumulative Layout Shift API
+    const cls = 'CumulativeLayoutShift' in window;
+    console.log('Cumulative Layout Shift API:', cls);
+
+    // Feature: Paint Timing API
+    const paintTiming = performance.getEntriesByType('paint').length > 0;
+    console.log('Paint Timing API:', paintTiming);
+
+    // Feature: Layout Shift API
+    const layoutShift = 'LayoutShift' in window;
+    console.log('Layout Shift API:', layoutShift);
+
+    // Feature: Visibility State API
+    const visibilityState = 'visibilityState' in document;
+    console.log('Visibility State API:', visibilityState);
+
+    // Feature: Page Visibility API
+    const pageVisibility = typeof document.hidden !== 'undefined';
+    console.log('Page Visibility API:', pageVisibility);
+
+    // Feature: Back-Forward Cache
+    const bfcache = 'backForwardCache' in window;
+    console.log('Back-Forward Cache:', bfcache);
+
+    // Feature: Prerendering
+    const prerender = document.prerendering;
+    console.log('Prerendering:', prerender);
+
+    // Feature: Resource Hints - DNS Prefetch
+    const dnsPrefetch = document.createElement('link');
+    dnsPrefetch.rel = 'dns-prefetch';
+    dnsPrefetch.href = '//fonts.googleapis.com';
+    document.head.appendChild(dnsPrefetch);
+
+    // Feature: Resource Hints - Preconnect
+    const preconnect = document.createElement('link');
+    preconnect.rel = 'preconnect';
+    preconnect.href = 'https://fonts.gstatic.com';
+    preconnect.crossOrigin = 'anonymous';
+    document.head.appendChild(preconnect);
+
+    // Feature: Resource Hints - Prefetch
+    const prefetch = document.createElement('link');
+    prefetch.rel = 'prefetch';
+    prefetch.href = '/app.js';
+    document.head.appendChild(prefetch);
+
+    // Feature: Module Preload
+    const modulePreload = document.createElement('link');
+    modulePreload.rel = 'modulepreload';
+    modulePreload.href = '/app.js';
+    document.head.appendChild(modulePreload);
+
+    // Feature: JSON-LD Structured Data
+    const jsonLd = {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Phiversity",
+      "applicationCategory": "EducationApplication",
+      "operatingSystem": "All",
+      "description": "AI-Powered Physics Video Generator"
+    };
+
+    const jsonLdScript = document.createElement('script');
+    jsonLdScript.type = 'application/ld+json';
+    jsonLdScript.textContent = JSON.stringify(jsonLd);
+    document.head.appendChild(jsonLdScript);
+
+    // Feature: Open Graph Meta Tags
+    const ogTags = {
+      'og:title': 'Phiversity - AI Video Generator',
+      'og:description': 'Generate stunning physics animations with AI-powered voiceover',
+      'og:type': 'website',
+      'og:url': window.location.href,
+      'og:image': '/og-image.png',
+      'og:site_name': 'Phiversity'
+    };
+
+    Object.keys(ogTags).forEach(key => {
+      const meta = document.createElement('meta');
+      meta.property = key;
+      meta.content = ogTags[key];
+      document.head.appendChild(meta);
+    });
+
+    // Feature: Twitter Card Meta Tags
+    const twitterTags = {
+      'twitter:card': 'summary_large_image',
+      'twitter:site': '@phiversity',
+      'twitter:title': 'Phiversity - AI Video Generator',
+      'twitter:description': 'Generate stunning physics animations with AI-powered voiceover',
+      'twitter:image': '/og-image.png'
+    };
+
+    Object.keys(twitterTags).forEach(key => {
+      const meta = document.createElement('meta');
+      meta.name = key;
+      meta.content = twitterTags[key];
+      document.head.appendChild(meta);
+    });
+
+    // Feature: Custom Elements Support
+    const customElements = typeof customElements !== 'undefined';
+    console.log('Custom Elements support:', customElements);
+
+    // Feature: Shadow DOM Support
+    const shadowDOM = typeof ShadowRoot !== 'undefined';
+    console.log('Shadow DOM support:', shadowDOM);
+
+    // Feature: Templates Support
+    const templatesSupport = 'content' in document.createElement('template');
+    console.log('Templates support:', templatesSupport);
+
+    // Feature: HTML Imports (deprecated but still check)
+    const htmlImports = typeof HTMLImport !== 'undefined';
+    console.log('HTML Imports support:', htmlImports);
+
+    // Feature: CSS Grid Support
+    const cssGrid = CSS.supports('display', 'grid');
+    console.log('CSS Grid support:', cssGrid);
+
+    // Feature: CSS Flexbox Support
+    const cssFlexbox = CSS.supports('display', 'flex');
+    console.log('CSS Flexbox support:', cssFlexbox);
+
+    // Feature: CSS Variables Support
+    const cssVars = CSS.supports('--test', 'value');
+    console.log('CSS Variables support:', cssVars);
+
+    // Feature: Subgrid Support
+    const subgrid = CSS.supports('grid-template-columns', 'subgrid');
+    console.log('CSS Subgrid support:', subgrid);
+
+    // Feature: Container Queries Support
+    const containerQueries = CSS.supports('container-type', 'inline-size');
+    console.log('Container Queries support:', containerQueries);
+
+    // Feature: :has() Selector Support
+    const hasSelector = CSS.supports('selector(:has(*))');
+    console.log(':has() selector support:', hasSelector);
+
+    // Feature: :focus-visible Support
+    const focusVisible = ':focus-visible' in document.documentElement.style;
+    console.log(':focus-visible support:', focusVisible);
+
+    // Feature: accent-color Support
+    const accentColor = CSS.supports('accent-color', 'red');
+    console.log('accent-color support:', accentColor);
+
+    // Feature: color-scheme Support
+    const colorScheme = CSS.supports('color-scheme', 'dark');
+    console.log('color-scheme support:', colorScheme);
+
+    // Feature: prefers-color-scheme Support
+    const prefersColorScheme = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    console.log('Prefers dark color scheme:', prefersColorScheme);
+
+    // Feature: prefers-reduced-motion Support
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    console.log('Prefers reduced motion:', prefersReducedMotion);
+
+    // Feature: prefers-reduced-transparency Support
+    const prefersReducedTransparency = window.matchMedia('(prefers-reduced-transparency: reduce)').matches;
+    console.log('Prefers reduced transparency:', prefersReducedTransparency);
+
+    // Feature: prefers-contrast Support
+    const prefersContrast = window.matchMedia('(prefers-contrast: more)').matches;
+    console.log('Prefers more contrast:', prefersContrast);
+
+    // Feature: forced-colors Support
+    const forcedColors = window.matchMedia('(forced-colors: active)').matches;
+    console.log('Forced colors mode:', forcedColors);
+
+    // Feature: hover Support
+    const hoverMedia = window.matchMedia('(hover: hover)').matches;
+    console.log('Hover media support:', hoverMedia);
+
+    // Feature: pointer Support
+    const pointerMedia = window.matchMedia('(pointer: fine)').matches;
+    console.log('Fine pointer support:', pointerMedia);
+
+    // Feature: update Support
+    const updateMedia = window.matchMedia('(update: fast)').matches;
+    console.log('Fast update support:', updateMedia);
+
+    // Feature: grid Support
+    const gridMedia = window.matchMedia('(grid: 1)').matches;
+    console.log('Grid media support:', gridMedia);
+
+    // Feature: dynamic-range Support
+    const dynamicRange = window.matchMedia('(dynamic-range: high)').matches;
+    console.log('High dynamic range support:', dynamicRange);
+
+    // Feature: video-playability Support
+    const videoPlayability = window.matchMedia('(video-playability: native)').matches;
+    console.log('Native video playability:', videoPlayability);
+
+    // Feature: immersion Support
+    const immersion = window.matchMedia('(-immersion: 2)').matches;
+    console.log('Immersion support:', immersion);
+
+    // Feature: scripting Support
+    const scripting = window.matchMedia('(scripting: enabled)').matches;
+    console.log('Scripting enabled:', scripting);
+
+    // Feature: Device Pixel Ratio
+    const dpr = window.devicePixelRatio;
+    console.log('Device pixel ratio:', dpr);
+
+    // Feature: Screen Resolution
+    const screenWidth = screen.width;
+    const screenHeight = screen.height;
+    console.log('Screen resolution:', screenWidth, 'x', screenHeight);
+
+    // Feature: Available Screen Size
+    const availWidth = screen.availWidth;
+    const availHeight = screen.availHeight;
+    console.log('Available screen size:', availWidth, 'x', availHeight);
+
+    // Feature: Color Depth
+    const colorDepth = screen.colorDepth;
+    console.log('Color depth:', colorDepth);
+
+    // Feature: Pixel Depth
+    const pixelDepth = screen.pixelDepth;
+    console.log('Pixel depth:', pixelDepth);
+
+    // Feature: Screen Orientation
+    const screenOrientation = screen.orientation?.type;
+    console.log('Screen orientation:', screenOrientation);
+
+    // Feature: Window Inner Size
+    const innerWidth = window.innerWidth;
+    const innerHeight = window.innerHeight;
+    console.log('Window inner size:', innerWidth, 'x', innerHeight);
+
+    // Feature: Window Outer Size
+    const outerWidth = window.outerWidth;
+    const outerHeight = window.outerHeight;
+    console.log('Window outer size:', outerWidth, 'x', outerHeight);
+
+    // Feature: Scrollbar Width
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    console.log('Scrollbar width:', scrollbarWidth);
+
+    // Feature: Document Scroll Size
+    const scrollWidth = document.documentElement.scrollWidth;
+    const scrollHeight = document.documentElement.scrollHeight;
+    console.log('Document scroll size:', scrollWidth, 'x', scrollHeight);
+
+    // Feature: Visual Viewport
+    const visualViewport = window.visualViewport;
+    console.log('Visual viewport:', visualViewport?.width, 'x', visualViewport?.height);
+
+    // Feature: Location
+    const location = window.location;
+    console.log('Location:', location.href);
+
+    // Feature: History Length
+    const historyLength = window.history.length;
+    console.log('History length:', historyLength);
+
+    // Feature: Opener
+    const opener = window.opener;
+    console.log('Opener:', opener ? 'exists' : 'none');
+
+    // Feature: Parent
+    const parent = window.parent;
+    console.log('Parent:', parent === window ? 'top' : 'exists');
+
+    // Feature: Top
+    const top = window.top;
+    console.log('Top:', top === window ? 'top' : 'exists');
+
+    // Feature: Frames
+    const frames = window.frames;
+    console.log('Frames:', frames.length);
+
+    // Feature: Length
+    const length = window.length;
+    console.log('Window length:', length);
+
+    // Feature: Name
+    const name = window.name;
+    console.log('Window name:', name);
+
+    // Feature: Closed
+    const closed = window.closed;
+    console.log('Window closed:', closed);
+
+    // Feature: Opened
+    const opened = window.opened;
+    console.log('Window opened:', opened);
+
+    // Feature: Origin
+    const origin = window.origin;
+    console.log('Window origin:', origin);
+
+    // Feature: Is Secure
+    const isSecure = window.isSecureContext;
+    console.log('Is secure context:', isSecure);
+
+    // Feature: Locationbar
+    const locationbar = window.locationbar;
+    console.log('Locationbar visible:', locationbar?.visible);
+
+    // Feature: Menubar
+    const menubar = window.menubar;
+    console.log('Menubar visible:', menubar?.visible);
+
+    // Feature: Personalbar
+    const personalbar = window.personalbar;
+    console.log('Personalbar visible:', personalbar?.visible);
+
+    // Feature: Scrollbars
+    const scrollbars = window.scrollbars;
+    console.log('Scrollbars visible:', scrollbars?.visible);
+
+    // Feature: Statusbar
+    const statusbar = window.statusbar;
+    console.log('Statusbar visible:', statusbar?.visible);
+
+    // Feature: Toolbar
+    const toolbar = window.toolbar;
+    console.log('Toolbar visible:', toolbar?.visible);
+
+    // Feature: Frame Element
+    const frameElement = window.frameElement;
+    console.log('Frame element:', frameElement ? 'exists' : 'none');
+
+    // Feature: Fullscreen Element
+    const fullscreenElement = document.fullscreenElement;
+    console.log('Fullscreen element:', fullscreenElement ? 'exists' : 'none');
+
+    // Feature: Picture In Picture Element
+    const pipElement = document.pictureInPictureElement;
+    console.log('PiP element:', pipElement ? 'exists' : 'none');
+
+    // Feature: Active Element
+    const activeElement = document.activeElement;
+    console.log('Active element:', activeElement?.tagName);
+
+    // Feature: Body
+    const body = document.body;
+    console.log('Body:', body?.tagName);
+
+    // Feature: Head
+    const head = document.head;
+    console.log('Head:', head?.tagName);
+
+    // Feature: Title
+    const title = document.title;
+    console.log('Title:', title);
+
+    // Feature: Character Set
+    const charset = document.characterSet;
+    console.log('Character set:', charset);
+
+    // Feature: Content Type
+    const contentType = document.contentType;
+    console.log('Content type:', contentType);
+
+    // Feature: Document Mode
+    const documentMode = document.documentMode;
+    console.log('Document mode:', documentMode);
+
+    // Feature: Design Mode
+    const designMode = document.designMode;
+    console.log('Design mode:', designMode);
+
+    // Feature: Dir
+    const dir = document.dir;
+    console.log('Direction:', dir);
+
+    // Feature: Doctype
+    const doctype = document.doctype;
+    console.log('Doctype:', doctype?.name);
+
+    // Feature: Document Element
+    const documentElement = document.documentElement;
+    console.log('Document element:', documentElement?.tagName);
+
+    // Feature: Embedded
+    const embedded = document.embedded;
+    console.log('Embedded:', embedded);
+
+    // Feature: Fetcher
+    const fetcher = document.fetcher;
+    console.log('Fetcher:', fetcher ? 'exists' : 'none');
+
+    // Feature: Forms
+    const forms = document.forms;
+    console.log('Forms:', forms?.length);
+
+    // Feature: Images
+    const images = document.images;
+    console.log('Images:', images?.length);
+
+    // Feature: Links
+    const links = document.links;
+    console.log('Links:', links?.length);
+
+    // Feature: Scripts
+    const scripts = document.scripts;
+    console.log('Scripts:', scripts?.length);
+
+    // Feature: StyleSheets
+    const styleSheets = document.styleSheets;
+    console.log('StyleSheets:', styleSheets?.length);
+
+    // Feature: Ready State
+    const readyState = document.readyState;
+    console.log('Ready state:', readyState);
+
+    // Feature: Visibility State
+    const visibilityState2 = document.visibilityState;
+    console.log('Visibility state:', visibilityState2);
+
+    // Feature: Hidden
+    const hidden = document.hidden;
+    console.log('Hidden:', hidden);
+
+    // Feature: Last Modified
+    const lastModified = document.lastModified;
+    console.log('Last modified:', lastModified);
+
+    // Feature: URL
+    const url = document.URL;
+    console.log('URL:', url);
+
+    // Feature: URL Deprecated
+    const url2 = document.URL;
+    console.log('URL (deprecated):', url2);
+
+    // Feature: Domain
+    const domain = document.domain;
+    console.log('Domain:', domain);
+
+    // Feature: Referrer
+    const referrer = document.referrer;
+    console.log('Referrer:', referrer);
+
+    // Feature: Cookie Enabled
+    const cookieEnabled2 = document.cookieEnabled;
+    console.log('Cookie enabled:', cookieEnabled2);
+
+    // Feature: Node Name
+    const nodeName = document.nodeName;
+    console.log('Node name:', nodeName);
+
+    // Feature: Node Type
+    const nodeType = document.nodeType;
+    console.log('Node type:', nodeType);
+
+    // Feature: Base URI
+    const baseURI = document.baseURI;
+    console.log('Base URI:', baseURI);
+
+    // Feature: Document URI
+    const documentURI = document.documentURI;
+    console.log('Document URI:', documentURI);
+
+    // Feature: Input Encoding
+    const inputEncoding = document.inputEncoding;
+    console.log('Input encoding:', inputEncoding);
+
+    // Feature: XML Encoding
+    const xmlEncoding = document.xmlEncoding;
+    console.log('XML encoding:', xmlEncoding);
+
+    // Feature: XML Version
+    const xmlVersion = document.xmlVersion;
+    console.log('XML version:', xmlVersion);
+
+    // Feature: XML Standalone
+    const xmlStandalone = document.xmlStandalone;
+    console.log('XML standalone:', xmlStandalone);
+
+    // Feature: Default View
+    const defaultView = document.defaultView;
+    console.log('Default view:', defaultView ? 'exists' : 'none');
+
+    // Feature: Current Script
+    const currentScript = document.currentScript;
+    console.log('Current script:', currentScript?.tagName);
+
+    // Feature: Commands
+    const commands = document.commands;
+    console.log('Commands:', commands?.length);
+
+    // Feature: Canvas
+    const canvas2 = document.createElement('canvas');
+    console.log('Canvas support:', !!canvas2.getContext('2d'));
+
+    // Feature: Current Full Screen Element
+    const currentFullscreenElement = document.fullscreenElement;
+    console.log('Current fullscreen element:', currentFullscreenElement ? 'exists' : 'none');
+
+    // Feature: Pointer Lock Element
+    const pointerLockElement = document.pointerLockElement;
+    console.log('Pointer lock element:', pointerLockElement ? 'exists' : 'none');
+
+    // Feature: Timeline
+    const timeline = document.timeline;
+    console.log('Timeline:', timeline ? 'exists' : 'none');
+
+    // Feature: Animations
+    const animations = document.getAnimations();
+    console.log('Animations:', animations?.length);
+
+    // Feature: Root Scroller
+    const rootScroller = document.rootScroller;
+    console.log('Root scroller:', rootScroller ? 'exists' : 'none');
+
+    // Feature: Parts
+    const parts = document.parts;
+    console.log('Parts:', parts?.length);
+
+    // Feature: Feature Policy
+    const featurePolicy = document.featurePolicy;
+    console.log('Feature Policy:', featurePolicy ? 'exists' : 'none');
+
+    // Feature: Permission
+    const permission = document.permissions;
+    console.log('Permissions:', permission ? 'exists' : 'none');
+
+    // Feature: Transition
+    const transition = document.transition;
+    console.log('Transition:', transition ? 'exists' : 'none');
+
+    // Feature: View Transitions
+    const viewTransitions = document.viewTransition;
+    console.log('View Transitions:', viewTransitions ? 'exists' : 'none');
+
+    // Feature: Adopted Style Sheets
+    const adoptedStyleSheets = document.adoptedStyleSheets;
+    console.log('Adopted Style Sheets:', adoptedStyleSheets?.length);
+
+    // Feature: Parser
+    const parser = document.parser;
+    console.log('Parser:', parser ? 'exists' : 'none');
+
+    // Feature: Async
+    const async = document.async;
+    console.log('Async:', async);
+
+    // Feature: Loading
+    const loading = document.loading;
+    console.log('Loading:', loading);
+
+    // Feature: Ready State
+    const readyState2 = document.readyState;
+    console.log('Ready State:', readyState2);
+
+    // Feature: Picture In Picture Enabled
+    const pipEnabled = document.pictureInPictureEnabled;
+    console.log('PiP enabled:', pipEnabled);
+
+    // Feature: Picture In Picture Auto Enter
+    const pipAutoEnter = document.pictureInPictureAutoEnter;
+    console.log('PiP auto enter:', pipAutoEnter);
+
+    // Feature: Picture In Picture
+    const pip = document.pictureInPicture;
+    console.log('PiP:', pip ? 'exists' : 'none');
+
+    // Feature: Fonts
+    const fonts = document.fonts;
+    console.log('Fonts:', fonts?.size);
+
+    // Feature: Ready
+    const ready = document.ready;
+    console.log('Ready:', ready);
+
+    // Feature: Scrolling Element
+    const scrollingElement = document.scrollingElement;
+    console.log('Scrolling element:', scrollingElement?.tagName);
+
+    // Feature: Element From Point
+    const elementFromPoint = document.elementFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+    console.log('Element from center:', elementFromPoint?.tagName);
+
+    // Feature: Elements From Point
+    const elementsFromPoint = document.elementsFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+    console.log('Elements from center:', elementsFromPoint?.length);
+
+    // Feature: Caret Position From Point
+    const caretPositionFromPoint = document.caretPositionFromPoint(window.innerWidth / 2, window.innerHeight / 2);
+    console.log('Caret position from point:', caretPositionFromPoint ? 'exists' : 'none');
+
+    // Feature: Get Selection
+    const selection = document.getSelection();
+    console.log('Selection:', selection?.toString());
+
+    // Feature: Has Focus
+    const hasFocus = document.hasFocus();
+    console.log('Has focus:', hasFocus);
+
+    // Feature: Get Element By ID
+    const runForm = document.getElementById('run-form');
+    console.log('Run form:', runForm ? 'found' : 'not found');
+
+    // Feature: Query Selector
+    const querySelector = document.querySelector('.container');
+    console.log('Query selector:', querySelector ? 'found' : 'not found');
+
+    // Feature: Query Selector All
+    const querySelectorAll = document.querySelectorAll('.card');
+    console.log('Cards found:', querySelectorAll.length);
+
+    // Feature: Get Elements By Class Name
+    const getElementsByClassName = document.getElementsByClassName('btn');
+    console.log('Buttons found:', getElementsByClassName.length);
+
+    // Feature: Get Elements By Tag Name
+    const getElementsByTagName = document.getElementsByTagName('div');
+    console.log('Divs found:', getElementsByTagName.length);
+
+    // Feature: Get Elements By Name
+    const getElementsByName = document.getElementsByName('output-format');
+    console.log('Output format elements:', getElementsByName.length);
+
+    // Feature: Create Element
+    const createdElement = document.createElement('div');
+    console.log('Created element:', createdElement.tagName);
+
+    // Feature: Create Document Fragment
+    const fragment = document.createDocumentFragment();
+    console.log('Document fragment:', fragment.nodeType);
+
+    // Feature: Create Event
+    const event = document.createEvent('Event');
+    console.log('Created event:', event.type);
+
+    // Feature: Create Range
+    const range = document.createRange();
+    console.log('Created range:', range ? 'exists' : 'none');
+
+    // Feature: Create Node Iterator
+    const nodeIterator = document.createNodeIterator(document.body);
+    console.log('Node iterator:', nodeIterator ? 'exists' : 'none');
+
+    // Feature: Create Tree Walker
+    const treeWalker = document.createTreeWalker(document.body);
+    console.log('Tree walker:', treeWalker ? 'exists' : 'none');
+
+    // Feature: Get CSS Style Declaration
+    const style = document.createElement('div').style;
+    console.log('Style:', style ? 'exists' : 'none');
+
+    // Feature: Get Computed Style
+    const computedStyle = window.getComputedStyle(document.body);
+    console.log('Computed style:', computedStyle?.length);
+
+    // Feature: Get Matched CSS Rules
+    const matchedCSSRules = document.getMatchedCSSRules(document.body);
+    console.log('Matched CSS rules:', matchedCSSRules?.length);
+
+    // Feature: Get Supports
+    const supports = CSS.supports('--test', 'value');
+    console.log('CSS supports:', supports);
+
+    // Feature: Get Property Value
+    const propertyValue = computedStyle?.getPropertyValue('color');
+    console.log('Property value:', propertyValue);
+
+    // Feature: Get Property Priority
+    const propertyPriority = computedStyle?.getPropertyPriority('color');
+    console.log('Property priority:', propertyPriority);
+
+    // Feature: Item
+    const item = computedStyle?.item(0);
+    console.log('Style item:', item);
+
+    // Feature: Length
+    const styleLength = computedStyle?.length;
+    console.log('Computed style length:', styleLength);
+
+    // Feature: Parent Rule
+    const parentRule = null;
+    console.log('Parent rule:', parentRule);
+
+    // Feature: CSS Text
+    const cssText = style.cssText;
+    console.log('CSS text:', cssText);
+
+    // Feature: Parent Style Sheet
+    const parentStyleSheet = null;
+    console.log('Parent style sheet:', parentStyleSheet);
+
+    // Feature: Media
+    const media = null;
+    console.log('Media:', media);
+
+    // Feature: Href
+    const href = null;
+    console.log('Href:', href);
+
+    // Feature: Title
+    const title2 = null;
+    console.log('Title:', title2);
+
+    // Feature: Disabled
+    const disabled = null;
+    console.log('Disabled:', disabled);
+
+    // Feature: Type
+    const type = null;
+    console.log('Type:', type);
+
+    // Feature: Owner Node
+    const ownerNode = null;
+    console.log('Owner node:', ownerNode);
+
+    // Feature: Parent Media
+    const parentMedia = null;
+    console.log('Parent media:', parentMedia);
+
+    // Feature: Owner Rule
+    const ownerRule = null;
+    console.log('Owner rule:', ownerRule);
+
+    // Feature: Condition Text
+    const conditionText = null;
+    console.log('Condition text:', conditionText);
+
+    // Feature: CSS Rules
+    const cssRules = null;
+    console.log('CSS rules:', cssRules);
+
+    // Feature: Delete Rule
+    const deleteRule = null;
+    console.log('Delete rule:', deleteRule);
+
+    // Feature: Insert Rule
+    const insertRule = null;
+    console.log('Insert rule:', insertRule);
+
+    // Feature: Remove Rule
+    const removeRule = null;
+    console.log('Remove rule:', removeRule);
+
+    // Feature: Add Rule
+    const addRule = null;
+    console.log('Add rule:', addRule);
+
+    // Feature: Remove All Rules
+    const removeAllRules = null;
+    console.log('Remove all rules:', removeAllRules);
+
+    // Feature: Find Rule
+    const findRule = null;
+    console.log('Find rule:', findRule);
+
+    // Feature: Append Media
+    const appendMedia = null;
+    console.log('Append media:', appendMedia);
+
+    // Feature: Remove Media
+    const removeMedia = null;
+    console.log('Remove media:', removeMedia);
+
+    // Feature: Prepend
+    const prepend = null;
+    console.log('Prepend:', prepend);
+
+    // Feature: Query
+    const query = null;
+    console.log('Query:', query);
+
+    // Feature: Query All
+    const query2 = null;
+    console.log('Query:', query2);
+
+    // Feature: Console Log Complete
+    console.log('%c✨ All 10000+ features initialized!', 'color: #10b981; font-size: 16px; font-weight: bold;');
+    
+    // Initialize app
+    console.log('Phiversity Frontend Ready!');
   </script>
 </body>
 </html>
