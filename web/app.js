@@ -367,11 +367,11 @@ form.addEventListener('submit', async (e) => {
 
   const modeGuidance = {
     question_solving:
-      'MODE: QUESTION_SOLVING. Focus on solving the exact question step-by-step with clear derivation, substitutions, unit checks, and final answer verification.',
+      'MODE: QUESTION_SOLVING. Duration 2-5 minutes only. Solve exactly one question end-to-end with clear derivation, substitution, unit checks, and final answer verification. Do not expand into chapter teaching.',
     lecture:
-      'MODE: LECTURE. Teach concept-first as a classroom lecture with intuition, definitions, derivations, examples, and smooth explanatory flow.',
+      'MODE: LECTURE. Duration 30-60 minutes. Teach the full lesson/chapter like a teacher: concept flow, definitions, derivations, examples, and exercises for each topic from basics to applications.',
     revision:
-      'MODE: REVISION. Create a concise high-yield revision format with key formulas, quick methods, common mistakes, and rapid recap checkpoints.'
+      'MODE: REVISION. Duration 10-15 minutes. Build a last-hour quick revision on tiny lesson topics with 4-5 solved questions, derivation if applicable, key formulas, and rapid recap checkpoints.'
   };
   const modePrompt = modeGuidance[learningMode] || modeGuidance.question_solving;
   const mergedPrompt = [modePrompt, customPrompt].filter(Boolean).join('\n\n');

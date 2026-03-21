@@ -24,7 +24,7 @@ except ImportError:
 SYSTEM_PROMPT_FOR_PROMPTER = """
 You are a prompt engineer. Your job: given a user's question, write a single, clear, rigorous prompt for a subject-expert LLM to produce a machine-parseable JSON object with:
 1) solution steps (with brief explanations and optional LaTeX), and
-2) a comprehensive animation plan for Manim (minimum 50 scenes with elements),
+2) a comprehensive animation plan for Manim,
 under the exact JSON schema described below.
 
 FIRST, CLASSIFY THE QUESTION TYPE to select the best teaching approach:
@@ -44,13 +44,19 @@ FIRST, CLASSIFY THE QUESTION TYPE to select the best teaching approach:
 For EVERY question, the solver prompt must instruct: step-by-step transparency (never skip steps),
 metacognitive narration ("why I chose this approach"), pattern recognition cues, and error awareness.
 
-CRITICAL: THE VIDEO MUST BE AT LEAST 90 MINUTES LONG.
-- Minimum 80 scenes (excluding intro)
-- Minimum 15000 words of total voiceover content across all scenes
-- Each scene voiceover: 150-300 words
-- estimated_duration_seconds >= 5400
-- duration_estimate_minutes >= 90
-- Each scene must have at least 5-10 visual elements
+CRITICAL: OBEY MODE-SPECIFIC DURATION AND CONTENT REQUIREMENTS (NON-NEGOTIABLE).
+- QUESTION_SOLVING mode:
+  - Total lesson length must be 2 to 5 minutes (120 to 300 seconds).
+  - Solve ONLY one question end-to-end with no chapter expansion.
+  - Show full step-by-step working, checks, and final verification.
+- LECTURE mode:
+  - Total lesson length must be 30 to 60 minutes (1800 to 3600 seconds).
+  - Teach the full lesson/chapter flow like a teacher: concepts, intuition, derivations, examples, and exercises for each topic.
+  - Include structured teaching progression from basics to applications.
+- REVISION mode:
+  - Total lesson length must be 10 to 15 minutes (600 to 900 seconds).
+  - Create a last-hour quick revision focused on tiny lesson topics.
+  - Include 4 to 5 solved questions and derivation steps when relevant.
 
 Rules:
 - The solver LLM must respond with ONLY JSON, no prose.
@@ -83,7 +89,7 @@ JSON Schema (types and keys):
     "difficulty": "beginner" | "intermediate" | "advanced",
     "subject": "physics" | "chemistry" | "mathematics" | "economics",
     "summary": string,
-    "duration_estimate_minutes": number (>= 90),
+    "duration_estimate_minutes": number (must satisfy selected mode duration range),
     "prerequisite_topics": [string] | null,
     "steps": [
       { "title": string, "explanation": string, "latex": string | null }
@@ -108,8 +114,8 @@ JSON Schema (types and keys):
   },
   "animation_plan": {
     "overview": string | null,
-    "total_scenes": integer (>= 80),
-    "estimated_duration_seconds": integer (>= 5400),
+    "total_scenes": integer (must satisfy selected mode scope and pacing),
+    "estimated_duration_seconds": integer (must satisfy selected mode duration range),
     "scenes": [
       {
         "id": string (snake_case),
@@ -148,17 +154,21 @@ def _mode_guidance(mode: str | None) -> str:
   m = (mode or "question_solving").strip().lower()
   if m == "lecture":
     return (
-      "MODE: LECTURE. Prioritize concept-first teaching flow, intuition, definitions, derivation logic, "
-      "and smooth explanatory sequencing as if delivering a classroom lecture."
+      "OVERRIDE RULE: The following mode constraints are mandatory and override any conflicting duration or scope instruction in other prompt text. "
+      "MODE: LECTURE. Duration target is 30-60 minutes total. Teach as a full teacher-led chapter lesson: "
+      "all key concepts, intuition, definitions, derivations, worked examples, and exercises topic-by-topic. "
+      "Cover the lesson comprehensively with classroom sequencing from fundamentals to applications."
     )
   if m == "revision":
     return (
-      "MODE: REVISION. Prioritize concise high-yield revision: key formulas, fast methods, common mistakes, "
-      "memory hooks, and short recap checkpoints."
+      "OVERRIDE RULE: The following mode constraints are mandatory and override any conflicting duration or scope instruction in other prompt text. "
+      "MODE: REVISION. Duration target is 10-15 minutes total. Build a last-hour quick revision on tiny topics of the lesson. "
+      "Include 4-5 solved questions, key formulas, derivation if applicable, quick mistakes review, and rapid recap checkpoints."
     )
   return (
-    "MODE: QUESTION_SOLVING. Prioritize direct question solving with explicit step-by-step derivation, "
-    "substitution, unit checks, and answer verification."
+    "OVERRIDE RULE: The following mode constraints are mandatory and override any conflicting duration or scope instruction in other prompt text. "
+    "MODE: QUESTION_SOLVING. Duration target is 2-5 minutes total. Solve only one question end-to-end with explicit step-by-step derivation, "
+    "substitution, unit checks, and final answer verification. Do not expand into full chapter teaching."
   )
 
 
@@ -172,7 +182,7 @@ def _local_solver_prompt(user_question: str) -> str:
     "difficulty": "beginner | intermediate | advanced",
     "subject": "physics | chemistry | mathematics | economics",
     "summary": "2-3 sentence plain-English answer",
-    "duration_estimate_minutes": "number, must be >= 90",
+    "duration_estimate_minutes": "number, must satisfy selected mode duration range",
     "prerequisite_topics": ["string — list of prerequisite topics taught before the main topic"],
     "steps": [
       { "title": "string", "explanation": "string", "latex": "string | null" }
@@ -217,8 +227,8 @@ def _local_solver_prompt(user_question: str) -> str:
   },
   "animation_plan": {
     "overview": "string | null",
-    "total_scenes": "integer, must be >= 80",
-    "estimated_duration_seconds": "integer, must be >= 5400",
+    "total_scenes": "integer, must match selected mode scope",
+    "estimated_duration_seconds": "integer, must satisfy selected mode duration range",
     "scenes": [
       {
         "id": "string (snake_case)",
@@ -255,15 +265,12 @@ def _local_solver_prompt(user_question: str) -> str:
     "• PATTERN RECOGNITION: Teach students to identify when to use each technique\n"
     "• NEVER SKIP STEPS: Show every algebraic manipulation as a human would on a whiteboard\n"
     "• ERROR AWARENESS: At every key step, mention what could go wrong and why\n"
-    "• BUILD from simple→complex, concrete→abstract\n\n",
-    "## CRITICAL LENGTH REQUIREMENTS (NON-NEGOTIABLE):\n"
-    "- Minimum 80 scenes (120+ preferred)\n"
-    "- Minimum 20000+ words of total voiceover content (aim for 30000+)\n"
-    "- Each scene voiceover: 180-350 words (FLOOR is 180 words)\n"
-    "- estimated_duration_seconds >= 7200 (120+ minutes)\n"
-    "- duration_estimate_minutes >= 120\n"
-    "- Each scene duration_seconds: 60-150\n"
-    "- Each scene MUST have 6-12 visual elements (NOT just 5-10)\n\n"
+    "• BUILD from simple→complex, concrete→abstract\n\n"
+    "## MODE REQUIREMENTS (NON-NEGOTIABLE):\n"
+    "- QUESTION_SOLVING: 2-5 minutes total (120-300s), exactly one question solved end-to-end.\n"
+    "- LECTURE: 30-60 minutes total (1800-3600s), teacher-style full lesson/chapter with exercises by topic.\n"
+    "- REVISION: 10-15 minutes total (600-900s), last-hour quick revision with 4-5 solved questions and derivation if relevant.\n"
+    "- Ensure duration_estimate_minutes and estimated_duration_seconds strictly match the selected mode.\n\n"
     "## DEPTH REQUIREMENTS:\n"
     "- Go DEEP into each concept with multiple examples and approaches\n"
     "- Include 20+ derivation steps for main formulas, showing every algebraic manipulation\n"
@@ -332,7 +339,7 @@ def craft_solver_prompt(user_question: str, chatgpt_model: str | None = None, mo
       print(f"[orchestrator] Crafting solver prompt via Ollama model: {model}")
       messages = [
         {"role": "system", "content": SYSTEM_PROMPT_FOR_PROMPTER},
-        {"role": "user", "content": user_question.strip()},
+        {"role": "user", "content": user_question.strip() + "\n\n" + _mode_guidance(mode)},
       ]
       resp = client.chat.completions.create(
         model=model,
@@ -701,12 +708,12 @@ def orchestrate_solution(user_question: str, override_solver_prompt: str | None 
   try:
     if override_solver_prompt and override_solver_prompt.strip():
       # Use the provided prompt directly, and ensure the user's question is included.
-      solver_prompt = override_solver_prompt.strip() + "\n\n" + _mode_guidance(mode) + "\n\n" + f"User question: {user_question.strip()}"
+      solver_prompt = _mode_guidance(mode) + "\n\n" + override_solver_prompt.strip() + "\n\n" + f"User question: {user_question.strip()}"
     else:
       # Auto-load the comprehensive 10-min Prompt.txt as default
       default_prompt = _load_default_prompt()
       if default_prompt:
-        solver_prompt = default_prompt + "\n\n" + _mode_guidance(mode) + "\n\n" + f"User question: {user_question.strip()}"
+        solver_prompt = _mode_guidance(mode) + "\n\n" + default_prompt + "\n\n" + f"User question: {user_question.strip()}"
       else:
         solver_prompt = craft_solver_prompt(user_question, mode=mode)
 
