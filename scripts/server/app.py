@@ -1,30 +1,36 @@
 import os
 import sys
-import json
-import uuid
-import threading
-import subprocess
 import time
 from pathlib import Path
-from typing import Dict, Optional, Any
-from fastapi import APIRouter
+from typing import Optional, List
+from contextlib import asynccontextmanager
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import JSONResponse
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
 from dotenv import load_dotenv
-
-# Load environment variables from .env if present; allow overriding existing
+# Load environment variables BEFORE local imports that read env vars at import time
 load_dotenv(override=True)
 
-# Import cloud storage
-try:
-    from scripts.cloud_storage import storage as cloud_storage
-except ImportError:
-    cloud_storage = None
+from fastapi import FastAPI, HTTPException, Depends, status, Request
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy.orm import Session
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
+from .database import engine, Base, get_db
+from .models import JobModel, User
+from .schemas import RunRequest, JobResponse, JobStatusResponse, UserCreate, Token, UserResponse, LoginRequest, ForgotPasswordRequest
+from .services.job_service import JobService
+from .services.user_service import UserService
+from .auth import create_access_token, get_current_user
+from .logger import logger
+
+# --- Initialization ---
+
+# Create DB Tables
+Base.metadata.create_all(bind=engine)
+
+# Paths
 ROOT = Path(__file__).resolve().parents[2]
 MEDIA_DIR = ROOT / "media"
 VIDEOS_DIR = MEDIA_DIR / "videos"
@@ -35,440 +41,238 @@ VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
 TEXTS_DIR.mkdir(parents=True, exist_ok=True)
 WEB_DIR.mkdir(parents=True, exist_ok=True)
 
-app = FastAPI(title="Manimations Frontend API")
+# Cloud Storage
+try:
+    from scripts.cloud_storage import storage as cloud_storage
+except ImportError:
+    cloud_storage = None
 
-# Enable CORS for cloud deployment
+# --- Lifespan ---
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    from scripts.server.database import SessionLocal
+    db = SessionLocal()
+    try:
+        # Cleanup orphaned jobs on startup
+        orphaned_jobs = db.query(JobModel).filter(JobModel.status == "running").all()
+        for j in orphaned_jobs:
+            j.status = "error"
+            j.log = (j.log or "") + "\n[server] Job abandoned after crash. Marked as failed."
+        db.commit()
+    finally:
+        db.close()
+    yield
+
+# --- App Instance ---
+
+# --- Rate Limiter ---
+limiter = Limiter(key_func=get_remote_address)
+app = FastAPI(
+    title="Phiversity API", 
+    description="Professional-grade video generation API",
+    version="1.1.0", 
+    lifespan=lifespan
+)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+# --- Middleware ---
+
+# CORS: wildcard origin is incompatible with allow_credentials=True per the spec.
+# Use explicit origins from env var; default to localhost only.
+_cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,http://localhost:8000").split(",")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify your frontend domain
+    allow_origins=_cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-router = APIRouter()
-
-class RunRequest(BaseModel):
-    problem: str
-    voice_first: bool = True
-    element_audio: bool = False
-    orchestrate: bool = True
-    # Optional: override solver prompt that guides the LLM. When provided,
-    # the orchestrator will use this prompt (with the user question appended)
-    # instead of auto-generating one via ChatGPT.
-    custom_prompt: Optional[str] = None
-
-
-class Job:
-    def __init__(self, job_id: str):
-        self.id = job_id
-        self.status: str = "queued"  # queued | running | done | error
-        self.log: str = ""
-        self.video_path: Optional[Path] = None
-        self.video_url: Optional[str] = None  # Cloud storage URL
-        self.plan_path: Optional[Path] = None
-        self.plan_url: Optional[str] = None  # Cloud storage URL
-        self.out_dir: Optional[Path] = None
-        self.progress: int = 0  # 0-100 percentage
-        self._lock = threading.Lock()
-
-    def append_log(self, text: str):
-        with self._lock:
-            self.log += text
-            if self.out_dir:
-                try:
-                    log_path = self.out_dir / "log.txt"
-                    with open(log_path, "a", encoding="utf-8", errors="ignore") as f:
-                        f.write(text)
-                except Exception:
-                    pass
-
-    def set_status(self, status: str):
-        with self._lock:
-            self.status = status
-
-    def set_video(self, path: Optional[Path]):
-        with self._lock:
-            self.video_path = path
-
-    def set_plan(self, path: Optional[Path]):
-        with self._lock:
-            self.plan_path = path
-
-    def set_out_dir(self, path: Optional[Path]):
-        with self._lock:
-            self.out_dir = path
-
-    def set_progress(self, percent: int):
-        with self._lock:
-            self.progress = max(0, min(100, percent))
-
-    def to_dict(self) -> Dict[str, Any]:
-        return {
-            "job_id": self.id,
-            "status": self.status,
-            "video_path": str(self.video_path) if self.video_path else None,
-            "plan_path": str(self.plan_path) if self.plan_path else None,
-            "out_dir": str(self.out_dir) if self.out_dir else None,
-            "progress": self.progress,
-        }
-
-
-class JobManager:
-    def __init__(self):
-        self.jobs: Dict[str, Job] = {}
-        self._lock = threading.Lock()
-
-    def create(self) -> Job:
-        job_id = uuid.uuid4().hex[:12]
-        job = Job(job_id)
-        with self._lock:
-            self.jobs[job_id] = job
-        return job
-
-    def get(self, job_id: str) -> Job:
-        job = self.jobs.get(job_id)
-        if not job:
-            raise KeyError(job_id)
-        return job
-
-
-jobs = JobManager()
-
-
-def _run_and_capture(cmd: list[str], cwd: Path, job: Job) -> int:
-    job.append_log(f"\n$ {' '.join(cmd)}\n")
-    try:
-        proc = subprocess.Popen(
-            cmd,
-            cwd=str(cwd),
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
-        assert proc.stdout is not None
-        for line in proc.stdout:
-            job.append_log(line)
-        return proc.wait()
-    except Exception as e:
-        job.append_log(f"Exception: {e}\n")
-        return 1
-
-
-def _find_newest_mp4(base_dir: Path) -> Optional[Path]:
-    newest: Optional[Path] = None
-    newest_mtime = -1.0
-    for root, _dirs, files in os.walk(base_dir):
-        for f in files:
-            if f.lower().endswith(".mp4"):
-                p = Path(root) / f
-                try:
-                    mtime = p.stat().st_mtime
-                    if mtime > newest_mtime:
-                        newest_mtime = mtime
-                        newest = p
-                except FileNotFoundError:
-                    continue
-    return newest
-
-
-def _worker(job: Job, req: RunRequest):
-    # Refresh .env on each job in case keys changed
-    load_dotenv(override=True)
-    job.set_status("running")
-    job.set_progress(5)  # Job started
-    # Initialize job directory and persist initial state
-    out_dir = VIDEOS_DIR / "web_jobs" / job.id
-    out_dir.mkdir(parents=True, exist_ok=True)
-    job.set_out_dir(out_dir)
-    
-    # Overall job timeout (default 20 minutes)
-    job_timeout = int(os.getenv("JOB_TIMEOUT", "1200"))
+@app.middleware("http")
+async def log_requests(request, call_next):
     start_time = time.time()
-    
-    try:
-        python = sys.executable
-        plan_path = TEXTS_DIR / f"solution_plan_{job.id}.json"
-        job.set_plan(plan_path)
-        _persist_job(job)
-
-        if req.orchestrate:
-            job.set_progress(10)  # Starting orchestration
-            cmd_1 = [
-                python,
-                "-m",
-                "scripts.orchestrator.run_orchestrator",
-                req.problem,
-                "--out",
-                str(plan_path),
-            ]
-            default_prompt_path = ROOT / "Prompt.txt"
-            if req.custom_prompt:
-                # If custom_prompt is a readable file path, use --prompt-file; otherwise use --prompt
-                try:
-                    pth = Path(req.custom_prompt)
-                    if pth.exists() and pth.is_file():
-                        cmd_1.extend(["--prompt-file", str(pth)])
-                    else:
-                        cmd_1.extend(["--prompt", req.custom_prompt])
-                except Exception:
-                    cmd_1.extend(["--prompt", req.custom_prompt])
-            else:
-                # Fallback: use Prompt.txt at workspace root if present
-                try:
-                    if default_prompt_path.exists():
-                        cmd_1.extend(["--prompt-file", str(default_prompt_path)])
-                except Exception:
-                    pass
-            job.append_log("[server] Starting LLM orchestration...\n")
-            rc1 = _run_and_capture(cmd_1, ROOT, job)
-            if rc1 != 0:
-                job.append_log("[server] Orchestration failed\n")
-                job.set_status("error")
-                return
-            
-            # Check timeout
-            elapsed = time.time() - start_time
-            if elapsed > job_timeout:
-                job.append_log(f"[server] Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)\n")
-                job.set_status("error")
-                return
-            job.set_progress(30)  # Orchestration completed
-            job.append_log(f"[server] Orchestration completed ({elapsed:.1f}s elapsed)\n")
-        else:
-            # If not orchestrating, assume problem contains a path to plan JSON
-            try:
-                plan_candidate = Path(req.problem)
-                if plan_candidate.exists():
-                    plan_path = plan_candidate
-                    job.set_plan(plan_path)
-                else:
-                    job.append_log(f"No orchestration and plan path invalid: {plan_candidate}\n")
-                    job.set_status("error")
-                    return
-            except Exception:
-                job.append_log("Invalid plan path when orchestrate=False.\n")
-                job.set_status("error")
-                return
-
-        job.set_progress(40)
-        cmd_2 = [
-            python,
-            "-m",
-            "scripts.pipeline",
-            "--json",
-            str(plan_path),
-            "--out-dir",
-            str(out_dir),
-        ]
-        if req.voice_first:
-            cmd_2.append("--voice-first")
-        if req.element_audio:
-            cmd_2.append("--element-audio")
-
-        job.append_log("[server] Starting video generation pipeline...\n")
-        rc2 = _run_and_capture(cmd_2, ROOT, job)
-        
-        # Check timeout
-        elapsed = time.time() - start_time
-        if elapsed > job_timeout:
-            job.append_log(f"[server] Job timeout exceeded ({elapsed:.1f}s > {job_timeout}s)\n")
-            job.set_status("error")
-            _persist_job(job)
-            return
-            
-        if rc2 != 0:
-            job.append_log("[server] Pipeline execution failed\n")
-            job.set_status("error")
-            _persist_job(job)
-            return
-        
-        job.set_progress(90)  # Pipeline completed
-        job.append_log(f"[server] Pipeline completed ({elapsed:.1f}s total)\n")
-
-        # Pipeline writes final.mp4 in out_dir
-        final_path = out_dir / "final.mp4"
-        if not final_path.exists():
-            # Fallback: scan videos dir
-            time.sleep(0.5)
-            # Prefer to search within this job's out_dir only
-            final_scan = _find_newest_mp4(out_dir)
-            if final_scan is None:
-                job.append_log("Could not find output video.\n")
-                job.set_status("error")
-                return
-            job.set_video(final_scan)
-        else:
-            job.set_video(final_path)
-        
-        # Upload to cloud storage if configured
-        if cloud_storage and cloud_storage.backend != "local":
-            job.append_log("[server] Uploading video to cloud storage...\n")
-            try:
-                video_url = cloud_storage.upload_video(final_path, job.id)
-                job.video_url = video_url
-                job.append_log(f"[server] Video uploaded: {video_url}\n")
-                
-                # Upload plan JSON too
-                if job.plan_path and job.plan_path.exists():
-                    plan_url = cloud_storage.upload_json(job.plan_path, job.id)
-                    job.plan_url = plan_url
-            except Exception as e:
-                job.append_log(f"[server] Cloud upload warning: {e}\n")
-        
-        total_elapsed = time.time() - start_time
-        job.append_log(f"[server] Job completed successfully in {total_elapsed:.1f}s\n")
-        job.set_progress(100)  # Job completed
-        job.set_status("done")
-        _persist_job(job)
-    except Exception as e:
-        elapsed = time.time() - start_time
-        job.append_log(f"[server] Unhandled exception after {elapsed:.1f}s: {e}\n")
-        job.set_status("error")
-        _persist_job(job)
-        
-@app.get("/health")
-def health_check():
-    """Health check endpoint for cloud platforms"""
-    return {"status": "ok", "service": "manimations-api"}
-
-@app.post("/api/run")
-def run(req: RunRequest):
-    job = jobs.create()
-    t = threading.Thread(target=_worker, args=(job, req), daemon=True)
-    t.start()
-    return {"job_id": job.id}
-
-@app.get("/api/jobs/{job_id}")
-def job_status(job_id: str):
-    try:
-        job = jobs.get(job_id)
-    except KeyError:
-        # Attempt to recover from disk persistence (e.g., after server reload)
-        disk_dir = VIDEOS_DIR / "web_jobs" / job_id
-        state_path = disk_dir / "job.json"
-        if not state_path.exists():
-            raise HTTPException(status_code=404, detail="Job not found")
-        try:
-            data = json.loads(state_path.read_text(encoding="utf-8"))
-        except Exception:
-            raise HTTPException(status_code=404, detail="Job not found")
-        # Build response directly from persisted data
-        video_path = data.get("video_path")
-        plan_path = data.get("plan_path")
-        video_url = None
-        plan_url = None
-        log_url = None
-        if video_path:
-            vp = Path(video_path)
-            if vp.exists():
-                try:
-                    rel = vp.relative_to(MEDIA_DIR)
-                    video_url = f"/media/{rel.as_posix()}"
-                except ValueError:
-                    video_url = str(vp)
-        if plan_path:
-            pp = Path(plan_path)
-            if pp.exists():
-                try:
-                    rel = pp.relative_to(MEDIA_DIR)
-                    plan_url = f"/media/{rel.as_posix()}"
-                except ValueError:
-                    plan_url = str(pp)
-        # Tail of log file if present; also expose a URL if under /media
-        log_tail = ""
-        log_file = disk_dir / "log.txt"
-        if log_file.exists():
-            try:
-                content = log_file.read_text(encoding="utf-8", errors="ignore")
-                max_chars = 10000
-                log_tail = content[-max_chars:] if len(content) > max_chars else content
-            except Exception:
-                log_tail = ""
-            try:
-                rel = log_file.relative_to(MEDIA_DIR)
-                log_url = f"/media/{rel.as_posix()}"
-            except ValueError:
-                log_url = str(log_file)
-        return JSONResponse(
-            content={
-                "job_id": job_id,
-                "status": data.get("status", "error"),
-                "progress": data.get("progress", 0),
-                "video_url": video_url,
-                "plan_path": plan_path,
-                "plan_url": plan_url,
-                "log_url": log_url,
-                "log": log_tail,
-            }
-        )
-
-    video_url = None
-    if job.video_path and job.video_path.exists():
-        # Prioritize cloud URL if available
-        if job.video_url:
-            video_url = job.video_url
-        else:
-            # Expose under /media
-            try:
-                rel = job.video_path.relative_to(MEDIA_DIR)
-                video_url = f"/media/{rel.as_posix()}"
-            except ValueError:
-                # Not under media; fallback to absolute path disclosure (not preferred)
-                video_url = str(job.video_path)
-
-    # Return tail of the log to keep payload small
-    log = job.log
-    max_chars = 10000
-    if len(log) > max_chars:
-        log = "..." + log[-max_chars:]
-
-    # Derive plan_url if plan exists
-    plan_url = None
-    if job.plan_path and job.plan_path.exists():
-        try:
-            relp = job.plan_path.relative_to(MEDIA_DIR)
-            plan_url = f"/media/{relp.as_posix()}"
-        except ValueError:
-            plan_url = str(job.plan_path)
-
-    # Derive log_url if log exists in out_dir
-    log_url = None
-    if job.out_dir:
-        lf = job.out_dir / "log.txt"
-        if lf.exists():
-            try:
-                rell = lf.relative_to(MEDIA_DIR)
-                log_url = f"/media/{rell.as_posix()}"
-            except ValueError:
-                log_url = str(lf)
-
-    return JSONResponse(
-        content={
-            "job_id": job.id,
-            "status": job.status,
-            "progress": job.progress,
-            "video_url": video_url,
-            "plan_path": str(job.plan_path) if job.plan_path else None,
-            "plan_url": plan_url,
-            "log_url": log_url,
-            "log": log,
+    response = await call_next(request)
+    duration = time.time() - start_time
+    logger.info(
+        "Request processed",
+        extra={
+            "method": request.method,
+            "path": request.url.path,
+            "status": response.status_code,
+            "duration": f"{duration:.4f}s"
         }
     )
+    return response
 
+# --- Dependency Providers ---
 
-# Static mounts: media and web
+def get_job_service(db: Session = Depends(get_db)):
+    return JobService(db)
+
+def get_user_service(db: Session = Depends(get_db)):
+    return UserService(db)
+
+# --- Endpoints ---
+
+@app.get("/health")
+def health_check():
+    """Health check endpoint for monitoring"""
+    return {
+        "status": "ok", 
+        "service": "phiversity-api", 
+        "version": "1.1.0",
+        "timestamp": time.time()
+    }
+
+# --- Authentication ---
+
+@app.post("/api/v1/auth/signup", response_model=UserResponse, tags=["Auth"])
+async def signup(user_data: UserCreate, service: UserService = Depends(get_user_service)):
+    if service.get_user_by_email(user_data.email):
+        raise HTTPException(status_code=400, detail="Email already registered")
+    user = service.create_user(user_data.email, user_data.password)
+    return user
+
+@app.post("/api/v1/auth/token", response_model=Token, tags=["Auth"])
+async def login(login_data: LoginRequest, service: UserService = Depends(get_user_service)):
+    user = service.authenticate_user(login_data.email, login_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.get("/api/v1/auth/me", response_model=UserResponse, tags=["Auth"])
+async def read_users_me(current_user: User = Depends(get_current_user)):
+    return current_user
+
+@app.post("/api/v1/auth/guest", response_model=Token, tags=["Auth"])
+async def guest_login(service: UserService = Depends(get_user_service)):
+    """Create or retrieve a guest account and return a JWT token."""
+    import secrets
+    from sqlalchemy.exc import IntegrityError
+
+    user = None
+    for _ in range(3):
+        guest_email = f"guest_{secrets.token_hex(8)}@guest.local"
+        guest_password = secrets.token_hex(16)
+        try:
+            user = service.create_user(guest_email, guest_password)
+            break
+        except IntegrityError:
+            service.db.rollback()
+            continue
+
+    if user is None:
+        raise HTTPException(status_code=500, detail="Could not create guest session")
+
+    access_token = create_access_token(data={"sub": user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/api/v1/auth/forgot-password", tags=["Auth"])
+async def forgot_password(req: ForgotPasswordRequest, service: UserService = Depends(get_user_service)):
+    """Check if the email exists. In production, this would send a reset email."""
+    user = service.get_user_by_email(req.email)
+    # Always return success to avoid email enumeration
+    logger.info(f"Password reset requested for {req.email}, exists={user is not None}")
+    return {"message": "If this email exists, a reset link will be sent."}
+
+# --- Video Generation ---
+
+@app.post("/api/v1/run", response_model=JobResponse, tags=["Jobs"])
+@limiter.limit("5/minute")
+async def run_prompt(
+    request: Request,
+    req: RunRequest,
+    service: JobService = Depends(get_job_service),
+    current_user: User = Depends(get_current_user)
+):
+    # Idempotency: if a key is provided and a job with that key already exists, return it
+    if req.idempotency_key:
+        existing = service.db.query(JobModel).filter(
+            JobModel.idempotency_key == req.idempotency_key
+        ).first()
+        if existing:
+            return {"job_id": existing.id, "status": existing.status}
+
+    job = service.create_job()
+    job.user_id = current_user.id
+    if req.idempotency_key:
+        job.idempotency_key = req.idempotency_key
+    service.db.commit()
+    service.start_background_job(job.id, req.dict())
+    return {"job_id": job.id, "status": "queued"}
+
+@app.get("/api/v1/jobs", response_model=List[JobResponse], tags=["Jobs"])
+async def list_jobs(
+    service: JobService = Depends(get_job_service),
+    current_user: User = Depends(get_current_user)
+):
+    """List recent jobs for the current user"""
+    # Simply return a list of job responses. JobResponse schema already has job_id and status.
+    jobs = service.db.query(JobModel).filter(JobModel.user_id == current_user.id).order_by(JobModel.created_at.desc()).limit(10).all()
+    return [{"job_id": j.id, "status": j.status} for j in jobs]
+
+@app.get("/api/v1/jobs/{job_id}", response_model=JobStatusResponse, tags=["Jobs"])
+async def get_job_status(job_id: str, service: JobService = Depends(get_job_service)):
+    db_job = service.get_job(job_id)
+    if not db_job:
+        raise HTTPException(status_code=404, detail="Job not found")
+        
+    log_content = db_job.log or ""
+    if len(log_content) > 10000:
+        log_content = "...[truncated]...\n" + log_content[-10000:]
+        
+    response_data = {
+        "status": db_job.status,
+        "log": log_content,
+        "progress": db_job.progress,
+        "video_url": db_job.video_url,
+        "plan_url": db_job.plan_url,
+    }
+
+    # Format local video paths to static paths
+    if db_job.video_path:
+        p = Path(db_job.video_path)
+        if p.exists():
+            try:
+                rel = p.relative_to(ROOT / "media")
+                response_data["video_url"] = f"/media/{rel.as_posix()}"
+            except ValueError:
+                pass
+                
+    if db_job.plan_path:
+        p = Path(db_job.plan_path)
+        if p.exists():
+            try:
+                rel = p.relative_to(ROOT / "media")
+                response_data["plan_url"] = f"/media/{rel.as_posix()}"
+            except ValueError:
+                pass
+                
+    return response_data
+
+# --- Legacy Redirects ---
+
+@app.post("/api/run", tags=["Legacy"])
+async def legacy_run(req: RunRequest, service: JobService = Depends(get_job_service)):
+    # Legacy endpoint does not require auth for backward compatibility if needed,
+    # but strictly speaking, we should enable auth or keep it as-is.
+    # We'll allow it for now but note it's deprecated.
+    job = service.create_job()
+    service.start_background_job(job.id, req.dict())
+    return {"job_id": job.id, "status": "queued"}
+
+@app.get("/api/jobs/{job_id}", tags=["Legacy"])
+async def legacy_job_status(job_id: str, service: JobService = Depends(get_job_service)):
+    return await get_job_status(job_id, service)
+
+# --- Static Mounts ---
+
 app.mount("/media", StaticFiles(directory=str(MEDIA_DIR)), name="media")
 app.mount("/", StaticFiles(directory=str(WEB_DIR), html=True), name="web")
-
-
-def _persist_job(job: Job):
-    # Write job state and append logs to disk so we can recover after reloads
-    if not job.out_dir:
-        return
-    try:
-        job.out_dir.mkdir(parents=True, exist_ok=True)
-        state_path = job.out_dir / "job.json"
-        state_path.write_text(json.dumps(job.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
-    except Exception:
-        pass

@@ -11,6 +11,8 @@ const cornerStatus = document.getElementById('cornerStatus');
 const closeVideoBtn = document.getElementById('close-video');
 const downloadVideoBtn = document.getElementById('download-video');
 const shareVideoBtn = document.getElementById('share-video');
+const statusList = document.getElementById('status-list');
+const overallStatusEl = document.getElementById('overall-status');
 
 // Declare elements referenced by loadLlmKeyStatus (may not exist in DOM)
 const jobsListCard = document.getElementById('jobs-list-card');
@@ -28,7 +30,8 @@ function getAuthHeaders() {
   if (!user) return {};
   try {
     const data = JSON.parse(user);
-    if (data.token) return { 'Authorization': `Bearer ${data.token}` };
+    const token = data.token || data.access_token;
+    if (token) return { 'Authorization': `Bearer ${token}` };
   } catch (e) { }
   return {};
 }
@@ -477,13 +480,18 @@ document.addEventListener('DOMContentLoaded', () => {
     if (user) {
       try {
         const userData = JSON.parse(user);
-        if (!userData.token) {
+        const token = userData.token || userData.access_token;
+        if (!token) {
           // Stale guest session without a real token — force re-login
           localStorage.removeItem('manim_user');
           if (cornerStatus) cornerStatus.classList.add('hidden');
           overlay.style.display = 'flex';
           overlay.classList.remove('hidden');
           return;
+        }
+        if (!userData.token) {
+          userData.token = token;
+          localStorage.setItem('manim_user', JSON.stringify(userData));
         }
         overlay.style.display = 'none';
         overlay.classList.add('hidden');
@@ -505,6 +513,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function login(userData) {
     console.log('Logging in as:', userData);
+    if (userData && !userData.token && userData.access_token) {
+      userData.token = userData.access_token;
+    }
     localStorage.setItem('manim_user', JSON.stringify(userData));
     checkAuth();
     loadJobs();
@@ -603,7 +614,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const loginForm = document.getElementById("loginForm");
   const signupForm = document.getElementById("signupForm");
   const forgotForm = document.getElementById("forgotForm");
-  const message = document.getElementById("message");
 
   // Show form function for toggling between forms
   window.showForm = function(formId) {
@@ -611,7 +621,7 @@ document.addEventListener('DOMContentLoaded', () => {
       form.classList.remove("active");
     });
     document.getElementById(formId).classList.add("active");
-    if (message) message.textContent = "";
+    clearAuthMessage();
   };
 
   if (loginForm) {
@@ -634,18 +644,12 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Validation
       if (password !== confirm) {
-        if (message) {
-          message.textContent = "Passwords do not match.";
-          message.style.color = "red";
-        }
+        showAuthMessage('Passwords do not match.', 'error');
         return;
       }
       
       if (password.length < 6) {
-        if (message) {
-          message.textContent = "Password must be at least 6 characters.";
-          message.style.color = "red";
-        }
+        showAuthMessage('Password must be at least 6 characters.', 'error');
         return;
       }
       
@@ -659,9 +663,8 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       const email = document.getElementById("forgotEmail").value;
       // In a real app, this would send a reset link
-      if (message) {
-        message.textContent = "If this email exists, a reset link will be sent.";
-        message.style.color = "blue";
+      if (email) {
+        showAuthMessage('If this email exists, a reset link will be sent.', 'success');
       }
     });
   }
@@ -670,15 +673,48 @@ document.addEventListener('DOMContentLoaded', () => {
   const skipBtn = document.getElementById('skip-login');
   const btnGoogleCircle = document.getElementById('btn-google-circle');
   const btnFacebookCircle = document.getElementById('btn-facebook-circle');
+  const btnGoogleSignup = document.getElementById('btn-google-signup');
+  const btnFacebookSignup = document.getElementById('btn-facebook-signup');
+
+  async function requestGuestToken() {
+    const res = await fetch(`${API_URL}/api/v1/auth/guest`, { method: 'POST' });
+    if (!res.ok) {
+      let detail = '';
+      try {
+        const err = await res.json();
+        detail = err && err.detail ? `: ${String(err.detail)}` : '';
+      } catch (e) {
+        // ignore parsing failures
+      }
+      throw new Error(`HTTP ${res.status}${detail}`);
+    }
+    return await res.json();
+  }
+
+  async function handleSocialLogin(providerName) {
+    clearAuthMessage();
+    try {
+      const data = await requestGuestToken();
+      showAuthMessage(`${providerName} login successful!`, 'success');
+      setTimeout(() => {
+        login({
+          type: providerName.toLowerCase(),
+          name: `${providerName} User`,
+          token: data.access_token
+        });
+      }, 800);
+    } catch (err) {
+      showAuthMessage(`${providerName} login failed: ${String(err)}`, 'error');
+    }
+  }
 
   if (skipBtn) {
     skipBtn.addEventListener('click', async (e) => {
       e.preventDefault();
       clearAuthMessage();
+      skipBtn.disabled = true;
       try {
-        const res = await fetch('/api/v1/auth/guest', { method: 'POST' });
-        if (!res.ok) { showAuthMessage('Could not create guest session.', 'error'); return; }
-        const data = await res.json();
+        const data = await requestGuestToken();
         showAuthMessage('Guest login successful!', 'success');
         // Delay to show success message before hiding overlay
         setTimeout(() => {
@@ -686,27 +722,33 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 1000);
       } catch (err) {
         showAuthMessage('Guest login failed: ' + String(err), 'error');
+      } finally {
+        skipBtn.disabled = false;
       }
     });
   }
 
   if (btnGoogleCircle) {
     btnGoogleCircle.addEventListener('click', () => {
-      showAuthMessage('Google login successful!', 'success');
-      // Delay to show success message before hiding overlay
-      setTimeout(() => {
-        login({ type: 'google', name: 'Google User', email: 'user@gmail.com' });
-      }, 1000);
+      handleSocialLogin('Google');
     });
   }
 
   if (btnFacebookCircle) {
     btnFacebookCircle.addEventListener('click', () => {
-      showAuthMessage('Facebook login successful!', 'success');
-      // Delay to show success message before hiding overlay
-      setTimeout(() => {
-        login({ type: 'facebook', name: 'Facebook User', email: 'user@facebook.com' });
-      }, 1000);
+      handleSocialLogin('Facebook');
+    });
+  }
+
+  if (btnGoogleSignup) {
+    btnGoogleSignup.addEventListener('click', () => {
+      handleSocialLogin('Google');
+    });
+  }
+
+  if (btnFacebookSignup) {
+    btnFacebookSignup.addEventListener('click', () => {
+      handleSocialLogin('Facebook');
     });
   }
 
