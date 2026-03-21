@@ -155,10 +155,12 @@ async def read_users_me(current_user: User = Depends(get_current_user)):
 async def guest_login(service: UserService = Depends(get_user_service)):
     """Create or retrieve a guest account and return a JWT token."""
     import secrets
-    from sqlalchemy.exc import IntegrityError
+    from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
     user = None
-    for _ in range(3):
+
+    # Prefer per-session random guests to avoid cross-user coupling.
+    for _ in range(5):
         guest_email = f"guest_{secrets.token_hex(8)}@guest.local"
         guest_password = secrets.token_hex(16)
         try:
@@ -167,9 +169,22 @@ async def guest_login(service: UserService = Depends(get_user_service)):
         except IntegrityError:
             service.db.rollback()
             continue
+        except SQLAlchemyError:
+            service.db.rollback()
+            break
 
+    # Fallback: reuse/create a deterministic guest account when random inserts fail.
     if user is None:
-        raise HTTPException(status_code=500, detail="Could not create guest session")
+        fallback_email = os.getenv("GUEST_ACCOUNT_EMAIL", "guest@guest.local")
+        fallback_password = os.getenv("GUEST_ACCOUNT_PASSWORD", "guest_access")
+        try:
+            user = service.get_user_by_email(fallback_email)
+            if user is None:
+                user = service.create_user(fallback_email, fallback_password)
+        except SQLAlchemyError as e:
+            service.db.rollback()
+            logger.exception("Guest session creation failed", exc_info=e)
+            raise HTTPException(status_code=500, detail="Could not create guest session")
 
     access_token = create_access_token(data={"sub": user.email})
     return {"access_token": access_token, "token_type": "bearer"}
