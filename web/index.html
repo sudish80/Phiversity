@@ -1,69 +1,103 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manimations UI</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <title>Phiversity - AI Video Generator</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <!-- Google Fonts + Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="/styles.css" />
 </head>
+
 <body>
+  <noscript>
+    <div style="background:#1e293b;color:#e2e8f0;padding:40px;text-align:center;font-family:system-ui,sans-serif;">
+      <h2>JavaScript Required</h2>
+      <p>This application requires JavaScript to be enabled. Please enable JavaScript in your browser settings and
+        reload the page.</p>
+    </div>
+  </noscript>
+
+  <!-- Corner status lives outside .container and form to avoid inheriting form styles -->
+  <div id="cornerStatus" class="corner-status hidden"></div>
+
   <div class="container">
-    <h1>Manimations</h1>
-      <!-- LLM Key Status removed -->
+    <div class="header-section">
+      <h1>🎬 Phiversity</h1>
+      <p class="subtitle">AI-Powered Video Generation for Math, Physics, Chemistry & Economics</p>
+    </div>
     <form id="run-form">
-            <div id="cornerStatus" class="corner-status hidden"></div>
-      <label for="problem">Problem or Plan Path</label>
-      <textarea id="problem" name="problem" rows="5" placeholder="Enter a math/physics problem to orchestrate, or provide a path to an existing plan JSON if you uncheck Orchestrate."></textarea>
+      <label for="problem">What would you like to learn?</label>
+      <textarea id="problem" name="problem" rows="4"
+        placeholder="Enter a math, physics, chemistry, or economics problem to generate an educational video..."></textarea>
 
       <label for="custom-prompt">Custom Prompt (optional)</label>
-      <textarea id="custom-prompt" name="custom-prompt" rows="5" placeholder="Paste a prompt or enter a path to a prompt file. Your question will be appended."></textarea>
+      <textarea id="custom-prompt" name="custom-prompt" rows="3"
+        placeholder="Paste a prompt or enter a path to a prompt file. Your question will be appended."></textarea>
 
-      <div class="row">
-        <label>
-          <input type="checkbox" id="orchestrate" checked />
-          Run Orchestrator (ChatGPT→DeepSeek)
+      <label>Learning Mode</label>
+      <div class="mode-options" role="radiogroup" aria-label="Learning mode">
+        <label class="mode-option">
+          <input type="radio" name="learning-mode" value="question_solving" checked>
+          <span>Question Solving</span>
         </label>
-      </div>
-      <div class="row">
-        <label>
-          <input type="checkbox" id="voice-first" checked />
-          Voice-first Timing
+        <label class="mode-option">
+          <input type="radio" name="learning-mode" value="lecture">
+          <span>Lecture</span>
         </label>
-      </div>
-      <div class="row">
-        <label>
-          <input type="checkbox" id="element-audio" />
-          Element-level Audio (Lip-sync)
+        <label class="mode-option">
+          <input type="radio" name="learning-mode" value="revision">
+          <span>Revision</span>
         </label>
       </div>
 
-      <div class="row">
-        <button type="button" id="sample-btn">Fill Sample Test</button>
-      </div>
-
-      <button type="submit">Run</button>
+      <button type="submit">
+        <span class="btn-icon">✨</span> Generate Video
+      </button>
     </form>
 
     <div id="status" class="status"></div>
 
+    <div id="jobs-list-card" class="card hidden">
+      <div class="card-header">
+        <h3>Recent Jobs</h3>
+        <button type="button" id="refresh-jobs-btn" class="btn">Refresh</button>
+      </div>
+      <div id="jobs-list" class="status-list"></div>
+    </div>
+
     <!-- Video Generation Loading Animation -->
     <div id="loading-animation" class="loading-animation hidden">
+      <button type="button" id="cancel-loading" class="cancel-loading-btn" title="Cancel generation">&#x2715;
+        Cancel</button>
       <div class="animation-container">
-        <div class="film-strip">
-          <div class="frame frame1"></div>
-          <div class="frame frame2"></div>
-          <div class="frame frame3"></div>
-          <div class="frame frame4"></div>
+        <!-- Circular Progress -->
+        <div class="circular-progress">
+          <svg class="progress-ring" viewBox="0 0 120 120">
+            <defs>
+              <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#8b5cf6" />
+                <stop offset="100%" stop-color="#c4b5fd" />
+              </linearGradient>
+            </defs>
+            <circle class="progress-ring-circle-bg" cx="60" cy="60" r="54" />
+            <circle class="progress-ring-circle" cx="60" cy="60" r="54" />
+          </svg>
+          <div class="percentage-display">
+            <span class="percentage-value" id="progress-percent">0</span>
+            <span class="percentage-symbol">%</span>
+          </div>
         </div>
         <div class="loading-text">
           <h3>Generating Your Video</h3>
-          <p id="loading-status">Initializing...</p>
-          <div class="progress-container">
-            <div class="progress-bar" id="progress-bar"></div>
-            <span class="progress-text" id="progress-text">0%</span>
-          </div>
-          <div class="spinner"></div>
+          <p id="loading-status">Initializing AI models...</p>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar" id="progress-bar"></div>
+          <span class="progress-text" id="progress-text">0%</span>
         </div>
       </div>
     </div>
@@ -73,7 +107,7 @@
         <div class="video-box">
           <div class="video-header">
             <h2>Your Generated Video</h2>
-            <button class="close-video" id="close-video" type="button">×</button>
+            <button class="close-video" id="close-video" type="button">&times;</button>
           </div>
           <div class="video-player-container">
             <video id="result-video" controls width="100%"></video>
@@ -86,7 +120,8 @@
             <div id="log-link" class="info-link"></div>
           </div>
           <div class="video-actions">
-            <a id="download-video" href="#" download class="action-btn download-btn">Download Video</a>
+            <a id="download-video" href="javascript:void(0)" download="phiversity-video.mp4"
+              class="action-btn download-btn">Download Video</a>
             <button id="share-video" class="action-btn share-btn" type="button">Share</button>
           </div>
         </div>
@@ -95,81 +130,66 @@
   </div>
 
   <!-- Login Overlay -->
-  <div id="login-overlay" class="login-overlay hidden">
-    <div class="wrapper">
-      <button class="skip-btn" id="skip-login">Skip</button>
-      
-      <div class="social-login-section">
-        <h3>Sign in with</h3>
-        <div class="social-buttons">
-          <button class="social-circle google-circle" id="btn-google-circle" title="Sign in with Google">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
-              <path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/>
-              <path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/>
-              <path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/>
-              <path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/>
-            </svg>
-          </button>
-          <button class="social-circle facebook-circle" id="btn-facebook-circle" title="Sign in with Facebook">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="24px" height="24px">
-              <path fill="#3F51B5" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"/>
-              <path fill="#FFF" d="M34.368,25H31v13h-5V25h-3v-4h3v-2.41c0.002-3.508,1.459-5.59,5.592-5.59H35v4h-2.287C31.104,17,31,17.6,31,18.723V21h4L34.368,25z"/>
-            </svg>
-          </button>
-        </div>
-      </div>
+  <div id="login-overlay" class="login-overlay">
+    <div class="form-container">
+      <!-- Login Form -->
+      <form id="loginForm" class="active form">
+        <h2>Login</h2>
+        <input type="email" id="loginEmail" placeholder="Email" required>
+        <input type="password" id="loginPassword" placeholder="Password" required>
+        <button type="submit">Login</button>
 
-      <div class="divider-text">
-        <span>OR</span>
-      </div>
+        <div class="divider">or</div>
 
-      <div class="title-text">
-        <div class="title login">Login Form</div>
-        <div class="title signup">Signup Form</div>
-      </div>
-      <div class="form-container">
-        <div class="slide-controls">
-          <input type="radio" name="slide" id="login" checked>
-          <input type="radio" name="slide" id="signup">
-          <label for="login" class="slide login">Login</label>
-          <label for="signup" class="slide signup">Signup</label>
-          <div class="slider-tab"></div>
-        </div>
-        <div class="form-inner">
-          <form action="#" class="login">
-            <div class="field">
-              <input type="text" placeholder="Email Address" required>
-            </div>
-            <div class="field">
-              <input type="password" placeholder="Password" required>
-            </div>
-            <div class="pass-link"><a href="#">Forgot password?</a></div>
-            <div class="field btn">
-              <div class="btn-layer"></div>
-              <input type="submit" value="Login">
-            </div>
-            <div class="signup-link">Not a member? <a href="">Signup now</a></div>
-          </form>
-          <form action="#" class="signup">
-            <div class="field">
-              <input type="text" placeholder="Email Address" required>
-            </div>
-            <div class="field">
-              <input type="password" placeholder="Password" required>
-            </div>
-            <div class="field">
-              <input type="password" placeholder="Confirm password" required>
-            </div>
-            <div class="field btn">
-              <div class="btn-layer"></div>
-              <input type="submit" value="Signup">
-            </div>
-          </form>
-        </div>
-      </div>
+        <!-- Social login -->
+        <button type="button" id="btn-google-circle" class="social-btn google">
+          <i class="fab fa-google"></i> Continue with Google
+        </button>
+        <button type="button" id="btn-facebook-circle" class="social-btn facebook">
+          <i class="fab fa-facebook-f"></i> Continue with Facebook
+        </button>
+
+        <p><a href="#" onclick="showForm('forgotForm')">Forgot Password?</a></p>
+        <p>Don't have an account? <a href="#" onclick="showForm('signupForm')">Sign Up</a></p>
+      </form>
+
+      <!-- Sign Up Form -->
+      <form id="signupForm" class="form">
+        <h2>Sign Up</h2>
+        <input type="text" id="signupName" placeholder="Full Name" required>
+        <input type="email" id="signupEmail" placeholder="Email" required>
+        <input type="password" id="signupPassword" placeholder="Password" required>
+        <input type="password" id="signupConfirm" placeholder="Confirm Password" required>
+        <button type="submit">Create Account</button>
+
+        <div class="divider">or</div>
+
+        <!-- Social sign up -->
+        <button type="button" id="btn-google-signup" class="social-btn google">
+          <i class="fab fa-google"></i> Sign up with Google
+        </button>
+        <button type="button" id="btn-facebook-signup" class="social-btn facebook">
+          <i class="fab fa-facebook-f"></i> Sign up with Facebook
+        </button>
+
+        <p>Already have an account? <a href="#" onclick="showForm('loginForm')">Login</a></p>
+      </form>
+
+      <!-- Forgot Password Form -->
+      <form id="forgotForm" class="form">
+        <h2>Forgot Password</h2>
+        <input type="email" id="forgotEmail" placeholder="Enter your email" required>
+        <button type="submit">Reset Password</button>
+        <p><a href="#" onclick="showForm('loginForm')">Back to Login</a></p>
+      </form>
+      <div id="auth-message"></div>
+
+      <!-- Skip button -->
+      <button class="skip-btn" id="skip-login" style="margin-top: 20px;">Skip / Continue without Login</button>
     </div>
   </div>
 
-  <script src="/app.js?v=2"></script>
+  <script src="/app.js?v=3"></script>
 </body>
+
 </html>
