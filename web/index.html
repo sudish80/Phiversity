@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Phiversity — AI Educational Video Generator</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+  <link rel="stylesheet" href="/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- ── 3D Particle Canvas ── -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- ── Navigation ── -->
+  <nav class="topnav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand">
+        <svg width="28" height="28" viewBox="0 0 100 100"><circle cx="50" cy="50" r="45" fill="none" stroke="url(#brandGrad)" stroke-width="4"/><text x="50" y="62" text-anchor="middle" fill="url(#brandGrad)" font-size="44" font-weight="900">P</text><defs><linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#a78bfa"/><stop offset="100%" stop-color="#60a5fa"/></linearGradient></defs></svg>
+        <span>Phiversity</span>
+      </a>
+      <div class="nav-actions">
+        <button class="theme-toggle" id="theme-toggle" onclick="Phiversity.toggleTheme()" title="Toggle theme (T)">🌙</button>
+        <button class="nav-btn" onclick="Phiversity.openLayer('history')" title="History (H)"><span>📋</span><span class="label">History</span></button>
+        <button class="nav-btn" onclick="Phiversity.openLayer('shortcuts')" title="Shortcuts (?)"><span>⌨️</span><span class="label">Shortcuts</span></button>
+        <button class="nav-btn" onclick="Phiversity.openLayer('settings')" title="Settings (S)"><span>⚙️</span><span class="label">Settings</span></button>
+        <span id="nav-user" class="nav-user" onclick="Phiversity.openLayer('settings')">👤 Guest</span>
+      </div>
+    </div>
+  </nav>
+
+  <div id="cornerStatus" class="corner-status hidden"></div>
+
+  <!-- ── Main ── -->
+  <main class="main-content">
+    <div class="container">
+      <!-- Hero -->
+      <header class="hero-3d reveal-section">
+        <div class="hero-badge">AI-Powered</div>
+        <h1 class="hero-title">Educational Videos<br/><span class="gradient-text">in Minutes</span></h1>
+        <p class="hero-subtitle">Transform any question into a professional animated lesson with voiceover.<br/>Math · Physics · Chemistry · Economics</p>
+      </header>
+
+      <!-- Mode Selector -->
+      <div class="mode-selector reveal-section">
+        <label class="mode-card active" data-mode="question_solving">
+          <div class="mode-icon-wrap"><span class="mode-icon">🎯</span></div>
+          <span class="mode-label">Question</span>
+          <span class="mode-desc">Solve a single problem</span>
+          <span class="mode-time">2-5 min</span>
+        </label>
+        <label class="mode-card" data-mode="lecture">
+          <div class="mode-icon-wrap"><span class="mode-icon">📚</span></div>
+          <span class="mode-label">Lecture</span>
+          <span class="mode-desc">Full chapter teaching</span>
+          <span class="mode-time">30-60 min</span>
+        </label>
+        <label class="mode-card" data-mode="revision">
+          <div class="mode-icon-wrap"><span class="mode-icon">⚡</span></div>
+          <span class="mode-label">Revision</span>
+          <span class="mode-desc">Quick recap</span>
+          <span class="mode-time">10-15 min</span>
+        </label>
+        <input type="hidden" id="learning-mode" value="question_solving" />
+      </div>
+
+      <!-- Main Form -->
+      <form id="run-form" class="glass-card reveal-section">
+        <div class="form-group">
+          <label for="problem">📝 Problem or Question</label>
+          <textarea id="problem" name="problem" rows="4" placeholder="e.g. A 5 kg block slides on a 30-degree incline with friction coefficient 0.2. Find the acceleration." required></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="custom-prompt">✏️ Custom Prompt <span class="optional">(optional)</span></label>
+          <textarea id="custom-prompt" name="custom-prompt" rows="2" placeholder="Override the AI solver prompt..."></textarea>
+        </div>
+
+        <div class="options-row">
+          <label class="opt-toggle">
+            <input type="checkbox" id="orchestrate" checked />
+            <span class="opt-toggle-track"><span class="opt-toggle-knob"></span></span>
+            <span class="opt-label">AI Planning</span>
+          </label>
+          <label class="opt-toggle">
+            <input type="checkbox" id="voice-first" checked />
+            <span class="opt-toggle-track"><span class="opt-toggle-knob"></span></span>
+            <span class="opt-label">Voice-first</span>
+          </label>
+          <label class="opt-toggle">
+            <input type="checkbox" id="element-audio" />
+            <span class="opt-toggle-track"><span class="opt-toggle-knob"></span></span>
+            <span class="opt-label">Element Audio</span>
+          </label>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" id="sample-btn" class="btn btn-secondary">📝 Sample</button>
+          <button type="submit" class="btn btn-primary btn-glow" id="submit-btn">
+            <span class="btn-text">🚀 Generate Video</span>
+            <span class="btn-loader" style="display:none"><span class="spinner-sm"></span> Submitting...</span>
+          </button>
+        </div>
+      </form>
+
+      <!-- Status -->
+      <div id="status" class="status-bar reveal-section" style="display:none"></div>
+
+      <!-- Stats -->
+      <div class="stats-row reveal-section" id="stats-row">
+        <div class="stat-card">
+          <span class="stat-value" id="stat-videos" data-target="0">—</span>
+          <span class="stat-label">Videos</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-subjects" data-target="4">4</span>
+          <span class="stat-label">Subjects</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value" id="stat-uptime" data-target="99" data-suffix="%">99%</span>
+          <span class="stat-label">Uptime</span>
+        </div>
+      </div>
+
+      <!-- Recent Jobs -->
+      <div class="section-header reveal-section">
+        <h2>📋 Recent Jobs</h2>
+        <button id="refresh-jobs" class="btn btn-sm btn-secondary" onclick="loadRecentJobs()">🔄 Refresh</button>
+      </div>
+      <div id="recent-jobs" class="jobs-grid reveal-section">
+        <div class="job-empty">Submit a question to see your generated videos here.</div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ════════════════════════════════════════════ -->
+  <!-- OVERLAY LAYERS                              -->
+  <!-- ════════════════════════════════════════════ -->
+
+  <!-- Loading Overlay (z-500) -->
+  <div id="loading-overlay" class="overlay-hidden">
+    <div class="loading-3d">
+      <div class="loader-cube">
+        <div class="cube-face front"></div>
+        <div class="cube-face back"></div>
+        <div class="cube-face right"></div>
+        <div class="cube-face left"></div>
+        <div class="cube-face top"></div>
+        <div class="cube-face bottom"></div>
+      </div>
+      <h3>Generating Your Video</h3>
+      <p id="loading-status" class="loading-status">Initializing...</p>
+      <div class="progress-track">
+        <div class="progress-fill" id="progress-bar"></div>
+      </div>
+      <span class="progress-pct" id="progress-text">0%</span>
+      <button id="cancel-loading" class="btn btn-secondary btn-sm">Cancel</button>
+    </div>
+  </div>
+
+  <!-- Video Overlay (z-400) -->
+  <div id="video-overlay" class="overlay-hidden">
+    <div class="video-modal">
+      <div class="video-modal-header">
+        <h2>🎬 Your Generated Video</h2>
+        <div class="video-modal-actions">
+          <button id="pip-video" class="btn-icon" title="Picture-in-Picture">🖼️</button>
+          <button id="close-video" class="btn-icon close-btn">✕</button>
+        </div>
+      </div>
+      <div class="video-wrap">
+        <video id="result-video" controls playsinline></video>
+      </div>
+      <div class="video-meta">
+        <div id="plan-link" class="meta-link"></div>
+        <div id="log-link" class="meta-link"></div>
+      </div>
+      <div class="video-actions">
+        <a id="download-video" href="#" download class="btn btn-primary" style="text-decoration:none;display:inline-flex;align-items:center;gap:8px">📥 Download</a>
+        <button id="share-video" class="btn btn-secondary">🔗 Share</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Login/Signup Overlay (z-1000) -->
+  <div id="login-overlay" class="overlay-hidden">
+    <div class="auth-modal">
+      <div class="auth-header">
+        <h2>Welcome to Phiversity</h2>
+        <p>Sign in or create an account to get started</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Sign In</button>
+        <button class="auth-tab" data-tab="signup">Create Account</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="form-login" class="auth-form active">
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password" />
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Sign In</button>
+        <p class="auth-error" id="login-error"></p>
+      </form>
+
+      <!-- Signup Form -->
+      <form id="form-signup" class="auth-form">
+        <div class="auth-field">
+          <label>Full Name</label>
+          <input type="text" id="signup-name" placeholder="John Doe" required autocomplete="name" />
+        </div>
+        <div class="auth-field">
+          <label>Email</label>
+          <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email" />
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <input type="password" id="signup-password" placeholder="Min 8 characters" required autocomplete="new-password" />
+          <div class="password-strength" id="pw-strength">
+            <div class="pw-bar" id="pw-bar"></div>
+            <span class="pw-text" id="pw-text"></span>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-full">Create Account</button>
+        <p class="auth-error" id="signup-error"></p>
+      </form>
+
+      <div class="auth-divider"><span>or continue with</span></div>
+
+      <div class="auth-social">
+        <button id="btn-google" class="btn-social">
+          <svg viewBox="0 0 48 48" width="20" height="20"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
+          Google
+        </button>
+        <button id="btn-facebook" class="btn-social">
+          <svg viewBox="0 0 48 48" width="20" height="20"><path fill="#3F51B5" d="M42,37c0,2.762-2.238,5-5,5H11c-2.761,0-5-2.238-5-5V11c0-2.762,2.239-5,5-5h26c2.762,0,5,2.238,5,5V37z"/><path fill="#FFF" d="M34.368,25H31v13h-5V25h-3v-4h3v-2.41c0.002-3.508,1.459-5.59,5.592-5.59H35v4h-2.287C31.104,17,31,17.6,31,18.723V21h4L34.368,25z"/></svg>
+          Facebook
+        </button>
+      </div>
+
+      <div class="auth-guest">
+        <button id="guest-login" class="btn btn-secondary btn-full">Continue as Guest</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings Overlay (z-600) -->
+  <div id="settings-overlay" class="overlay-hidden">
+    <div class="settings-modal modal-panel">
+      <div class="settings-header">
+        <h2>⚙️ Settings</h2>
+        <button class="btn-icon close-btn" onclick="Phiversity.closeLayer('settings')">✕</button>
+      </div>
+      <div class="settings-body">
+        <section>
+          <h3>🎬 Playback</h3>
+          <div class="setting-row">
+            <span>Speed</span>
+            <div class="speed-btns" id="speed-btns"></div>
+          </div>
+          <div class="setting-row">
+            <span>Auto-play video</span>
+            <label class="toggle-sm"><input type="checkbox" id="setting-autoplay" /><span class="toggle-track-sm"></span></label>
+          </div>
+        </section>
+        <section>
+          <h3>👤 Account</h3>
+          <p id="setting-user" class="setting-user">Loading...</p>
+          <button id="btn-logout" class="btn btn-secondary btn-sm" style="display:none">Logout</button>
+          <button id="btn-show-login" class="btn btn-primary btn-sm">Sign In</button>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Overlay (z-350) -->
+  <div id="history-overlay" class="overlay-hidden">
+    <div class="history-panel" id="history-panel">
+      <div class="history-header">
+        <h2>📋 Job History</h2>
+        <button class="btn-icon close-btn" onclick="Phiversity.closeLayer('history')">✕</button>
+      </div>
+      <div id="history-list" class="history-list"><div class="history-empty">Loading...</div></div>
+    </div>
+  </div>
+
+  <!-- Shortcuts Overlay (z-700) -->
+  <div id="shortcuts-overlay" class="overlay-hidden">
+    <div class="shortcuts-modal modal-panel">
+      <div class="shortcuts-header">
+        <h2>⌨️ Keyboard Shortcuts</h2>
+        <button class="btn-icon close-btn" onclick="Phiversity.closeLayer('shortcuts')">✕</button>
+      </div>
+      <div class="shortcuts-grid">
+        <div class="shortcut-row"><kbd>Enter</kbd><span>Generate video</span></div>
+        <div class="shortcut-row"><kbd>Esc</kbd><span>Close overlay</span></div>
+        <div class="shortcut-row"><kbd>?</kbd><span>Toggle shortcuts</span></div>
+        <div class="shortcut-row"><kbd>S</kbd><span>Settings</span></div>
+        <div class="shortcut-row"><kbd>H</kbd><span>Job history</span></div>
+        <div class="shortcut-row"><kbd>Space</kbd><span>Play/Pause video</span></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="/core.js"></script>
+  <script src="/api.js"></script>
+  <script src="/ui.js"></script>
+  <script src="/app.js?v=4"></script>
+</body>
+</html>

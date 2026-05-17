@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        run: pip install uv
+
+      - name: Install dependencies
+        run: uv pip install --system -r requirements.txt
+
+      - name: Check imports
+        run: python _check_imports.py
+
+      - name: Run auth security regression gate
+        env:
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DATABASE_URL: sqlite:///test.db
+          ORCHESTRATOR_OFFLINE: "1"
+          ORCHESTRATOR_DISABLE_LOCAL_FALLBACK: ""
+          PHIVERSITY_ENV: development
+        run: python -m unittest test.test_api_security test.test_auth_hardening test.test_auth_scaffold_flows -v
+
+      - name: Run tests
+        env:
+          SECRET_KEY: ci-test-secret-key-not-for-production
+          DATABASE_URL: sqlite:///test.db
+          ORCHESTRATOR_OFFLINE: "1"
+          ORCHESTRATOR_DISABLE_LOCAL_FALLBACK: ""
+          PHIVERSITY_ENV: development
+        run: python -m unittest discover -s test -p "test_*.py" -v
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install ruff
+        run: pip install ruff
+
+      - name: Lint with ruff
+        run: ruff check scripts/ web/ --select E,F,W --ignore E501,W503
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t phiversity:${{ github.sha }} .
+
+      - name: Verify image starts
+        run: |
+          docker run --rm -d \
+            -e SECRET_KEY=ci-test-key \
+            -e DATABASE_URL=sqlite:///tmp/test.db \
+            -p 8000:8000 \
+            --name phiversity-test \
+            phiversity:${{ github.sha }} &
+          sleep 5
+          curl -f http://localhost:8000/health || (docker logs phiversity-test && exit 1)
+          docker stop phiversity-test

@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: manimations-api
+    env: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: MANIM_QUALITY
+        value: low
+      - key: JOB_TIMEOUT
+        value: 600
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_S3_BUCKET
+        sync: false
+      - key: CLOUDINARY_URL
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true

@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phiversity - Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f5f7fa;
+      min-height: 100vh;
+    }
+
+    .navbar {
+      background: white;
+      padding: 1rem 2rem;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .navbar .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .navbar .user-menu {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+
+    .navbar .user-name {
+      color: #333;
+      font-weight: 500;
+    }
+
+    .navbar button {
+      background: #e74c3c;
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .navbar button:hover {
+      background: #c0392b;
+    }
+
+    .main-content {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 2rem;
+    }
+
+    .welcome-banner {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 2.5rem;
+      border-radius: 16px;
+      margin-bottom: 2rem;
+    }
+
+    .welcome-banner h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+    }
+
+    .card h3 {
+      color: #333;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .card h3 i {
+      color: #667eea;
+    }
+
+    .card p {
+      color: #666;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .card .action-btn {
+      display: inline-block;
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background: #667eea;
+      color: white;
+      text-decoration: none;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+
+    .card .action-btn:hover {
+      background: #5a6fd6;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      background: white;
+      padding: 1.5rem;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .stat-box .number {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-box .label {
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 3rem;
+      color: #666;
+    }
+
+    #error {
+      display: none;
+      text-align: center;
+      padding: 3rem;
+      color: #e74c3c;
+    }
+
+    #error button {
+      margin-top: 1rem;
+      padding: 0.75rem 1.5rem;
+      background: #667eea;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="loading">Loading dashboard...</div>
+  
+  <div id="error">
+    <p id="error-message">Session expired. Please log in again.</p>
+    <button onclick="window.location.href='index.html'">Go to Login</button>
+  </div>
+
+  <div id="dashboard" style="display: none;">
+    <nav class="navbar">
+      <div class="logo">Phiversity</div>
+      <div class="user-menu">
+        <span class="user-name" id="userName">User</span>
+        <button onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Logout
+        </button>
+      </div>
+    </nav>
+
+    <div class="main-content">
+      <div class="welcome-banner">
+        <h1>Welcome to Phiversity!</h1>
+        <p>Create stunning physics educational videos with AI-powered animations.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat-box">
+          <div class="number" id="videoCount">0</div>
+          <div class="label">Videos Created</div>
+        </div>
+        <div class="stat-box">
+          <div class="number" id="renderCount">0</div>
+          <div class="label">Renders</div>
+        </div>
+        <div class="stat-box">
+          <div class="number" id="storageUsed">0</div>
+          <div class="label">Storage Used (MB)</div>
+        </div>
+      </div>
+
+      <div class="grid">
+        <div class="card">
+          <h3><i class="fas fa-plus-circle"></i> Create New Video</h3>
+          <p>Start creating a new educational video with our AI-powered animation generator. Just enter your physics question or topic.</p>
+          <a href="#" class="action-btn" onclick="createVideo()">Get Started</a>
+        </div>
+        
+        <div class="card">
+          <h3><i class="fas fa-video"></i> My Videos</h3>
+          <p>View and manage all your created videos. Download, share, or edit your previous work.</p>
+          <a href="#" class="action-btn">View Videos</a>
+        </div>
+        
+        <div class="card">
+          <h3><i class="fas fa-cog"></i> Account Settings</h3>
+          <p>Manage your profile, subscription, billing information, and API keys.</p>
+          <a href="#" class="action-btn">Settings</a>
+        </div>
+        
+        <div class="card">
+          <h3><i class="fas fa-book"></i> Documentation</h3>
+          <p>Learn how to use Phiversity effectively. Browse tutorials and documentation.</p>
+          <a href="#" class="action-btn">Learn More</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const API_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:8000' 
+      : '';
+
+    // Check authentication on load
+    document.addEventListener('DOMContentLoaded', async () => {
+      const token = localStorage.getItem('auth_token');
+      if (!token) {
+        showError('Please log in to access the dashboard');
+        return;
+      }
+      
+      await loadUserData();
+    });
+
+    function showError(message) {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('error').style.display = 'block';
+      document.getElementById('error-message').textContent = message;
+    }
+
+    function showDashboard() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('error').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+    }
+
+    async function loadUserData() {
+      try {
+        const token = localStorage.getItem('auth_token');
+        const response = await fetch(`${API_URL}/api/v1/auth/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          if (response.status === 401) {
+            localStorage.removeItem('auth_token');
+            showError('Session expired. Please log in again.');
+          } else {
+            showError('Failed to load user data');
+          }
+          return;
+        }
+
+        const userData = await response.json();
+        document.getElementById('userName').textContent = userData.full_name || userData.email || 'User';
+        showDashboard();
+        
+        // Load additional data (jobs, etc.)
+        await loadUserStats();
+        
+      } catch (error) {
+        console.error('Error loading user data:', error);
+        showError('Network error. Please try again.');
+      }
+    }
+
+    async function loadUserStats() {
+      try {
+        const token = localStorage.getItem('auth_token');
+        // This would fetch from a real endpoint
+        document.getElementById('videoCount').textContent = '0';
+        document.getElementById('renderCount').textContent = '0';
+        document.getElementById('storageUsed').textContent = '0';
+      } catch (error) {
+        console.error('Error loading stats:', error);
+      }
+    }
+
+    async function logout() {
+      try {
+        const token = localStorage.getItem('auth_token');
+        if (token) {
+          await fetch(`${API_URL}/api/v1/auth/logout`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            }
+          });
+        }
+      } catch (e) {
+        console.error('Logout error:', e);
+      }
+      localStorage.removeItem('auth_token');
+      window.location.href = 'index.html';
+    }
+
+    function createVideo() {
+      // Redirect to video creation page or show modal
+      alert('Video creation - Coming soon!');
+    }
+  </script>
+</body>
+</html>

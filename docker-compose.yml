@@ -1,0 +1,96 @@
+# Docker Compose for Local Development & Testing
+# Run: docker-compose up --build
+
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      - POSTGRES_DB=phiversity
+      - POSTGRES_USER=phiversity
+      - POSTGRES_PASSWORD=phiversity
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U phiversity -d phiversity"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  manimations:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql+psycopg://phiversity:phiversity@postgres:5432/phiversity
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MANIM_QUALITY=low
+      - JOB_TIMEOUT=600
+      - JOB_EXECUTION_MODE=worker
+      - REQUIRE_SERVER_DB=true
+      - REQUIRE_DB_MIGRATIONS=true
+      - RUN_DB_MIGRATIONS_ON_STARTUP=true
+      - SERVICE_MODE=api
+      - STORAGE_BACKEND=${STORAGE_BACKEND:-local}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    volumes:
+      - ./media:/app/media
+      - ./voice_cache:/app/voice_cache
+      - ./web_jobs:/app/web_jobs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  manimations-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - DATABASE_URL=postgresql+psycopg://phiversity:phiversity@postgres:5432/phiversity
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - MANIM_QUALITY=low
+      - JOB_TIMEOUT=600
+      - JOB_EXECUTION_MODE=worker
+      - REQUIRE_SERVER_DB=true
+      - REQUIRE_DB_MIGRATIONS=true
+      - SERVICE_MODE=worker
+      - STORAGE_BACKEND=${STORAGE_BACKEND:-local}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_S3_BUCKET=${AWS_S3_BUCKET}
+      - AWS_REGION=${AWS_REGION:-us-east-1}
+      - CLOUDINARY_CLOUD_NAME=${CLOUDINARY_CLOUD_NAME}
+      - CLOUDINARY_API_KEY=${CLOUDINARY_API_KEY}
+      - CLOUDINARY_API_SECRET=${CLOUDINARY_API_SECRET}
+    volumes:
+      - ./media:/app/media
+      - ./voice_cache:/app/voice_cache
+      - ./web_jobs:/app/web_jobs
+    restart: unless-stopped
+
+volumes:
+  postgres_data:

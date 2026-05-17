@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Phiversity - Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .form-container {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+      margin-bottom: 0.5rem;
+    }
+
+    .tagline {
+      color: #888;
+      font-size: 0.9rem;
+      margin-bottom: 2rem;
+    }
+
+    h2 {
+      margin-bottom: 1.5rem;
+      color: #333;
+      font-size: 1.5rem;
+    }
+
+    .input-group {
+      position: relative;
+      margin-bottom: 1rem;
+    }
+
+    .input-group i {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #888;
+    }
+
+    input {
+      width: 100%;
+      padding: 12px 12px 12px 40px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    input.error {
+      border-color: #e74c3c;
+    }
+
+    .error-message {
+      color: #e74c3c;
+      font-size: 0.85rem;
+      text-align: left;
+      margin-top: -0.5rem;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .error-message.visible {
+      display: block;
+    }
+
+    button[type="submit"] {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-weight: bold;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      margin-top: 0.5rem;
+    }
+
+    button[type="submit"]:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button[type="submit"]:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255,255,255,0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    a {
+      color: #667eea;
+      text-decoration: none;
+    }
+
+    a:hover {
+      text-decoration: underline;
+    }
+
+    /* Social login buttons */
+    .social-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      margin: 8px 0;
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .social-btn:hover {
+      transform: translateY(-2px);
+    }
+
+    .google {
+      background: #db4437;
+    }
+
+    .facebook {
+      background: #3b5998;
+    }
+
+    .social-btn i {
+      margin-right: 10px;
+    }
+
+    /* Hide all forms by default */
+    .form {
+      display: none;
+    }
+
+    .form.active {
+      display: block;
+    }
+
+    .divider {
+      margin: 20px 0;
+      color: #888;
+      font-size: 14px;
+      position: relative;
+    }
+
+    .divider::before, .divider::after {
+      content: "";
+      position: absolute;
+      top: 50%;
+      width: 45%;
+      height: 1px;
+      background: #ddd;
+    }
+
+    .divider::before {
+      left: 0;
+    }
+
+    .divider::after {
+      right: 0;
+    }
+
+    #message {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      display: none;
+    }
+
+    #message.success {
+      display: block;
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+
+    #message.error {
+      display: block;
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+
+    #message.info {
+      display: block;
+      background: #d1ecf1;
+      color: #0c5460;
+      border: 1px solid #bee5eb;
+    }
+
+    .switch-form {
+      margin-top: 1.5rem;
+      color: #666;
+    }
+
+    .password-requirements {
+      text-align: left;
+      font-size: 0.8rem;
+      color: #666;
+      margin-bottom: 1rem;
+      padding-left: 1rem;
+    }
+
+    .password-requirements li {
+      margin: 4px 0;
+    }
+
+    .password-requirements li.met {
+      color: #27ae60;
+    }
+
+    .password-requirements li::marker {
+      content: "○ ";
+    }
+
+    .password-requirements li.met::marker {
+      content: "✓ ";
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <div class="logo">Phiversity</div>
+    <div class="tagline"> Education Made Simple</div>
+    
+    <!-- Login Form -->
+    <form id="loginForm" class="active form">
+      <h2>Welcome Back</h2>
+      
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
+      </div>
+      <div id="loginEmailError" class="error-message"></div>
+      
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
+      </div>
+      <div id="loginPasswordError" class="error-message"></div>
+      
+      <button type="submit" id="loginSubmit">
+        <span class="btn-text">Login</span>
+      </button>
+
+      <div class="divider">or continue with</div>
+
+      <button type="button" class="social-btn google" onclick="socialLogin('google')">
+        <i class="fab fa-google"></i> Google
+      </button>
+      <button type="button" class="social-btn facebook" onclick="socialLogin('facebook')">
+        <i class="fab fa-facebook-f"></i> Facebook
+      </button>
+
+      <div class="switch-form">
+        <p><a href="#" onclick="showForm('forgotForm')">Forgot Password?</a></p>
+        <p>Don't have an account? <a href="#" onclick="showForm('signupForm')">Sign Up</a></p>
+      </div>
+    </form>
+
+    <!-- Sign Up Form -->
+    <form id="signupForm" class="form">
+      <h2>Create Account</h2>
+      
+      <div class="input-group">
+        <i class="fas fa-user"></i>
+        <input type="text" id="signupName" placeholder="Full Name" required autocomplete="name">
+      </div>
+      <div id="signupNameError" class="error-message"></div>
+      
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="signupEmail" placeholder="Email" required autocomplete="email">
+      </div>
+      <div id="signupEmailError" class="error-message"></div>
+      
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="signupPassword" placeholder="Password" required autocomplete="new-password">
+      </div>
+      <div id="signupPasswordError" class="error-message"></div>
+      
+      <ul class="password-requirements" id="passwordRequirements">
+        <li id="req-length">At least 8 characters</li>
+        <li id="req-upper">One uppercase letter</li>
+        <li id="req-lower">One lowercase letter</li>
+        <li id="req-number">One number</li>
+        <li id="req-special">One special character</li>
+      </ul>
+      
+      <div class="input-group">
+        <i class="fas fa-lock"></i>
+        <input type="password" id="signupConfirm" placeholder="Confirm Password" required autocomplete="new-password">
+      </div>
+      <div id="signupConfirmError" class="error-message"></div>
+      
+      <button type="submit" id="signupSubmit">
+        <span class="btn-text">Create Account</span>
+      </button>
+
+      <div class="divider">or sign up with</div>
+
+      <button type="button" class="social-btn google" onclick="socialLogin('google')">
+        <i class="fab fa-google"></i> Google
+      </button>
+      <button type="button" class="social-btn facebook" onclick="socialLogin('facebook')">
+        <i class="fab fa-facebook-f"></i> Facebook
+      </button>
+
+      <div class="switch-form">
+        <p>Already have an account? <a href="#" onclick="showForm('loginForm')">Login</a></p>
+      </div>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgotForm" class="form">
+      <h2>Reset Password</h2>
+      <p style="color: #666; margin-bottom: 1rem; font-size: 0.9rem;">Enter your email and we'll send you a reset link</p>
+      
+      <div class="input-group">
+        <i class="fas fa-envelope"></i>
+        <input type="email" id="forgotEmail" placeholder="Enter your email" required autocomplete="email">
+      </div>
+      <div id="forgotEmailError" class="error-message"></div>
+      
+      <button type="submit" id="forgotSubmit">
+        <span class="btn-text">Send Reset Link</span>
+      </button>
+
+      <div class="switch-form">
+        <p><a href="#" onclick="showForm('loginForm')">Back to Login</a></p>
+      </div>
+    </form>
+    
+    <div id="message"></div>
+  </div>
+
+  <script>
+    // API Configuration - Uses the main Phiversity API
+    const API_URL = window.location.hostname === 'localhost' 
+      ? 'http://localhost:8000' 
+      : '';
+
+    // Form switching
+    function showForm(formId) {
+      document.querySelectorAll(".form").forEach(form => {
+        form.classList.remove("active");
+      });
+      document.getElementById(formId).classList.add("active");
+      clearMessage();
+      clearErrors();
+    }
+
+    // Message handling
+    function showMessage(text, type = 'info') {
+      const messageEl = document.getElementById("message");
+      messageEl.textContent = text;
+      messageEl.className = type;
+    }
+
+    function clearMessage() {
+      const messageEl = document.getElementById("message");
+      messageEl.textContent = "";
+      messageEl.className = "";
+    }
+
+    // Error handling
+    function showError(fieldId, message) {
+      const errorEl = document.getElementById(fieldId + 'Error');
+      const inputEl = document.getElementById(fieldId);
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.add('visible');
+      }
+      if (inputEl) inputEl.classList.add('error');
+    }
+
+    function clearErrors() {
+      document.querySelectorAll('.error-message').forEach(el => {
+        el.textContent = '';
+        el.classList.remove('visible');
+      });
+      document.querySelectorAll('input.error').forEach(el => {
+        el.classList.remove('error');
+      });
+    }
+
+    // Loading state
+    function setLoading(buttonId, loading) {
+      const button = document.getElementById(buttonId);
+      const btnText = button.querySelector('.btn-text');
+      if (loading) {
+        button.disabled = true;
+        btnText.innerHTML = '<span class="spinner"></span>Please wait...';
+      } else {
+        button.disabled = false;
+        btnText.textContent = buttonId === 'loginSubmit' ? 'Login' : 
+                              buttonId === 'signupSubmit' ? 'Create Account' : 
+                              'Send Reset Link';
+      }
+    }
+
+    // Validation helpers
+    function isValidEmail(email) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
+
+    function validatePassword(password) {
+      const requirements = {
+        length: password.length >= 8,
+        upper: /[A-Z]/.test(password),
+        lower: /[a-z]/.test(password),
+        number: /[0-9]/.test(password),
+        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)
+      };
+      return requirements;
+    }
+
+    // Update password requirements UI
+    document.getElementById('signupPassword').addEventListener('input', function(e) {
+      const req = validatePassword(e.target.value);
+      document.getElementById('req-length').classList.toggle('met', req.length);
+      document.getElementById('req-upper').classList.toggle('met', req.upper);
+      document.getElementById('req-lower').classList.toggle('met', req.lower);
+      document.getElementById('req-number').classList.toggle('met', req.number);
+      document.getElementById('req-special').classList.toggle('met', req.special);
+    });
+
+    // API helper
+    async function apiCall(endpoint, data) {
+      try {
+        const response = await fetch(`${API_URL}${endpoint}`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify(data)
+        });
+        
+        const result = await response.json().catch(() => null);
+        return { ok: response.ok, status: response.status, data: result };
+      } catch (error) {
+        return { ok: false, error: error.message };
+      }
+    }
+
+    // Login form handler
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearErrors();
+      clearMessage();
+      
+      const email = document.getElementById("loginEmail").value.trim();
+      const password = document.getElementById("loginPassword").value;
+      let hasError = false;
+
+      if (!email) {
+        showError('loginEmail', 'Email is required');
+        hasError = true;
+      } else if (!isValidEmail(email)) {
+        showError('loginEmail', 'Please enter a valid email');
+        hasError = true;
+      }
+
+      if (!password) {
+        showError('loginPassword', 'Password is required');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      setLoading('loginSubmit', true);
+      
+      const response = await apiCall('/api/v1/auth/token', { 
+        email: email,  // Use email field
+        password 
+      });
+      
+      setLoading('loginSubmit', false);
+      
+      if (response.ok) {
+        showMessage('Login successful! Redirecting...', 'success');
+        // Store auth token if provided
+        if (response.data?.access_token) {
+          localStorage.setItem('auth_token', response.data.access_token);
+        }
+        // Redirect to video creation tool after short delay
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 1000);
+      } else if (response.status === 401) {
+        showMessage('Invalid email or password', 'error');
+      } else if (response.status === 403) {
+        showMessage('Please verify your email before logging in', 'error');
+      } else {
+        showMessage(typeof response.data?.detail === 'string' ? response.data.detail : 'Login failed. Please try again.', 'error');
+      }
+    });
+
+    // Signup form handler
+    document.getElementById("signupForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearErrors();
+      clearMessage();
+      
+      const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
+      const password = document.getElementById("signupPassword").value;
+      const confirm = document.getElementById("signupConfirm").value;
+      let hasError = false;
+
+      if (!name) {
+        showError('signupName', 'Full name is required');
+        hasError = true;
+      } else if (name.length < 2) {
+        showError('signupName', 'Name must be at least 2 characters');
+        hasError = true;
+      }
+
+      if (!email) {
+        showError('signupEmail', 'Email is required');
+        hasError = true;
+      } else if (!isValidEmail(email)) {
+        showError('signupEmail', 'Please enter a valid email');
+        hasError = true;
+      }
+
+      const pwdReq = validatePassword(password);
+      if (!password) {
+        showError('signupPassword', 'Password is required');
+        hasError = true;
+      } else if (!Object.values(pwdReq).every(Boolean)) {
+        showError('signupPassword', 'Password does not meet all requirements');
+        hasError = true;
+      }
+
+      if (password !== confirm) {
+        showError('signupConfirm', 'Passwords do not match');
+        hasError = true;
+      }
+
+      if (hasError) return;
+
+      setLoading('signupSubmit', true);
+      
+      const response = await apiCall('/api/v1/auth/signup', { 
+        full_name: name,
+        email, 
+        password 
+      });
+      
+      setLoading('signupSubmit', false);
+      
+      if (response.ok) {
+        showMessage('Account created successfully! Please check your email to verify your account.', 'success');
+        setTimeout(() => showForm('loginForm'), 3000);
+      } else if (response.status === 409) {
+        showMessage('An account with this email already exists', 'error');
+      } else {
+        showMessage(response.data?.detail || 'Signup failed. Please try again.', 'error');
+      }
+    });
+
+    // Forgot password handler
+    document.getElementById("forgotForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      clearErrors();
+      clearMessage();
+      
+      const email = document.getElementById("forgotEmail").value.trim();
+      
+      if (!email) {
+        showError('forgotEmail', 'Email is required');
+        return;
+      } else if (!isValidEmail(email)) {
+        showError('forgotEmail', 'Please enter a valid email');
+        return;
+      }
+
+      setLoading('forgotSubmit', true);
+      
+      const response = await apiCall('/api/v1/auth/forgot-password', { email });
+      
+      setLoading('forgotSubmit', false);
+      
+      if (response.ok) {
+        showMessage('If this email exists in our system, you will receive a password reset link.', 'success');
+        setTimeout(() => showForm('loginForm'), 3000);
+      } else {
+        // Don't reveal if email exists for security reasons
+        showMessage('If this email exists in our system, you will receive a password reset link.', 'success');
+        setTimeout(() => showForm('loginForm'), 3000);
+      }
+    });
+
+    // Social login placeholder
+    function socialLogin(provider) {
+      showMessage(`${provider} login coming soon!`, 'info');
+    }
+
+    // Check if already logged in
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+      // Optionally validate token and redirect
+      console.log('Existing session found');
+    }
+  </script>
+</body>
+</html>
