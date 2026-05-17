@@ -375,6 +375,7 @@ _PHYSICS_ANIMATION_TYPES = frozenset(
         "force_arrow",
         "motion_trail",
         "particle_system",
+        "growth_chart",
     }
 )
 _SHAPE_TYPES = frozenset(
@@ -1355,6 +1356,14 @@ def _scene_zoom_flags(scene: Dict[str, Any]) -> Dict[str, bool]:
         )
     )
 
+    has_growth_chart_focus = any(
+        t in etypes for t in ("growth_chart",)
+    ) or any(token in blob for token in ("growth chart", "growth", "trend", "increase over time", "data points"))
+
+    has_particle_focus = any(
+        t in etypes for t in ("particle_system", "particle")
+    ) or any(token in blob for token in ("particle", "organic", "fluid", "flow", "swarm"))
+
     return {
         "tire": has_tire_friction_focus,
         "bubble": has_chem_bubble_focus,
@@ -1367,6 +1376,8 @@ def _scene_zoom_flags(scene: Dict[str, Any]) -> Dict[str, bool]:
         "zoom_trigger": has_zoom_trigger,
         "motion_trigger": has_motion_trigger,
         "heat_friction": has_heat_friction,
+        "growth_chart": has_growth_chart_focus,
+        "particle": has_particle_focus,
         "any": any(
             (
                 has_tire_friction_focus,
@@ -1374,66 +1385,11 @@ def _scene_zoom_flags(scene: Dict[str, Any]) -> Dict[str, bool]:
                 has_graph_focus,
                 has_equation_focus,
                 has_3d_object_focus,
+                has_growth_chart_focus,
+                has_particle_focus,
             )
         ),
     }
-    text_parts: List[str] = [
-        str(scene.get("description") or ""),
-        str(scene.get("voiceover") or ""),
-    ]
-    for el in elements:
-        if isinstance(el, dict):
-            text_parts.append(str(el.get("content") or ""))
-    blob = " ".join(text_parts).lower()
-
-    has_tire_friction_focus = any(
-        token in blob
-        for token in (
-            "friction",
-            "rough surface",
-            "tire",
-            "tyre",
-            "wheel",
-            "mu =",
-            "coefficient of friction",
-        )
-    )
-    has_chem_bubble_focus = any(
-        token in blob
-        for token in (
-            "bubble",
-            "bubbles",
-            "effervescence",
-            "gas evolution",
-            "gas release",
-            "liquid drop",
-        )
-    )
-    has_graph_focus = any(
-        t in etypes
-        for t in ("axes", "graph", "vectorfield", "streamlines", "parametric3d")
-    ) or any(token in blob for token in ("graph", "chart", "plot", "curve", "figure"))
-    has_equation_focus = (
-        any(t in etypes for t in ("mathtex", "latex"))
-        or any(token in blob for token in ("equation", "formula", "derive", "solve"))
-        or ("=" in blob and any(ch.isalpha() for ch in blob))
-    )
-
-    return {
-        "tire": has_tire_friction_focus,
-        "bubble": has_chem_bubble_focus,
-        "graph": has_graph_focus,
-        "equation": has_equation_focus,
-        "any": any(
-            (
-                has_tire_friction_focus,
-                has_chem_bubble_focus,
-                has_graph_focus,
-                has_equation_focus,
-            )
-        ),
-    }
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # MAIN SCENE SCRIPT GENERATOR
@@ -2707,6 +2663,118 @@ def generate_scene_script(
                     lines.append(f"        idmap['{el_id}_arrow'] = _force_arrow")
                     lines.append(f"        idmap['{el_id}_label'] = _force_label")
 
+            elif etype == "growth_chart":
+                data_points = (
+                    style.get("data_points", [[0,0],[1,2],[2,3],[3,5],[4,4],[5,6]])
+                    if isinstance(style, dict) else [[0,0],[1,2],[2,3],[3,5],[4,4],[5,6]]
+                )
+                chart_col = color_e or "#00d2ff"
+                label = (
+                    style.get("label", "Growth")
+                    if isinstance(style, dict) else "Growth"
+                )
+                lines.extend([
+                    f"        _chart_axes = Axes(x_range=[0, {len(data_points)+1}, 1], y_range=[0, 8, 1], axis_config={{'include_numbers': True, 'font_size': 18}})",
+                    f"        _chart_axes.scale(0.6).move_to({p})",
+                    f"        _chart_axes.set_opacity(0.6)",
+                    f"        _chart_label = Text('{label}', font_size=20, color='{chart_col}').next_to(_chart_axes, UP, buff=0.1)",
+                    f"        _chart_pts = [",
+                ])
+                for dp in data_points:
+                    x, y = dp[0], dp[1]
+                    lines.append(f"            _chart_axes.c2p({x}, {y}),")
+                lines.extend([
+                    "        ]",
+                    f"        _chart_curve = VMobject(stroke_color='{chart_col}', stroke_width=3, fill_color='{chart_col}', fill_opacity=0.15)",
+                    "        _chart_curve.set_points_smoothly(_chart_pts)",
+                    "        _chart_fill = VMobject(stroke_width=0, fill_color=_chart_curve.get_color(), fill_opacity=0.12)",
+                    "        _chart_fill.set_points_as_corners([*_chart_pts, _chart_axes.c2p(_chart_pts[-1][0], 0), _chart_axes.c2p(_chart_pts[0][0], 0)])",
+                    "        _chart_dots = VGroup(*[Dot(_pt, color=_chart_curve.get_color(), radius=0.06) for _pt in _chart_pts])",
+                ])
+                if start is not None:
+                    lines.append(_wait_guard(start))
+                lines.extend([
+                    "        self.play(Create(_chart_axes), run_time=0.6)",
+                    "        self.play(Create(_chart_curve), run_time=0.8)",
+                    "        self.play(FadeIn(_chart_fill), run_time=0.4)",
+                    "        self.play(LaggedStart(*[GrowFromCenter(d) for d in _chart_dots], lag_ratio=0.15), run_time=0.8)",
+                    "        self.play(Write(_chart_label), run_time=0.4)",
+                    "        _scene_mobjs.extend([_chart_axes, _chart_curve, _chart_fill, _chart_dots, _chart_label])",
+                    "        for _d in _chart_dots:",
+                    "            _d.add_updater(lambda m, dt: m.scale(1 + 0.08*math.sin(2*dt)))",
+                    "        self.wait(0.5)",
+                    "        for _d in _chart_dots:",
+                    "            _d.remove_updater(_d.updaters[0])",
+                ])
+                if end is not None and end > start and tout:
+                    lines.append(_wait_guard(end))
+                    lines.append("        self.play(FadeOut(_chart_axes), FadeOut(_chart_curve), FadeOut(_chart_fill), FadeOut(_chart_dots), FadeOut(_chart_label))")
+                lines.extend([
+                    "        objs.extend([_chart_axes, _chart_curve, _chart_fill, _chart_dots, _chart_label])",
+                ])
+                if el_id:
+                    lines.append(f"        idmap['{el_id}_curve'] = _chart_curve")
+
+            elif etype == "particle_system":
+                count = style.get("count", 30) if isinstance(style, dict) else 30
+                ps_color = color_e or "#FF6B35"
+                radius = style.get("radius", 3.0) if isinstance(style, dict) else 3.0
+                lines.extend([
+                    "        _ps_dots = VGroup()",
+                    "        _ps_vx = []",
+                    "        _ps_vy = []",
+                    f"        for _i in range({count}):",
+                    f"            _d = Dot(radius=0.04, color='{ps_color}').move_to({p} + {radius}*np.random.uniform(-1,1)*RIGHT + {radius}*np.random.uniform(-1,1)*UP)",
+                    "            _d.set_opacity(0.7)",
+                    "            _ps_dots.add(_d)",
+                    "            _ps_vx.append(np.random.uniform(-0.3, 0.3))",
+                    "            _ps_vy.append(np.random.uniform(-0.3, 0.3))",
+                    "        _ps_center = np.array(" + p.replace("[", "(").replace("]", ")") + ")",
+                    "        def _ps_update(mobs, dt):",
+                    "            for _idx, _m in enumerate(mobs):",
+                    "                _ps_vx[_idx] += np.random.uniform(-0.02, 0.02)",
+                    "                _ps_vy[_idx] += np.random.uniform(-0.02, 0.02)",
+                    "                _spd = math.sqrt(_ps_vx[_idx]**2 + _ps_vy[_idx]**2)",
+                    "                if _spd > 0.4:",
+                    "                    _ps_vx[_idx] *= 0.98",
+                    "                    _ps_vy[_idx] *= 0.98",
+                    "                _m.shift(_ps_vx[_idx]*dt*RIGHT + _ps_vy[_idx]*dt*UP)",
+                    "                _v = _ps_center - _m.get_center()",
+                    "                _dist = np.linalg.norm(_v)",
+                    f"                if _dist > {radius}:",
+                    "                    _m.shift(0.03 * _v / _dist)",
+                    "        _ps_dots.add_updater(_ps_update)",
+                    "        _ps_bonds = VGroup()",
+                    f"        for _i in range(min(12, {count})):",
+                    "            _j = (_i + 1) % min(12, count)",
+                    "            _line = Line(_ps_dots[_i].get_center(), _ps_dots[_j].get_center(), stroke_width=0.5, stroke_opacity=0.25)",
+                    f"            _line.set_color('{ps_color}')",
+                    "            _line.add_updater(lambda m: m.put_start_and_end_on(_ps_dots[_i].get_center(), _ps_dots[_j].get_center()))",
+                    "            _ps_bonds.add(_line)",
+                ])
+                if start is not None:
+                    lines.append(_wait_guard(start))
+                lines.extend([
+                    "        self.play(LaggedStart(*[FadeIn(d) for d in _ps_dots], lag_ratio=0.05), run_time=0.8)",
+                    "        self.add(_ps_bonds)",
+                    "        self.wait(2.0)",
+                    "        _ps_dots.remove_updater(_ps_dots.updaters[0])",
+                    "        for _b in _ps_bonds:",
+                    "            if _b.updaters:",
+                    "                _b.remove_updater(_b.updaters[0])",
+                    "        _scene_mobjs.extend(_ps_dots)",
+                    "        _scene_mobjs.extend(_ps_bonds)",
+                ])
+                if end is not None and end > start and tout:
+                    lines.append(_wait_guard(end))
+                    lines.append("        self.play(FadeOut(_ps_dots), FadeOut(_ps_bonds), run_time=0.5)")
+                lines.extend([
+                    "        objs.append(_ps_dots)",
+                    "        objs.append(_ps_bonds)",
+                ])
+                if el_id:
+                    lines.append(f"        idmap['{el_id}_dots'] = _ps_dots")
+
             else:
                 # Generic fallback
                 lines.append(
@@ -2736,17 +2804,34 @@ def generate_scene_script(
             "            elif hasattr(self, 'camera') and hasattr(self.camera, 'frame'):",
             "                _focus_obj = None",
             "                if _zoom_tire:",
-            "                    for _o in objs:",
-            "                        _nm = _o.__class__.__name__.lower()",
-            "                        if 'circle' in _nm:",
-            "                            _focus_obj = _o",
-            "                            break",
-            "                if _focus_obj is None and (_zoom_bubble or _zoom_graph or _zoom_equation):",
+            "                    _tire_contact_pt = ORIGIN + 0.3*DOWN",
+            "                    _contact_glow = Circle(radius=0.12, color='#FF6B35', stroke_width=0)",
+            "                    _contact_glow.set_fill('#FF6B35', opacity=0.5)",
+            "                    _contact_glow.move_to(_tire_contact_pt)",
+            "                    self.play(FadeIn(_contact_glow), run_time=0.3)",
+            "                    _zoom_box = Rectangle(width=1.2, height=0.9, color='#FFD700', stroke_width=1.5)",
+            "                    _zoom_box.move_to(_tire_contact_pt)",
+            "                    _zoom_box_label = Text('Contact Patch', font_size=12, color='#FFD700').next_to(_zoom_box, UP, buff=0.05)",
+            "                    self.play(Create(_zoom_box), Write(_zoom_box_label), run_time=0.4)",
+            "                    _orig_w = self.camera.frame.width",
+            "                    self.play(self.camera.frame.animate.move_to(_tire_contact_pt).set(width=1.8), run_time=1.2)",
+            "                    _contact_arrow_f = Arrow(0.3*LEFT, 0.3*RIGHT, color='#FF4500', stroke_width=4, buff=0.02)",
+            "                    _contact_arrow_f.move_to(_tire_contact_pt + 0.15*DOWN)",
+            "                    _contact_arrow_f_label = Text('Friction', font_size=10, color='#FF4500').next_to(_contact_arrow_f, DOWN, buff=0.02)",
+            "                    _contact_arrow_N = Arrow(0.3*UP, 0.15*DOWN, color='#00FF88', stroke_width=3, buff=0.02)",
+            "                    _contact_arrow_N.move_to(_tire_contact_pt)",
+            "                    _contact_arrow_N_label = Text('Normal', font_size=10, color='#00FF88').next_to(_contact_arrow_N, UP, buff=0.02)",
+            "                    _road_texture = VGroup(*[Line(_tire_contact_pt + 0.4*LEFT + i*0.12*RIGHT, _tire_contact_pt + 0.4*LEFT + i*0.12*RIGHT + 0.06*DOWN, stroke_width=0.5, color='#888') for i in range(7)])",
+            "                    self.play(FadeIn(_road_texture), Create(_contact_arrow_f), Write(_contact_arrow_f_label), Create(_contact_arrow_N), Write(_contact_arrow_N_label), run_time=0.8)",
+            "                    self.wait(1.0)",
+            "                    self.play(FadeOut(_road_texture), FadeOut(_contact_arrow_f), FadeOut(_contact_arrow_f_label), FadeOut(_contact_arrow_N), FadeOut(_contact_arrow_N_label), FadeOut(_contact_glow), FadeOut(_zoom_box), FadeOut(_zoom_box_label), run_time=0.5)",
+            "                    self.play(self.camera.frame.animate.set(width=_orig_w).move_to(ORIGIN), run_time=0.8)",
+            "                elif _zoom_bubble or _zoom_graph or _zoom_equation:",
             "                    _focus_obj = objs[-1] if objs else None",
             "                if _focus_obj is not None:",
             "                    _orig_w = self.camera.frame.width",
             "                    _base_w = float(getattr(_focus_obj, 'width', 4.0) or 4.0)",
-            "                    _target_w = max(4.2, min(9.5, _base_w * (2.0 if _zoom_tire else 2.4)))",
+            "                    _target_w = max(4.2, min(9.5, _base_w * 2.4))",
             "                    self.play(self.camera.frame.animate.move_to(_focus_obj).set(width=_target_w), run_time=1.0)",
             "                    self.play(self.camera.frame.animate.set(width=_orig_w).move_to(ORIGIN), run_time=0.8)",
             "        if _zoom_zoom_trigger:",
@@ -2761,13 +2846,19 @@ def generate_scene_script(
             "                self.wait(2)",
             "                self.stop_ambient_camera_rotation()",
             "        if _zoom_heat_friction:",
-            "            _heat_indicator = Circle(radius=0.3, color='#FF4500').move_to(ORIGIN + 3*RIGHT + 2*UP)",
-            "            _heat_indicator.set_fill('#FF4500', opacity=0.3)",
-            "            self.play(FadeIn(_heat_indicator), run_time=0.5)",
-            "            _glow_text = Text('Heat from friction!', font_size=0.4, color='#FF6B35').next_to(_heat_indicator, UP)",
-            "            self.play(Write(_glow_text), run_time=0.8)",
-            "            self.wait(1.0)",
-            "            self.play(FadeOut(_heat_indicator), FadeOut(_glow_text), run_time=0.5)",
+            "            _heat_base = Circle(radius=0.25, color='#FF4500').move_to(ORIGIN)",
+            "            _heat_base.set_fill('#FF4500', opacity=0.4)",
+            "            _heat_ring = Circle(radius=0.4, color='#FF6B35', stroke_width=2, stroke_opacity=0.6).move_to(ORIGIN)",
+            "            _heat_label_prefix = 'Heat from friction!' if not _zoom_tire else 'Thermal energy at tire contact!'",
+            "            _heat_text = Text(_heat_label_prefix, font_size=0.35, color='#FF6B35').next_to(_heat_ring, UP, buff=0.05)",
+            "            _heat_arrow = always_redraw(lambda: Arrow(ORIGIN + 0.1*LEFT, ORIGIN + 0.1*RIGHT, color='#FF4500', stroke_width=3, buff=0.05))",
+            "            self.play(FadeIn(_heat_base), Create(_heat_ring), Write(_heat_text), run_time=0.6)",
+            "            _heat_base.add_updater(lambda m, dt: m.set_opacity(0.3 + 0.3*math.sin(3*dt)))",
+            "            _heat_ring.add_updater(lambda m, dt: m.scale(1 + 0.15*math.sin(2*dt)))",
+            "            self.wait(1.2)",
+            "            _heat_base.remove_updater(_heat_base.updaters[0])",
+            "            _heat_ring.remove_updater(_heat_ring.updaters[0])",
+            "            self.play(FadeOut(_heat_base), FadeOut(_heat_ring), FadeOut(_heat_text), run_time=0.5)",
             "        if _zoom_3d_object:",
             "            if _is_3d_scene:",
             "                self.begin_ambient_camera_rotation(rate=0.12)",

@@ -139,7 +139,7 @@ JSON Schema (types and keys):
         "duration_seconds": integer (50-120),
         "elements": [
           { 
-            "type": "Text" | "Latex" | "MathTex" | "Circle" | "Rectangle" | "Polygon" | "Annulus" | "Axes" | "Graph" | "highlight" | "arrow" | "Line" | "Arrow" | "DashedLine" | "Vector",
+            "type": "Text" | "Latex" | "MathTex" | "Circle" | "Rectangle" | "Polygon" | "Annulus" | "Axes" | "Graph" | "highlight" | "arrow" | "Line" | "Arrow" | "DashedLine" | "Vector" | "car_moving" | "friction_heat" | "force_arrow" | "growth_chart" | "particle_system" | "tire3d" | "car3d" | "road3d",
             "content": string, 
             "position": string | null, 
             "style": object | null 
@@ -150,16 +150,93 @@ JSON Schema (types and keys):
   }
 }
 
-Element Instructions:
-- "Latex"/"MathTex": Use for all math expressions. content="E = mc^2".
-- "Polygon": content="[(0,0), (2,0), (0,2)]".
-- "Circle": content="radius label" (optional).
-- "Annulus": content="label" (optional). inner/outer radius handled by logic.
-- "Rectangle": content="label" (optional). dimensions handled by logic.
-- "Axes": content="" (empty). style={"x_range": [-5,5], "y_range": [-3,3]}.
-- "highlight": content="" to highlight last object, or specific text to find.
-- "Line"/"Arrow"/"DashedLine"/"Vector": Use for lines and arrows in diagrams.
-- Each scene MUST have 5-10 visual elements for maximum visual density and engagement.
+ELEMENT INSTRUCTIONS (all element types):
+- "Text": Plain text display. content="any text". style={"color": "#hex", "font_size": 24}.
+- "Latex"/"MathTex": Math expressions. content="E = mc^2". style={"color": "#hex"}.
+- "Title": Large heading text. content="Scene Title". position="[0, 3.3, 0]".
+- "Circle": Circle shape. content optional. style={"radius": 0.5, "fill_color": "#hex", "fill_opacity": 0.8}.
+- "Rectangle": Rectangle shape. content optional. style={"width": 2.0, "height": 0.7, "fill_color": "#hex", "fill_opacity": 0.85}.
+- "Polygon": Arbitrary polygon. content="[(x1,y1), (x2,y2), ...]". style={"fill_color": "#hex"}.
+- "Annulus": Ring shape. content optional. style={"inner_radius": 0.3, "outer_radius": 0.6}.
+- "Ellipse": Ellipse shape. style={"width": 2, "height": 1, "fill_color": "#hex"}.
+- "Line"/"Arrow"/"DashedLine"/"Vector": Lines and arrows. style={"color": "#hex", "stroke_width": 3}.
+- "Axes": Coordinate axes. content="". style={"x_range": [-5,5,1], "y_range": [-3,3,1]}.
+- "Graph"/"Plot": Function graph on axes. content="sin(x)". style={"color": "#hex"}.
+- "VectorField": Vector field visualization. content="(-y, x)".
+- "StreamLines": Flow streamlines. content="(y, -x)".
+- "ParametricGraph": Parametric curve. content="(t, 3.5*t - 0.49*t**2)". style={"t_range": [0, 6]}.
+- "highlight": Highlight last object or specific text.
+- "Sphere3d"/"Cylinder3d"/"Box3d"/"Cone3d"/"Torus3d": 3D geometry objects.
+- "car_moving": Animated car with spinning wheels. style: {"direction": "RIGHT"|"LEFT", "distance": 3, "duration": 2}.
+- "friction_heat": Glowing friction heat circle with vapor particles. style: {"intensity": 0.5, "radius": 0.3}.
+- "force_arrow": Force vector arrow with label. style: {"force_type": "normal"|"friction"|"gravity"|"applied", "length": 1.5, "direction": "UP"|"DOWN"|"LEFT"|"RIGHT"}.
+- "growth_chart": Animated bezier chart with data points and area fill. style: {"data_points": [[x1,y1],[x2,y2],...], "label": "Growth"}.
+- "particle_system": Organic particle system with bonding lines. style: {"count": 30, "radius": 3.0}.
+- "tire3d"/"car3d"/"road3d": 3D tire, car, or road objects for immersive scenes.
+- Each scene MUST have 8-14 visual elements for maximum visual density and engagement.
+
+SUBJECT-SPECIFIC SCENE BUILDING GUIDE — USE THESE PATTERNS FOR MAXIMUM VISUAL IMPACT:
+
+PHYSICS scenes:
+- Free-body diagrams: Use "Rectangle" for the object, "Arrow" for forces (N up, mg down, applied, friction), "Text" labels. Add "force_arrow" for animated force vectors. Use "car_moving" + "friction_heat" for dynamic car-on-road scenes. The system auto-detects "tire"/"friction"/"wheel" keywords and zooms into the tire-road contact patch showing friction and normal arrows — leverage this by including these keywords in scene descriptions.
+- Projectile motion: "Axes" with "ParametricGraph" for trajectory, "Circle" for projectile, "Arrow" for velocity components (v, vx, vy), "Arrow" for gravity. Animate the projectile moving along the path. Show angle of launch with "Arc" + "Text".
+- Incline planes: "Polygon" for the ramp, "Circle" for the block, "Arrow" for forces (W=mg straight down, N perpendicular to ramp, f parallel up/down the ramp). Add "Text" for theta, mu values.
+- Collisions: "Rectangle" for each object, "Arrow" for momentum vectors before/after. Use green/orange for objects before, purple for combined after. Show conservation equation.
+- Circular motion: "Circle" dashed for path, "Circle" solid for object, "Arrow" for centripetal force inward, "Arrow" for velocity tangent. Add "Text" for formulas.
+- Pendulum/Spring: "Line" for string/spring, "Circle" for bob/mass, "Arrow" for forces. "DashedLine" for equilibrium position. Animate oscillation with arc motion.
+- Energy/Power: "Rectangle" blocks at different heights, "Arrow" for force, "Text" for energy values. Use color gradient from red (high) to blue (low) for energy bars.
+- Thermo/Gas: "Rectangle" for container, "Circle" for particles (use "particle_system" for gas molecules), "Arrow" for pressure, "Text" for T, P, V values.
+- Waves: "Axes" with "Graph" for wave function, "Arrow" to show amplitude/wavelength. Animate propagation by showing wave at multiple time steps.
+- Electric fields: "Circle" for charges (+ red, - blue), "Arrow"/"Vector" for field lines, "Text" for potential values. Use "VectorField" for field visualization.
+- Circuits: "Rectangle" for resistor, "Line" for wires, "Circle" for bulb, "Arrow" for current direction. "Text" for V, I, R values.
+
+CHEMISTRY scenes:
+- Molecular/Atomic: "Circle" for atoms (color-coded: H=white, O=red, N=blue, C=dark grey), "Line" for bonds (single/double/triple). "Text" for element labels. Use 3D types for molecular structures.
+- Reactions: "Text"/"Latex" for reactants → products. Animate rearrangement with "Circle" atoms moving. Show energy profile with "Axes" + "Graph".
+- Gas laws (Boyle/Charles): "Rectangle" for container with movable piston ("Line"), "Circle" for gas particles. Animate volume change while particles move. "Text" for P, V, T values.
+- Titration: "Axes" for pH curve (sigmoid shape), "Circle" for flask, "Arrow" for burette dripping. "Text" for equivalence point label. "Circle" color change indicator.
+- Electrochemistry: "Rectangle" for electrodes, "Circle" for ions, "Arrow" for electron flow through wire, "Arrow" for ion movement through salt bridge. "Text" for half-reactions.
+- Enthalpy/Energy: "Axes" with "Graph" for reaction coordinate, "Arrow" for activation energy (Ea), "Arrow" for enthalpy change (ΔH). Use red for exothermic, blue for endothermic.
+- Periodic trends: "Rectangle" grid for periodic table cells, "Text" for element symbols. "Arrow" showing trend direction (left→right, top→bottom). Color gradient.
+- Equilibrium: "Axes" for concentration vs time graph, "Graph" for reactants decreasing, "Graph" for products increasing to plateau. "Text" for K_eq value.
+- Bonding: "Circle" for atoms, overlapping regions for shared electrons. "DashedCircle" for orbital overlap. "Text" for bond type labels.
+- Solutions/Concentration: "Rectangle" for beaker, "Circle" for solute particles dispersed. "Text" for concentration value. Animate dilution by adding more solvent.
+
+MATHEMATICS scenes:
+- Graphs/Plotting: "Axes" with "Graph" for function, "Circle" for key points (roots, intercepts, vertices). "DashedLine" for asymptotes. "Arrow" showing slope at a point. "Text" for coordinates.
+- Calculus (derivatives): "Axes" + "Graph" for f(x). "Line" for tangent at a point. "Arrow" showing slope = f'(x). Animate tangent moving along curve. "Text" for derivative formula. Show secant → tangent limit with "DashedLine" family.
+- Calculus (integrals): "Axes" + "Graph" for f(x). "Polygon" for area under curve (use thin Rectangle strips for Riemann sum, then show smooth fill). Animate from many small rectangles to smooth integral. "Text" for ∫ formula.
+- Geometry: "Circle"/"Polygon"/"Rectangle" for shapes. "DashedLine" for auxiliary constructions. "Arc" for angles with "Text" degree labels. "Line" for sides with measurement labels.
+- Vectors/Matrices: "Arrow" for vectors from origin. "DashedLine" for components. "Polygon" for parallelogram. "Text" for coordinates and matrix elements.
+- Sequences/Series: "Axes" with "Circle" points at each term. "Arrow" between consecutive terms showing step. Animate convergence by showing partial sums approaching limit.
+- Probability/Statistics: "Axes" for distribution, "Polygon"/"Rectangle" for bars (histogram), "Graph" for PDF curve. "Text" for mean, median, σ labels. "DashLine" for standard deviation intervals.
+- Trigonometry: "Circle" for unit circle, "Line" for radius, "DashedLine" for sin/cos projections. "Arc" for angle, "Text" for angle measure. Show sin/cos as moving point on circle.
+- Linear equations: "Axes" for coordinate plane, "Line" for each equation. "Circle" at intersection point. "Text" for solution coordinates. Animate lines transforming.
+- Number theory: Number line with "Line" + "Circle" markers. "Arrow" for operations. "Text" for divisibility, factors, primes.
+
+ECONOMICS scenes:
+- Supply/Demand: "Axes" for price-quantity plane. "Line" downward for demand (D), "Line" upward for supply (S). "Circle" at equilibrium (P*, Q*). "Arrow" showing shifts of curves (ΔD, ΔS). "Text" for labels. Use "growth_chart" for time-series data.
+- Elasticity: Two "Line" graphs side by side — one steep (inelastic), one flat (elastic). "Polygon" shading for revenue rectangles. "Text" for elasticity coefficients. "Arrow" showing total revenue change.
+- Cost curves: "Axes" with "Graph" for MC, ATC, AVC, AFC curves. U-shaped ATC, AVC. "Circle" at minimum points. "Text" for shutdown price, break-even price.
+- Market structures: "Axes" with demand curve. "Rectangle" for profit area (between P and ATC). "DashedLine" for MR = MC point. "Text" labels for monopoly vs perfect competition comparison.
+- GDP/Inflation: "growth_chart" for GDP over time. "Axes" + "Graph" for inflation rate. "Arrow" showing trend direction. "Text" for key year values and percentages.
+- Labor markets: "Axes" for wage vs quantity. "Line" for labor demand (downward), "Line" for labor supply (upward). "Circle" at equilibrium. "Arrow" showing minimum wage effects.
+- International trade: Two-panel "Axes" (domestic + world market). "Polygon" shading for consumer/producer surplus. "Arrow" showing trade flow. "Text" for tariff effects.
+- Business cycle: "growth_chart" or "Axes" + "Graph" for GDP over time with peaks and troughs. "Text" labels for expansion, peak, contraction, trough. Animate along the cycle.
+- Utility/Indifference: "Axes" with "Graph" for indifference curves (convex to origin). "Line" for budget constraint. "Circle" at optimal bundle. "Arrow" showing income/substitution effects.
+- Game theory: "Rectangle" grid for payoff matrix. "Text" for player strategies (Cooperate/Defect). "Circle" for Nash equilibrium. "Arrow" showing best-response directions.
+
+CRITICAL VISUAL DESIGN RULES:
+- Every scene MUST balance text, math, and visual diagrams — never show only text.
+- Use color meaningfully: red = important/error/hot, blue = neutral/cold/forces, green = correct/normal/positive, yellow/gold = highlight/focus, purple = friction/shear.
+- Animate progressively: show one element at a time with "FadeIn", "Create", or "Write" so the viewer follows the explanation.
+- For physics diagrams, always show force vectors as arrows with clear labels (N, mg, f, F, T, etc.).
+- For graphs, always include labeled axes, key points as dots, and the curve/line connecting them.
+- When the problem involves motion (car, projectile, pendulum, etc.), dedicate 1-2 scenes to animation of that motion using the relevant element types.
+- Use "force_arrow" with proper force_type (normal/friction/gravity/applied) so the system auto-colors them.
+- Use "car_moving" + "friction_heat" + "force_arrow" together in the same scene for car friction problems — the system recognizes these and creates an immersive zoom into the tire-road contact patch.
+- Use "growth_chart" for any time-series, trend, or sequential data visualization across ALL subjects.
+- Use "particle_system" for gas molecules, fluid flow, diffusion, organic motion, or swarm behavior.
 
 Write only the solver prompt. Do not include example JSON or any extra commentary.
 """.strip()
@@ -851,7 +928,62 @@ def _inject_subject_figure_scene(raw: Dict[str, Any], user_question: str | None,
         print(f"[orchestrator] Injected {subject or 'subject'} figure scene: {figure_scene.get('description', 'Unknown')}")
     except Exception as e:
       print(f"[orchestrator] Subject figure injection failed (non-fatal): {e}")
-  
+
+  # Inject growth chart scene if question mentions growth/trend data
+  q_lower = (user_question or "").lower()
+  has_growth_chart_keywords = any(
+    token in q_lower for token in ("growth chart", "growth", "trend", "increase over time", "data points", "chart", "graph of")
+  )
+  if has_growth_chart_keywords and not any(
+    "_growth_chart_" in str(scene.get("id", "")) for scene in scenes if isinstance(scene, dict)
+  ):
+    growth_scene = {
+      "id": "injected_growth_chart",
+      "description": "Growth chart visualization",
+      "voiceover": "Let's visualize this growth trend on a chart. Each data point represents a measurement over time, and the smooth curve shows the overall trend.",
+      "duration_seconds": 20,
+      "elements": [
+        {
+          "type": "growth_chart",
+          "content": "",
+          "position": "[0, 0, 0]",
+          "style": {
+            "data_points": [[0, 0], [1, 2], [2, 3], [3, 5], [4, 4], [5, 6]],
+            "label": "Growth Trend"
+          }
+        }
+      ]
+    }
+    scenes.append(growth_scene)
+    print(f"[orchestrator] Injected growth chart scene")
+
+  # Inject particle system scene if question mentions particles/fluid/organic motion
+  has_particle_keywords = any(
+    token in q_lower for token in ("particle", "organic", "fluid flow", "swarm", "diffusion")
+  )
+  if has_particle_keywords and not any(
+    "_particle_" in str(scene.get("id", "")) for scene in scenes if isinstance(scene, dict)
+  ):
+    particle_scene = {
+      "id": "injected_particle_system",
+      "description": "Organic particle system",
+      "voiceover": "Watch how particles move and interact organically. This visualizes the random motion and emerging patterns in the system.",
+      "duration_seconds": 18,
+      "elements": [
+        {
+          "type": "particle_system",
+          "content": "",
+          "position": "[0, 0, 0]",
+          "style": {
+            "count": 25,
+            "radius": 2.5
+          }
+        }
+      ]
+    }
+    scenes.append(particle_scene)
+    print(f"[orchestrator] Injected particle system scene")
+
   animation_plan["total_scenes"] = len(scenes)
   return raw
 
