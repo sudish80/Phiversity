@@ -1008,6 +1008,71 @@ textarea { resize: vertical; min-height: 80px; }
 .corner-status.hidden { display: none; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
+/* ── Growth Chart ── */
+.chart-wrap {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px;
+  margin-bottom: 16px;
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.chart-wrap canvas {
+  display: block;
+  width: 100%;
+  height: 200px;
+}
+[data-theme="light"] .chart-wrap canvas {
+  filter: invert(0.85) hue-rotate(180deg);
+}
+
+/* ── Zoom Controls ── */
+.zoom-controls {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 6px;
+  box-shadow: var(--shadow);
+  animation: slideUpFade 0.4s ease;
+}
+.zoom-btn {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.zoom-btn:hover {
+  background: var(--hover);
+  color: var(--text);
+  border-color: var(--accent);
+}
+.zoom-btn:active { transform: scale(0.92); }
+.zoom-level {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-tertiary);
+  min-width: 32px;
+  text-align: center;
+  font-family: monospace;
+}
+
 /* ── Stats Row ── */
 .stats-row {
   display: grid;

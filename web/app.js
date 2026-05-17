@@ -81,9 +81,14 @@
           updateNavUser(profile);
           return;
         }
-      } catch {}
+      } catch {
+        // Session expired — show login overlay instead of silently creating guest
+        Phiversity._emit('session-expired');
+        updateNavUser({ name: 'Guest', type: 'guest' });
+        return;
+      }
     }
-    // No valid user — try guest
+    // No prior user — create guest session
     try {
       const guest = await PhiversityAPI.guestLogin();
       patchState({ user: guest });
@@ -117,6 +122,11 @@
 
     const problem = $('#problem').value.trim();
     if (!problem) { toast('Please enter a problem', 'warning'); return; }
+
+    // Trigger context-aware physics visualization
+    if (typeof PhiversityViz !== 'undefined') {
+      PhiversityViz.showSceneForProblem(problem);
+    }
 
     // Ensure auth session
     if (!getState('user')) await initAuth();
@@ -164,7 +174,9 @@
   function startPolling(jobId) {
     pollAbort = new AbortController();
     let iterations = 0;
+    let errorCount = 0;
     const MAX_ITER = 3600;
+    const MAX_ERRORS = 5;
     let backoff = 1500;
 
     (function poll() {
@@ -179,6 +191,7 @@
       iterations++;
 
       PhiversityAPI.getJob(jobId).then(job => {
+        errorCount = 0;
         const status = (job.status || '').toLowerCase();
         const progress = job.progress || 0;
         const log = job.log || '';
@@ -201,6 +214,14 @@
         }
       }).catch(err => {
         if (pollAbort.signal.aborted) return;
+        errorCount++;
+        if (errorCount >= MAX_ERRORS) {
+          finishJob();
+          PhiversityUI.closeOverlay('loading');
+          setStatus('Polling failed after repeated errors.');
+          toast('Job monitoring failed — check server status', 'error');
+          return;
+        }
         backoff = Math.min(backoff * 1.5, 8000);
         setTimeout(poll, backoff);
       });
@@ -299,7 +320,10 @@
   };
 
   // ─── Video Controls ───
-  closeVideoBtn?.addEventListener('click', () => PhiversityUI.closeOverlay('video'));
+  closeVideoBtn?.addEventListener('click', () => {
+    PhiversityUI.closeOverlay('video');
+    if (typeof PhiversityViz !== 'undefined') PhiversityViz.resetToAmbient();
+  });
   $('#pip-video')?.addEventListener('click', () => {
     if (videoEl && document.pictureInPictureEnabled) {
       videoEl.requestPictureInPicture().catch(() => {});
@@ -326,14 +350,19 @@
     activeJobId = null;
     setStatus('Cancelled');
     toast('Cancelled', 'info');
+    if (typeof PhiversityViz !== 'undefined') PhiversityViz.resetToAmbient();
   });
 
   // ─── Sample Button ───
   $('#sample-btn')?.addEventListener('click', () => {
-    $('#problem').value = 'A 5 kg block slides on a 30 degree incline with friction coefficient 0.2. Find the acceleration.';
+    const sampleText = 'A 5 kg block slides on a 30 degree incline with friction coefficient 0.2. Find the acceleration.';
+    $('#problem').value = sampleText;
     $('#learning-mode').value = 'question_solving';
     $$('.mode-card').forEach(c => c.classList.remove('active'));
     document.querySelector('.mode-card[data-mode="question_solving"]')?.classList.add('active');
+    if (typeof PhiversityViz !== 'undefined') {
+      PhiversityViz.showSceneForProblem(sampleText);
+    }
   });
 
   // ─── LLM Key Status ───

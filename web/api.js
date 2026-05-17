@@ -4,13 +4,10 @@ const PhiversityAPI = (() => {
 
   // ── Token management ──
   function _getUser() {
-    try { return JSON.parse(localStorage.getItem('manim_user') || 'null'); } catch { return null; }
+    return Phiversity.getState('user');
   }
 
   function _saveUser(u) {
-    localStorage.setItem('manim_user', JSON.stringify(u));
-    if (u && u.access_token) localStorage.setItem('auth_token', u.access_token);
-    if (!u) localStorage.removeItem('auth_token');
     Phiversity.patchState({ user: u });
   }
 
@@ -42,8 +39,9 @@ const PhiversityAPI = (() => {
       if (!refresh) throw new Error('No refresh token');
       const res = await fetch(BASE + '/api/v1/auth/refresh', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ..._getCsrfHeader() },
         body: JSON.stringify({ refresh_token: refresh }),
+        credentials: 'include',
       });
       if (!res.ok) { _saveUser(null); throw new Error('Refresh failed'); }
       const data = await res.json();
@@ -71,7 +69,7 @@ const PhiversityAPI = (() => {
         await refreshToken();
         const retryHeaders = { ...init.headers, ..._getAuthHeaders(), ..._getCsrfHeader() };
         res = await fetch(BASE + path, { ...init, headers: retryHeaders, credentials: 'include' });
-      } catch { _saveUser(null); throw new Error('Session expired'); }
+      } catch { _saveUser(null); Phiversity._emit('session-expired'); throw new Error('Session expired'); }
     }
     if (!res.ok) {
       let msg = `HTTP ${res.status}`;

@@ -4032,7 +4032,7 @@ async def run_prompt(
     if scoped_key:
         job.idempotency_key = scoped_key
     service.db.commit()
-    service.start_background_job(job.id, req.dict())
+    service.start_background_job(job.id, req.model_dump())
     return {"job_id": job.id, "status": "queued"}
 
 @app.get("/api/v1/jobs", response_model=List[JobResponse], tags=["Jobs"])
@@ -4041,9 +4041,18 @@ async def list_jobs(
     current_user: User = Depends(get_current_user)
 ):
     """List recent jobs for the current user"""
-    # Simply return a list of job responses. JobResponse schema already has job_id and status.
     jobs = service.db.query(JobModel).filter(JobModel.user_id == current_user.id).order_by(JobModel.created_at.desc()).limit(10).all()
-    return [{"job_id": j.id, "status": j.status} for j in jobs]
+    result = []
+    for j in jobs:
+        problem = ""
+        if j.request_payload:
+            try:
+                payload = json.loads(j.request_payload)
+                problem = payload.get("problem", "")
+            except (json.JSONDecodeError, TypeError):
+                pass
+        result.append({"job_id": j.id, "status": j.status, "problem": problem})
+    return result
 
 @app.get("/api/v1/jobs/{job_id}", response_model=JobStatusResponse, tags=["Jobs"])
 async def get_job_status(
@@ -4068,6 +4077,7 @@ async def get_job_status(
         "plan_url": artifact_urls["plan_url"],
         "log_url": artifact_urls["log_url"],
         "summary": summary,
+        "error": db_job.error_message or None,
     }
                 
     return response_data
@@ -4196,8 +4206,9 @@ async def legacy_run(
     if req.idempotency_key:
         job.idempotency_key = _scoped_idempotency_key(current_user.id, req.idempotency_key)
     service.db.commit()
-    service.start_background_job(job.id, req.dict())
+    service.start_background_job(job.id, req.model_dump())
     return {"job_id": job.id, "status": "queued"}
+
 
 @app.get("/api/jobs/{job_id}", tags=["Legacy"])
 async def legacy_job_status(

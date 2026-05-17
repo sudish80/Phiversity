@@ -57,6 +57,7 @@ class RunRequest(BaseModel):
 class JobResponse(BaseModel):
     job_id: str
     status: str
+    problem: Optional[str] = None
 
 
 class JobSummaryResponse(BaseModel):
@@ -76,6 +77,7 @@ class JobStatusResponse(BaseModel):
     plan_url: Optional[str] = None
     log_url: Optional[str] = None
     summary: Optional[JobSummaryResponse] = None
+    error: Optional[str] = None
 
 
 class UserCreate(BaseModel):
@@ -148,6 +150,7 @@ class UserResponse(BaseModel):
     role: str
     quality_tier: str = "free"
     watermark_enabled: bool = True
+    full_name: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
