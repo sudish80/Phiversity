@@ -157,3 +157,215 @@ INFO:     127.0.0.1:51011 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01c
 INFO:     127.0.0.1:51013 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
 {"timestamp": "2026-05-18T16:28:05.358069", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
 INFO:     127.0.0.1:51016 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:11.384971", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51019 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:16.689367", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51023 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:21.842403", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51024 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:27.136519", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51025 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:32.328310", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51027 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:33.046534", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51027 - "GET /api/v1/system/llm-key-status?_=1779101012960 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:37.708042", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51027 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:45.582966", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51029 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:51.382544", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51031 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:28:56.524535", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51032 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:01.726392", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51034 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:07.045656", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51035 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:12.246286", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51037 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:17.473521", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51038 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:22.623254", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51040 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:27.678696", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51041 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:32.854859", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51043 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:33.023686", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51044 - "GET /api/v1/system/llm-key-status?_=1779101072965 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:38.868071", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51048 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:48.600518", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51055 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:29:54.302380", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51063 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:00.290780", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51066 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:06.255650", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51067 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:12.324189", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51068 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:18.342469", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51069 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:24.261250", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51070 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:30.320819", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51071 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:33.285933", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51071 - "GET /api/v1/system/llm-key-status?_=1779101133252 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:36.391021", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51071 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:42.270035", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51076 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:48.346730", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51079 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:30:54.278163", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51080 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:00.280737", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51082 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:06.273222", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51083 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:12.258697", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51084 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:18.279792", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51086 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:24.261887", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51087 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:30.547772", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51089 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:34.272828", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51089 - "GET /api/v1/system/llm-key-status?_=1779101194233 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:36.262245", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51089 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:42.271148", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51090 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:48.251856", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51092 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:31:54.262413", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51093 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:00.276760", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51095 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:06.257581", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51096 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:12.260732", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51097 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:18.252150", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51099 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:24.260360", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51100 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:30.260494", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51102 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:33.867203", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51102 - "GET /api/v1/system/llm-key-status?_=1779101253849 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:36.251331", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51102 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:42.260770", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51104 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:47.545606", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51105 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:32:57.717811", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51108 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:04.238878", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51109 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:09.369875", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51111 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:14.474001", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51112 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:19.543580", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51113 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:24.667720", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51114 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:30.089849", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51116 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:33.003337", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51116 - "GET /api/v1/system/llm-key-status?_=1779101312964 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:35.279425", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51116 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:40.964112", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51117 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:46.499859", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51118 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:51.668717", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51120 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:33:57.047892", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51121 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:04.452202", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51124 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:11.641118", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51126 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:18.349296", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51129 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:24.403560", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51131 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:30.550326", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51137 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:39.973279", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51143 - "GET /api/v1/system/llm-key-status?_=1779101379809 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:45.435399", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51144 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:51.621075", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51146 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:34:58.260153", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51149 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:04.724078", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51150 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:11.694789", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51151 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:17.235960", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51152 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:22.685105", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51153 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:28.815781", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51154 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:33.579343", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51154 - "GET /api/v1/system/llm-key-status?_=1779101432996 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:33.913004", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51154 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:39.003538", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51155 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:44.385479", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51157 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:49.697129", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51159 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:35:55.331687", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51160 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:00.888272", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51162 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:06.820649", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51163 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:12.337859", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51165 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:17.691313", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51166 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:22.930380", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51169 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:28.279615", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51170 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:35.637721", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51171 - "GET /api/v1/system/llm-key-status?_=1779101495409 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:35.666456", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51172 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:41.291589", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51176 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:47.268484", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51177 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:53.260108", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51178 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:36:59.282051", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51179 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:05.311902", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51180 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:11.441322", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51182 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:19.159291", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51183 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:24.362741", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51184 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:30.262181", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51187 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:36.527194", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51188 - "GET /api/v1/system/llm-key-status?_=1779101556252 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:36.615932", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51189 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:37:42.375442", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:51190 - "GET /api/v1/jobs/a8aafc7d-b403-4724-a331-fc552db01cdb HTTP/1.1" 200 OK
