@@ -381,6 +381,98 @@ const PhiversityUI = (() => {
   }
 
   // =====================================================
+  // HERO FEATURES — Card spotlight + scene previews
+  // =====================================================
+  function initHeroFeatures() {
+    const cards = $$('.hero-feature-card');
+    if (!cards.length) return;
+    const sceneData = {
+      physics: ['bars', 'wave', 'circle'],
+      chemistry: ['beaker', 'flask', 'atom'],
+      math: ['graph', 'angle', 'integral'],
+      economics: ['chart', 'arrow', 'pie'],
+    };
+    cards.forEach(card => {
+      card.addEventListener('mouseenter', () => {
+        cards.forEach(c => c.style.opacity = '0.5');
+        card.style.opacity = '1';
+        card.style.transform = 'translateY(-6px) scale(1.03)';
+      });
+      card.addEventListener('mouseleave', () => {
+        cards.forEach(c => { c.style.opacity = '1'; c.style.transform = ''; });
+      });
+      card.addEventListener('click', () => {
+        const feature = card.dataset.feature;
+        const tagline = document.getElementById('hero-tagline');
+        const msgs = {
+          physics: '⚛️ From free-body diagrams to car-tire friction — visualized step by step',
+          chemistry: '🧪 Molecular structures, reactions, gas laws, and more — brought to life',
+          math: '📐 Derivatives as slopes, integrals as areas — see calculus in action',
+          economics: '📊 Supply-demand curves, elasticity, GDP trends — animated economics',
+        };
+        if (tagline && msgs[feature]) {
+          tagline.style.opacity = '0';
+          setTimeout(() => {
+            tagline.textContent = msgs[feature];
+            tagline.style.opacity = '1';
+            setTimeout(() => {
+              tagline.style.opacity = '0';
+              setTimeout(() => {
+                tagline.textContent = 'Transform any question into a professional animated lesson with voiceover.';
+                tagline.style.opacity = '1';
+              }, 400);
+            }, 2500);
+          }, 400);
+        }
+      });
+    });
+  }
+
+  // =====================================================
+  // HERO TYPING — Typewriter for tagline
+  // =====================================================
+  function initHeroTyping() {
+    const el = document.getElementById('hero-tagline');
+    if (!el) return;
+    const text = el.textContent;
+    el.textContent = '';
+    el.style.opacity = '1';
+    let i = 0;
+    function type() {
+      if (i < text.length) {
+        el.textContent = text.slice(0, i + 1);
+        i++;
+        setTimeout(type, 28 + Math.random() * 20);
+      }
+    }
+    setTimeout(type, 1400);
+  }
+
+  // =====================================================
+  // HERO SCROLL — Fade out on scroll
+  // =====================================================
+  function initHeroScroll() {
+    const hero = document.getElementById('cinema-hero');
+    if (!hero) return;
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const st = window.scrollY;
+          const h = hero.offsetHeight;
+          if (st <= h) {
+            const p = Math.min(st / h, 1);
+            hero.style.opacity = 1 - p * 0.7;
+            hero.style.transform = `scale(${1 - p * 0.03})`;
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+
+  // =====================================================
   // INIT
   // =====================================================
   function init() {
@@ -391,6 +483,9 @@ const PhiversityUI = (() => {
     initReveal();
     animateCounters();
     buildShortcuts();
+    initHeroFeatures();
+    initHeroTyping();
+    initHeroScroll();
 
     ['login', 'loading', 'video', 'settings', 'history', 'shortcuts'].forEach(id => {
       Phiversity.registerLayer(id, {

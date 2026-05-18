@@ -32,15 +32,85 @@
 
   <div id="cornerStatus" class="corner-status hidden"></div>
 
+  <!-- ── Cinematic Hero ── -->
+  <section class="cinema-hero" id="cinema-hero">
+    <div class="hero-backdrop">
+      <video autoplay loop muted playsinline class="hero-video-bg" id="hero-video" poster="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1920' height='1080'%3E%3Crect fill='%230a0a0a' width='1920' height='1080'/%3E%3C/svg%3E">
+        <source src="https://res.cloudinary.com/dfonotyfb/video/upload/v1775585556/dds3_1_rqhg7x.mp4" type="video/mp4" />
+      </video>
+      <div class="hero-overlay"></div>
+      <div class="hero-vignette"></div>
+    </div>
+
+    <div class="hero-foreground">
+      <div class="hero-top-bar">
+        <div class="hero-badge-pill">🚀 AI-Powered</div>
+      </div>
+
+      <div class="hero-center">
+        <h1 class="hero-main-title">
+          <span class="hero-title-line hero-title-line-1">Educational Videos</span>
+          <span class="hero-title-line hero-title-line-2 gradient-text">in Minutes</span>
+        </h1>
+        <p class="hero-tagline" id="hero-tagline">Transform any question into a professional animated lesson with voiceover.</p>
+        <div class="hero-cta-row">
+          <button class="hero-cta hero-cta-primary" onclick="document.getElementById('problem').focus(); document.getElementById('run-form').scrollIntoView({behavior:'smooth'})">
+            <span>🎬</span> Start Creating
+          </button>
+          <button class="hero-cta hero-cta-secondary" onclick="document.getElementById('sample-btn').click()">
+            <span>📝</span> Try Sample
+          </button>
+        </div>
+      </div>
+
+      <div class="hero-feature-strip" id="hero-features">
+        <div class="hero-feature-card" data-feature="physics">
+          <div class="feature-icon">⚛️</div>
+          <div class="feature-info">
+            <span class="feature-title">Physics</span>
+            <span class="feature-desc">Forces, motion, energy</span>
+          </div>
+          <div class="feature-scene-preview" id="scene-physics">
+            <div class="preview-bar" style="height:60%;background:#a78bfa;animation-delay:0s"></div>
+            <div class="preview-bar" style="height:85%;background:#818cf8;animation-delay:0.1s"></div>
+            <div class="preview-bar" style="height:45%;background:#6366f1;animation-delay:0.2s"></div>
+            <div class="preview-bar" style="height:70%;background:#8b5cf6;animation-delay:0.3s"></div>
+            <div class="preview-bar" style="height:90%;background:#a78bfa;animation-delay:0.4s"></div>
+          </div>
+        </div>
+        <div class="hero-feature-card" data-feature="chemistry">
+          <div class="feature-icon">🧪</div>
+          <div class="feature-info">
+            <span class="feature-title">Chemistry</span>
+            <span class="feature-desc">Reactions, gas laws, bonding</span>
+          </div>
+        </div>
+        <div class="hero-feature-card" data-feature="math">
+          <div class="feature-icon">📐</div>
+          <div class="feature-info">
+            <span class="feature-title">Mathematics</span>
+            <span class="feature-desc">Calculus, algebra, geometry</span>
+          </div>
+        </div>
+        <div class="hero-feature-card" data-feature="economics">
+          <div class="feature-icon">📊</div>
+          <div class="feature-info">
+            <span class="feature-title">Economics</span>
+            <span class="feature-desc">Supply, demand, markets</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-scroll-indicator" id="scroll-indicator">
+        <span class="scroll-arrow"></span>
+        <span class="scroll-label">Scroll to begin</span>
+      </div>
+    </div>
+  </section>
+
   <!-- ── Main ── -->
   <main class="main-content">
     <div class="container">
-      <!-- Hero -->
-      <header class="hero-3d reveal-section">
-        <div class="hero-badge">AI-Powered</div>
-        <h1 class="hero-title">Educational Videos<br/><span class="gradient-text">in Minutes</span></h1>
-        <p class="hero-subtitle">Transform any question into a professional animated lesson with voiceover.<br/>Math · Physics · Chemistry · Economics</p>
-      </header>
 
       <!-- Mode Selector -->
       <div class="mode-selector reveal-section">
