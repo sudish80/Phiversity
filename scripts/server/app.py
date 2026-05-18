@@ -4068,32 +4068,39 @@ async def list_jobs(
     return result
 
 @app.get("/api/v1/jobs/{job_id}", response_model=JobStatusResponse, tags=["Jobs"])
-async def get_job_status(
+def get_job_status(
     job_id: str,
     service: JobService = Depends(get_job_service),
     current_user: User = Depends(get_current_user)
 ):
-    db_job = _get_owned_job_or_404(job_id, service, current_user)
+    try:
+        db_job = _get_owned_job_or_404(job_id, service, current_user)
         
-    log_content = db_job.log or ""
-    if len(log_content) > 10000:
-        log_content = "...[truncated]...\n" + log_content[-10000:]
-        
-    artifact_urls = _job_artifact_urls(db_job)
-    summary = service.extract_job_summary(db_job)
+        log_content = db_job.log or ""
+        if len(log_content) > 10000:
+            log_content = "...[truncated]...\n" + log_content[-10000:]
+            
+        artifact_urls = _job_artifact_urls(db_job)
+        summary = service.extract_job_summary(db_job)
 
-    response_data = {
-        "status": db_job.status,
-        "log": log_content,
-        "progress": db_job.progress,
-        "video_url": artifact_urls["video_url"],
-        "plan_url": artifact_urls["plan_url"],
-        "log_url": artifact_urls["log_url"],
-        "summary": summary,
-        "error": db_job.error_message or None,
-    }
-                
-    return response_data
+        response_data = {
+            "status": db_job.status,
+            "log": log_content,
+            "progress": db_job.progress,
+            "video_url": artifact_urls["video_url"],
+            "plan_url": artifact_urls["plan_url"],
+            "log_url": artifact_urls["log_url"],
+            "summary": summary,
+            "error": getattr(db_job, "error_message", None) or None,
+        }
+                    
+        return response_data
+    except HTTPException:
+        raise
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal error: {e}")
 
 
 @app.get("/api/v1/jobs/{job_id}/summary", response_model=JobSummaryResponse, tags=["Jobs"])
