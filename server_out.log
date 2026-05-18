@@ -1,0 +1,2 @@
+{"timestamp": "2026-05-18T15:56:10.972426", "level": "INFO", "message": "Bootstrap admin role/identity ensured for existing user", "module": "app", "funcName": "_ensure_bootstrap_admin_user", "line": 382}
+{"timestamp": "2026-05-18T15:56:12.287145", "level": "INFO", "message": "Auth token cleanup completed", "module": "app", "funcName": "_run_auth_cleanup_once", "line": 318}
