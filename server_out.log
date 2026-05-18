@@ -1,2 +1,36 @@
 {"timestamp": "2026-05-18T15:56:10.972426", "level": "INFO", "message": "Bootstrap admin role/identity ensured for existing user", "module": "app", "funcName": "_ensure_bootstrap_admin_user", "line": 382}
 {"timestamp": "2026-05-18T15:56:12.287145", "level": "INFO", "message": "Auth token cleanup completed", "module": "app", "funcName": "_run_auth_cleanup_once", "line": 318}
+{"timestamp": "2026-05-18T15:56:57.128473", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50245 - "GET /api/v1/system/llm-key-status?_=1779099116103 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T15:57:37.849941", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50254 - "GET / HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T15:57:55.427947", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50259 - "GET / HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T15:57:56.608019", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50260 - "GET /api/v1/system/llm-key-status?_=1779099176234 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T15:58:25.330733", "level": "INFO", "message": "Auth event", "module": "app", "funcName": "log_requests", "line": 544}
+{"timestamp": "2026-05-18T15:58:25.338708", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50264 - "POST /api/v1/auth/guest HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T15:58:27.730556", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50264 - "POST /api/v1/run HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50266 - "GET /api/v1/jobs/6bcb1bde-9fb3-4fde-9518-9da8d987d83d HTTP/1.1" 500 Internal Server Error
+{"timestamp": "2026-05-18T15:58:37.688328", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50267 - "GET /api/v1/jobs/6bcb1bde-9fb3-4fde-9518-9da8d987d83d/summary HTTP/1.1" 404 Not Found
+{"timestamp": "2026-05-18T15:58:56.392784", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50271 - "GET /api/v1/system/llm-key-status?_=1779099236229 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T15:59:56.270253", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50291 - "GET /api/v1/system/llm-key-status?_=1779099296232 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:00:57.306270", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50304 - "GET /api/v1/system/llm-key-status?_=1779099356369 HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:01:22.961727", "level": "INFO", "message": "Auth event", "module": "app", "funcName": "log_requests", "line": 544}
+{"timestamp": "2026-05-18T16:01:22.962947", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50309 - "POST /api/v1/auth/guest HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:01:23.455785", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50309 - "GET /api/v1/jobs HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:01:23.734228", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50309 - "POST /api/v1/run HTTP/1.1" 200 OK
+{"timestamp": "2026-05-18T16:01:25.900674", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50309 - "GET /api/v1/jobs HTTP/1.1" 200 OK
+INFO:     127.0.0.1:50309 - "GET /api/v1/jobs/b3eadcec-c371-48b7-b329-2e58a6fef057 HTTP/1.1" 500 Internal Server Error
+{"timestamp": "2026-05-18T16:01:56.307818", "level": "INFO", "message": "Request processed", "module": "app", "funcName": "log_requests", "line": 554}
+INFO:     127.0.0.1:50316 - "GET /api/v1/system/llm-key-status?_=1779099416238 HTTP/1.1" 200 OK
