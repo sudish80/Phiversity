@@ -458,6 +458,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["X-CSRF-Token"],
 )
 
 @app.middleware("http")
@@ -2379,11 +2380,23 @@ async def guest_login(
         request_method="POST",
         response_status=200,
     )
-    return {
+    refresh_expires_at = issued.get("refresh_expires_at") or (datetime.now(timezone.utc) + timedelta(days=30))
+    secure_cookies = os.getenv("PHIVERSITY_ENV") in {"prod", "production", "staging"}
+    guest_response = JSONResponse({
         "access_token": issued["access_token"],
         "refresh_token": issued["refresh_token"],
         "token_type": issued["token_type"],
-    }
+    })
+    HttpOnlyCookieManager.set_refresh_token_cookie(
+        response=guest_response,
+        token=issued["refresh_token"],
+        expires_at=refresh_expires_at,
+        secure=secure_cookies,
+    )
+    csrf_token = generate_csrf_token()
+    HttpOnlyCookieManager.set_csrf_token_cookie(response=guest_response, token=csrf_token, secure=secure_cookies)
+    guest_response.headers["X-CSRF-Token"] = csrf_token
+    return guest_response
 
 @app.post("/api/v1/auth/forgot-password", tags=["Auth"])
 @limiter.limit("10/minute")
