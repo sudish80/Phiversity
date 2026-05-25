@@ -1973,3 +1973,7 @@
 [2026-05-25 13:14:41] Sync: committed and pushed successfully
 [2026-05-25 13:18:17] Sync: committed and pushed successfully
 [2026-05-25 13:21:51] Sync: committed and pushed successfully
+[2026-05-25 13:43:47] Sync: committed and pushed successfully
+[2026-05-25 13:57:35] Auto-sync started. Watching: C:\Phiversity-main
+[2026-05-25 13:57:36] Debounce: 60s | Poll: every 15min
+[2026-05-25 13:57:36] Logging to: C:\Phiversity-main\auto-sync.log
