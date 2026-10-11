@@ -14,6 +14,32 @@ Manim scenes timed to the narration ─▶ Manim renders (self-healing,
 auto-paced, overflow-guarded) ─▶ ffmpeg aligns + stitches ─▶ lecture.mp4
 ```
 
+## Watch a sample lecture
+
+**Two-Block Spring System** (physics, 2 min) — the full narrated pipeline
+output: your Intro clip plays first, then the printed question is read
+aloud while the setup is drawn, followed by energy conservation, the
+separation of the blocks, the SHM graph, and the energy bar chart.
+
+**▶ [Watch the full video with narration](samples/spring-blocks.mp4)**
+
+*(animated preview below — the real video has voice-over)*
+
+![Spring-block lecture preview](samples/spring-blocks.gif)
+
+More sample lectures render locally with a single command — no API key
+needed:
+
+```bash
+phiversity --demo derivative      # secant → tangent, live camera zoom
+phiversity --demo hbr-propene     # Markovnikov mechanism (chemistry)
+phiversity --demo methane         # 2D drawing → 3D tetrahedron
+phiversity --demo car-friction    # camera zoom to the tire, force diagram
+phiversity --demo quadratic       # color-graded factoring, answer reveal
+phiversity --demo kinematics-numerical   # exam-format numerical with
+                                         # cancellation strikes + Riemann sums
+```
+
 ## Repository layout
 
 | Path | What it is |
