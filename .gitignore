@@ -1,0 +1,35 @@
+# Secrets - never commit live keys (.env.example has placeholders only)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Node (if any tooling is added later)
+node_modules/
+.vite/
+.cache/
+coverage/
+
+# Generated content - rendered by the pipeline, not source
+lectures/
+
+# Local state
+phiversity.db
+*.sqlite
+chats/
+chat-thread.json
+*.log
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

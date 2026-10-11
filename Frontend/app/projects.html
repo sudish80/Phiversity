@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>All projects · Phiversity</title><link rel="stylesheet" href="../assets/style.css"></head><body><div class="shell"><main><h1>All projects</h1><div id="list" class="grid"></div><p class="msg" id="empty" hidden>No lectures yet. <a href="../chat.html">Create your first video</a>.</p></main>
+<script src="../assets/app.js"></script>
+<script>
+(async()=>{
+  const box=document.getElementById('list'),empty=document.getElementById('empty');
+  const render=async()=>{
+    const data=await lf.get('/api/lectures');
+    box.innerHTML='';empty.hidden=data.lectures.length>0;
+    for(const lec of data.lectures){
+      const del=lf.el('button',{class:'btn',text:'Delete'});
+      del.onclick=async()=>{
+        if(!confirm('Delete "'+lec.title+'"?'))return;
+        await fetch('/api/lectures/'+lec.slug,{method:'DELETE'});
+        render();
+      };
+      const card=lf.el('div',{class:'card'},[
+        lf.el('strong',{text:lec.title}),
+        lec.question?lf.el('p',{style:'font-size:.85rem',text:lec.question}):null,
+        lf.el('p',{style:'font-size:.75rem;color:#858fa0',text:(lec.format||'conceptual')+' · '+lec.segments+' segments · '+lf.fmt(lec.narration_seconds)+' · '+lf.date(lec.modified)}),
+        lf.el('div',{class:'pbox'}),
+        lf.el('p',{style:'margin:10px 0 0'},[del])
+      ].filter(Boolean));
+      box.appendChild(card);
+      lfPlayer(card.querySelector('.pbox'),{src:lec.video,preload:'none'});
+    }
+  };
+  render();
+})();
+</script></div><script src="../assets/app.js"></script></body></html>

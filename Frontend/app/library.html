@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Library · Phiversity</title><link rel="stylesheet" href="../assets/style.css"></head><body><div class="shell"><main><h1>Library</h1><h2 style="font-size:1.05rem;margin:0 0 10px">Recent chats</h2><div id="chats" class="grid"></div><p class="msg" id="nochats" hidden>No saved chats yet — conversations appear here as you use the <a href="../chat.html">chat</a>.</p><h2 style="font-size:1.05rem;margin:22px 0 10px">Lectures</h2><div id="list" class="grid"></div><p class="msg" id="empty" hidden>Nothing to show yet.</p><p style="margin-top:16px"><a class="btn" href="../chat.html">Back to chat</a></p></main>
+<script src="../assets/app.js"></script>
+<script>
+(async()=>{
+  const chatBox=document.getElementById('chats'),noChats=document.getElementById('nochats');
+  try{
+    const data=await lf.get('/api/chats');
+    const chats=data.chats||[];
+    noChats.hidden=chats.length>0;
+    for(const chat of chats.slice(0,12)){
+      const vids=chat.videos||[];
+      const del=lf.el('button',{class:'btn',style:'padding:2px 10px;font-size:.8rem;margin-top:8px',text:'Delete chat'});
+      del.onclick=async e=>{
+        e.preventDefault();e.stopPropagation();
+        if(!confirm('Delete this chat?'))return;
+        await fetch('/api/chats/'+chat.id,{method:'DELETE'});
+        location.reload();
+      };
+      const open=lf.el('a',{class:'card',href:'../chat.html?chat='+chat.id,style:'text-decoration:none;color:inherit'});
+      open.appendChild(lf.el('strong',{text:chat.title}));
+      open.appendChild(lf.el('p',{style:'font-size:.75rem;color:#858fa0',
+        text:chat.messages+' messages · '+vids.length+' video'+(vids.length===1?'':'s')+' · '+lf.date(chat.modified)}));
+      if(vids.length)open.appendChild(lf.el('p',{style:'font-size:.8rem',text:'▶ '+vids.map(v=>v.title||v.video.split('/').slice(-1)[0]).join(' · ')}));
+      open.appendChild(del);
+      chatBox.appendChild(open);
+    }
+  }catch(e){noChats.hidden=false}
+  const box=document.getElementById('list'),empty=document.getElementById('empty');
+  const data=await lf.get('/api/lectures');
+  const lectures=data.lectures||[];
+  if(!lectures.length){empty.hidden=false;return}
+  for(const lec of lectures){
+    const meta=[lec.title,lec.format&&lec.format!=='conceptual'?'format: '+lec.format:null,lec.preset?('theme: '+lec.preset):null,lec.segments+' segments',lf.fmt(lec.narration_seconds)].filter(Boolean).join(' · ');
+    const card=lf.el('div',{class:'card'},[
+      lf.el('strong',{text:meta}),
+      lec.question?lf.el('p',{style:'font-size:.85rem',text:lec.question}):null,
+      lf.el('div',{class:'pbox'}),
+      lf.el('p',{style:'font-size:.75rem;color:#858fa0',text:'rendered '+lf.date(lec.modified)+' · '+lec.slug})
+    ].filter(Boolean));
+    box.appendChild(card);
+    lfPlayer(card.querySelector('.pbox'),{src:lec.video,preload:'none'});
+  }
+})();
+</script></div><script src="../assets/app.js"></script></body></html>

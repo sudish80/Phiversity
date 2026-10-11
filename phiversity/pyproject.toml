@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "phiversity"
+version = "0.1.0"
+description = "Ask a question, get a narrated lecture video: LLM writes the Manim code, TTS adds the voice-over."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "Phiversity" }]
+dependencies = ["requests>=2.28"]
+
+[project.optional-dependencies]
+voice = ["edge-tts>=6.1", "gtts>=2.3"]
+dev = ["pytest>=7.0"]
+
+[project.scripts]
+phiversity = "phiversity.cli:main"
+phiversity-serve = "phiversity.server:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

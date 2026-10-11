@@ -1,0 +1,43 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Sample lectures · Phiversity</title><link rel="stylesheet" href="../assets/style.css"></head><body><div class="shell"><main><h1>Sample lectures</h1><p style="margin:0 0 14px;color:#858fa0">Ready-made topic videos.</p><div id="list" class="grid"></div><p class="msg" id="empty" hidden>No sample lectures available.</p><p style="margin-top:16px"><a class="btn" href="../chat.html">Back to chat</a></p></main>
+<style>
+main{max-width:1500px;margin:0 auto;width:100%}
+main h1{margin-bottom:6px}
+#list{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:22px;margin:18px 0}
+.ytcard{display:flex;flex-direction:column;gap:8px;padding:14px}
+.ytcard .pbox{order:1}
+.ytcard .pbox .phi-player{border-radius:10px}
+.ytcard h3{order:2;margin:0;font-size:1.02rem;line-height:1.3}
+@media(min-width:1400px){#list{grid-template-columns:repeat(4,1fr)}}
+@media(max-width:900px){#list{grid-template-columns:repeat(auto-fill,minmax(280px,1fr))}}
+@media(max-width:560px){#list{grid-template-columns:1fr}}
+</style>
+<script src="../assets/app.js"></script>
+<script>
+(async()=>{
+  const box=document.getElementById('list'),empty=document.getElementById('empty');
+  const [cfg,lib]=await Promise.all([lf.get('/api/config'),lf.get('/api/lectures')]);
+  const byslug={};(lib.lectures||[]).forEach(l=>byslug[l.slug]=l);
+  empty.hidden=(cfg.topics||[]).length===0;
+  for(const t of cfg.topics){
+    const lec=byslug['demo-'+t.topic];
+    const card=lf.el('div',{class:'card ytcard'});
+    card.appendChild(lf.el('h3',{text:t.title}));
+    if(lec){
+      card.appendChild(lf.el('div',{class:'pbox'}));
+      lfPlayer(card.querySelector('.pbox'),{src:lec.video,preload:'metadata'});
+    }else{
+      const ph=lf.el('div',{class:'pbox',style:'aspect-ratio:16/9;background:#0d1117;border:1px solid #343b49;border-radius:10px;display:grid;place-items:center;color:#858fa0;font-size:.85rem',text:'not rendered yet'});
+      card.appendChild(ph);
+      const go=lf.el('a',{href:'#',class:'regen',style:'font-size:.8rem',text:'Generate this lecture'});
+      go.onclick=async e=>{
+        e.preventDefault();
+        go.textContent='Starting…';
+        const job=await lf.post('/api/generate',{topic:t.topic}).catch(()=>null);
+        if(job)location='../generate/item.html?id='+job.id;else go.textContent='Generate this lecture';
+      };
+      card.appendChild(go);
+    }
+    box.appendChild(card);
+  }
+})();
+</script></div><script src="../assets/app.js"></script></body></html>

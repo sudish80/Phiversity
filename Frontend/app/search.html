@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Search · Phiversity</title><link rel="stylesheet" href="../assets/style.css"></head><body><div class="shell"><main><h1>Search</h1><form id="sform"><label>Search lectures<input id="sq" name="q" placeholder="e.g. friction, markovnikov, quadratic"></label><button class="btn solid">Search</button></form><p class="msg" id="hint"></p><div id="list" class="grid"></div><p style="margin-top:16px"><a class="btn" href="../chat.html">Back to chat</a></p></main>
+<script src="../assets/app.js"></script>
+<script>
+(async()=>{
+  const form=document.getElementById('sform'),q=document.getElementById('sq'),
+        box=document.getElementById('list'),hint=document.getElementById('hint');
+  const run=async(query)=>{
+    const data=await lf.get('/api/search?q='+encodeURIComponent(query));
+    box.innerHTML='';
+    hint.textContent=data.lectures.length+' result'+(data.lectures.length===1?'':'s')+(query?' for "'+query+'"':'');
+    for(const lec of data.lectures){
+      const card=lf.el('div',{class:'card'},[
+        lf.el('strong',{text:lec.title}),
+        lec.question?lf.el('p',{style:'font-size:.85rem',text:lec.question}):null,
+        lf.el('div',{class:'pbox'}),
+        lf.el('p',{style:'font-size:.75rem;color:#858fa0',text:(lec.format||'conceptual')+' · '+lf.fmt(lec.narration_seconds)+' · '+lf.date(lec.modified)})
+      ].filter(Boolean));
+      box.appendChild(card);
+      lfPlayer(card.querySelector('.pbox'),{src:lec.video,preload:'none'});
+    }
+  };
+  form.onsubmit=e=>{e.preventDefault();run(q.value.trim())};
+  run('');
+})();
+</script></div><script src="../assets/app.js"></script></body></html>

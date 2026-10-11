@@ -1,0 +1,2 @@
+Explain the Pythagorean theorem. Start with what a right triangle is,
+state the theorem, then show a concrete example with actual numbers.

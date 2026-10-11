@@ -1,0 +1,31 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Generation progress · Phiversity</title><link rel="stylesheet" href="../../assets/style.css"></head><body><div class="shell"><main><h1>Generation progress</h1><p>Job <code class="qid"></code></p><div class="card"><p><strong>Status:</strong> <span id="status">loading…</span> &nbsp; <strong>Stage:</strong> <span id="stage">-</span></p><div class="bar"><div id="barfill" style="height:10px;width:0%;background:#65a9ff;border-radius:6px;transition:width .4s"></div></div><p class="msg" id="pmsg"></p></div><div class="card" id="logcard" hidden><p style="margin:0 0 8px"><strong>Pipeline log</strong></p><pre id="log" style="max-height:260px;overflow:auto;font-size:.75rem;background:#171c25;padding:10px;border-radius:8px;margin:0"></pre></div><div class="card" id="playcard" hidden><p style="margin:0 0 8px"><strong id="vtitle"></strong></p><div id="playerbox"></div><p style="margin:10px 0 0"><a class="btn" href="../../app/library.html">Open library</a></p></div></main>
+<script src="../../assets/app.js"></script>
+<script>
+(async()=>{
+  const job=new URLSearchParams(location.search).get('id');
+  if(!job){document.getElementById('status').textContent='no job id given';return}
+  const status=document.getElementById('status'),stage=document.getElementById('stage'),
+        fill=document.getElementById('barfill'),msg=document.getElementById('pmsg'),
+        logEl=document.getElementById('log'),logCard=document.getElementById('logcard'),
+        play=document.getElementById('playcard');
+  let last='';
+  for(;;){
+    let job_data;
+    try{job_data=await lf.get('/api/jobs/'+job)}
+    catch(e){status.textContent='job not found';return}
+    status.textContent=job_data.status;
+    stage.textContent=job_data.stage+(job_data.topic?' · '+job_data.topic:'');
+    fill.style.width=job_data.progress+'%';
+    const tail=job_data.logs.join('\n');
+    if(tail!==last){last=tail;logCard.hidden=false;logEl.textContent=tail||'(waiting for output…)';logEl.scrollTop=logEl.scrollHeight}
+    if(job_data.status==='error'){msg.textContent='Render failed: '+(job_data.error||'see log');msg.style.color='#ff9aa2';return}
+    if(job_data.status==='done'){
+      msg.textContent='Render complete.';
+      document.getElementById('vtitle').textContent=job_data.title||'Lecture video';
+      lfPlayer(document.getElementById('playerbox'),{src:job_data.video});
+      play.hidden=false;return;
+    }
+    await new Promise(r=>setTimeout(r,2000));
+  }
+})();
+</script></div><script src="../../assets/app.js"></script></body></html>

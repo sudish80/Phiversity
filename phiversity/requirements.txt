@@ -1,0 +1,4 @@
+requests>=2.28
+edge-tts>=6.1
+gtts>=2.3
+manim>=0.18

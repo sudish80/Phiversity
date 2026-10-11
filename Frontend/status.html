@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Service status · Phiversity</title><link rel="stylesheet" href="assets/style.css"></head><body><div class="top"><a class="logo" href="index.html">Phiversity</a><nav><a href="pricing.html">Pricing</a><a href="faq.html">FAQ</a><a href="help.html">Help</a><a href="login.html">Log in</a></nav></div><main style="margin:0 auto"><h1>Service status</h1><div class="card" id="card"><p style="margin:0 0 8px"><strong id="s">checking…</strong></p><p id="rows" style="font-size:.85rem;margin:0"></p></div><p style="margin-top:16px"><a class="btn" href="chat.html">Back to dashboard</a> <a class="btn" href="chat.html">Open chat</a></p></main>
+<script src="assets/app.js"></script>
+<script>
+(async()=>{
+  const s=document.getElementById('s'),rows=document.getElementById('rows');
+  try{
+    const st=await lf.get('/api/status');
+    s.textContent=st.server==='ok'?'All systems operational':'Service issue';
+    const yes=v=>v?'yes':'no';
+    rows.innerHTML=
+      'Local time: '+st.time+'<br>'+
+      'LLM API key configured: '+yes(st.llm_configured)+'<br>'+
+      'Sample lectures: '+st.sample_lectures+'<br>'+
+      'Generated lectures: '+st.generated_lectures+'<br>'+
+      'Render jobs this session: '+st.jobs+'<br>'+
+      'ffmpeg: '+yes(st.ffmpeg)+' · manim: '+yes(st.manim);
+  }catch(e){
+    s.textContent='Backend not reachable: '+e.message;
+    rows.textContent='Start it with: phiversity-serve';
+  }
+})();
+</script><script src="assets/app.js"></script></body></html>

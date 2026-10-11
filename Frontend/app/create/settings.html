@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Generation settings · Phiversity</title><link rel="stylesheet" href="../../assets/style.css"></head><body><div class="shell"><main><h1>Generation settings</h1><form id="gform"><label>Question<textarea id="q" placeholder="Your question from the previous page appears here"></textarea></label><label>Sample lecture<select id="topic"><option value="">— use my own question —</option></select></label><label>Narration voice<select id="voice"></select></label><label>Narration engine<select id="tts"></select></label><label>Visual theme<select id="theme"></select></label><label>Render quality<select id="quality"><option value="l">480p (fast)</option><option value="m" selected>720p</option><option value="h">1080p (slow)</option></select></label><label>Burned-in captions<select id="captions"><option value="no">Off</option><option value="yes">On</option></select></label><button class="btn solid" style="width:100%">Generate video</button><p class="msg" role="status"></p></form></main>
+<script src="../../assets/app.js"></script>
+<script>
+(async()=>{
+  const cfg=await lf.get('/api/config');
+  const fill=(id,values,sel)=>{const s=document.getElementById(id);s.add(new Option('— use my own question —',''));
+    values.forEach(v=>s.add(new Option(v,v)))};
+  for(const t of cfg.topics)document.getElementById('topic').add(new Option(t.title+' ('+t.topic+')',t.topic));
+  for(const v of cfg.voices)document.getElementById('voice').add(new Option(v,v));
+  for(const v of cfg.tts_engines)document.getElementById('tts').add(new Option(v,v));
+  for(const v of cfg.themes)document.getElementById('theme').add(new Option(v,v));
+  const stored=sessionStorage.getItem('lfq');
+  if(stored)document.getElementById('q').value=stored;
+  document.getElementById('gform').onsubmit=async e=>{
+    e.preventDefault();
+    const q=document.getElementById('q').value.trim();
+    const topic=document.getElementById('topic').value;
+    if(!topic&&!q){document.querySelector('.msg').textContent='Type a question or pick a sample lecture.';return}
+    sessionStorage.setItem('lfq',q);
+    const btn=e.target.querySelector('button');btn.disabled=true;btn.textContent='Starting render job…';
+    const body=topic?{topic}:{question:q};
+    body.voice=document.getElementById('voice').value;
+    body.tts=document.getElementById('tts').value;
+    body.theme=document.getElementById('theme').value;
+    body.quality=document.getElementById('quality').value;
+    body.captions=document.getElementById('captions').value==='yes';
+    try{
+      const job=await lf.post('/api/generate',body);
+      location='../generate/item.html?id='+job.id;
+    }catch(err){
+      btn.disabled=false;btn.textContent='Generate video';
+      document.querySelector('.msg').textContent=err.message;
+    }
+  };
+})();
+</script></div><script src="../../assets/app.js"></script></body></html>

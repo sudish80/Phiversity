@@ -1,0 +1,25 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Notifications · Phiversity</title><link rel="stylesheet" href="../assets/style.css"></head><body><div class="shell"><main><h1>Notifications</h1><div id="list" class="grid"></div><p class="msg" id="empty" hidden>No render jobs yet in this session. Jobs reset when the server restarts; finished lectures live in the <a href="library.html">library</a>.</p><p style="margin-top:16px"><a class="btn" href="../chat.html">Back to chat</a></p></main>
+<script src="../assets/app.js"></script>
+<script>
+(async()=>{
+  const box=document.getElementById('list'),empty=document.getElementById('empty');
+  const data=await lf.get('/api/jobs');
+  empty.hidden=(data.jobs||[]).length>0;
+  for(const job of data.jobs){
+    const status=job.status==='done'?'render finished':job.status==='error'?'render failed':job.status;
+    const card=lf.el('div',{class:'card'},[
+      lf.el('strong',{text:(job.title||job.topic||job.question||'Render job')+' — '+status}),
+      lf.el('p',{style:'font-size:.75rem;color:#858fa0',text:job.id+' · stage: '+job.stage+' · '+lf.date(job.created)}),
+      job.error?lf.el('p',{style:'font-size:.85rem;color:#ff9aa2',text:job.error}):null
+    ].filter(Boolean));
+    if(job.status==='done'&&job.video){
+      const pb=lf.el('div',{class:'pbox'});card.appendChild(pb);
+      lfPlayer(pb,{src:job.video,preload:'none'});
+    }else if(job.status!=='error'){
+      const link=lf.el('a',{class:'btn',href:'../generate/item.html?id='+job.id,text:'Open progress'});
+      card.appendChild(lf.el('p',{style:'margin:10px 0 0'},[link]));
+    }
+    box.appendChild(card);
+  }
+})();
+</script></div><script src="../assets/app.js"></script></body></html>
