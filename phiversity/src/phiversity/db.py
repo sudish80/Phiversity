@@ -55,7 +55,6 @@ CREATE TABLE IF NOT EXISTS lectures (
 """
 
 SQLITE_MAGIC = b"SQLite format 3\x00"
-LEGACY_THREAD_ID = "default"
 
 
 def is_sqlite_file(path: Path) -> bool:

@@ -1,0 +1,11 @@
+/* ---- phi-player: video previewer ---- */
+.phi-player{position:relative;max-width:900px;background:#000;border:0;border-radius:14px;overflow:hidden}
+.phi-player video{width:100%;display:block;aspect-ratio:16/9;background:#000}
+.phi-player .bar{display:flex;align-items:center;gap:10px;padding:10px 14px;background:#0d0d0d;color:#d4d4d4;font:13px system-ui,sans-serif}
+.phi-player button{background:#000;color:#fff;border:0;border-radius:9px;width:36px;height:32px;cursor:pointer;font-size:15px;display:grid;place-items:center}
+.phi-player button:hover{background:#1c1c1c;color:#fff}
+.phi-player button:focus-visible,.phi-player input:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.phi-player .seek{flex:1}
+.phi-player .vol{width:80px}
+.phi-player input[type=range]{accent-color:#fff;background:transparent;border:0;box-shadow:none}
+@media(max-width:600px){.phi-player .vol{display:none}}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -23,8 +24,8 @@ def build_parser() -> argparse.ArgumentParser:
                         help="the question / topic for the lecture")
     parser.add_argument("-f", "--file", metavar="PATH",
                         help="read the question from a file instead")
-    parser.add_argument("-o", "--out", default="lectures", metavar="DIR",
-                        help="output directory (default: ./lectures/<slug>)")
+    parser.add_argument("-o", "--out", default=os.environ.get("PHIVERSITY_OUT_DIR", "lectures"), metavar="DIR",
+                        help="output directory (default: $PHIVERSITY_OUT_DIR or ./lectures/<slug>)")
     parser.add_argument("--demo", nargs="?", const="pythagoras",
                         metavar="TOPIC", default=None,
                         help="build a bundled offline lecture instead of using "

@@ -1,15 +1,24 @@
-document.querySelectorAll('form[data-msg]').forEach(f=>f.onsubmit=e=>{e.preventDefault();f.querySelector('.msg').textContent=f.dataset.msg});
-document.querySelectorAll('.chip').forEach(c=>c.onclick=()=>c.setAttribute('aria-pressed',c.getAttribute('aria-pressed')!='true'));
-const f=document.getElementById('f');if(f)f.onchange=()=>{const i=f.files[0];if(i){const v=document.getElementById('pv');v.src=URL.createObjectURL(i);v.style.display='block'}};
-const id=new URLSearchParams(location.search).get('id');document.querySelectorAll('.qid').forEach(e=>e.textContent=id||'(none)');
-
 /* Phiversity local API helpers */
 window.lf={
   async get(p){const r=await fetch(p);if(!r.ok)throw new Error((await r.json().catch(()=>({}))).error||r.status);return r.json()},
   async post(p,body){const r=await fetch(p,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body||{})});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||r.status);return d},
   el(tag,attrs,children){const n=document.createElement(tag);for(const[k,v]of Object.entries(attrs||{})){if(k==='text')n.textContent=v;else if(k==='html')n.innerHTML=v;else n.setAttribute(k,v)}(children||[]).forEach(c=>n.appendChild(c));return n},
   fmt:s=>Math.round(s)+'s of narration',
-  date:t=>new Date(t*1000).toLocaleString()
+  date:t=>new Date(t*1000).toLocaleString(),
+  /* poll /api/jobs/{id} until it finishes; onUpdate(job) runs on every tick.
+     Returns stop(). onGone() fires if the job can no longer be fetched. */
+  watchJob(id,onUpdate,onGone,ms=2000){
+    let stopped=false,timer=null;
+    const tick=async()=>{
+      let job;
+      try{job=await lf.get('/api/jobs/'+id)}catch(e){if(!stopped){stopped=true;onGone&&onGone(e)}return}
+      if(stopped)return;
+      if(onUpdate(job)===false||job.status==='done'||job.status==='error'){stopped=true;return}
+      timer=setTimeout(tick,ms);
+    };
+    tick();
+    return()=>{stopped=true;clearTimeout(timer)};
+  }
 };
 
 /* phi-player: the video previewer used across the app.

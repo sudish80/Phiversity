@@ -87,44 +87,37 @@ details p{color:var(--t2);max-width:680px;margin:12px 0 0}
 footer{border-top:1px solid var(--bd);padding:48px 0;color:var(--mut);font-size:.9rem}
 footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:24px}
 footer a{display:block;color:var(--t2)}footer a:hover{color:var(--h)}
-@media(max-width:900px){.act .sec{display:none}.hg,.two,.gal,.price{grid-template-columns:1fr}.flow{grid-template-columns:1fr 1fr}.links.open{display:flex;position:absolute;top:76px;left:0;right:0;flex-direction:column;background:var(--bg);padding:20px 24px;border-bottom:1px solid var(--bd)}}
+@media(max-width:900px){.links{display:none}.hg{grid-template-columns:1fr}}
 @media(prefers-reduced-motion:reduce){.ln>span{animation:none;transform:none}html{scroll-behavior:auto}}
 :root:not([data-theme=light]){color-scheme:dark}
 </style></head><body>
 <nav id="nv"><div class="wrap"><a class="logo" href="#top">Phiversity</a>
-<div class="act"><a class="btn sec" href="login.html">Sign in</a><a class="btn pri" href="signup.html">Get started</a></div></div></nav>
+<div class="links"><a href="#how">How it works</a><a href="#faq">FAQ</a></div><div class="act"><a class="btn pri" href="chat.html">Get started</a></div></div></nav>
 <main id="top">
 <section id="hero"><div id="cv" aria-label="Animated wireframe surface of a damped radial wave" role="img"><div class="fb" id="fb">z = sin(r) / (1 + 0.15r)</div>
 </div><div class="wrap hg">
 <div><h1><span class="ln"><span>Turn Complex</span></span><span class="ln"><span>Ideas Into</span></span><span class="ln"><span class="gr">Visual Understanding.</span></span></h1>
 <p class="lead">Transform mathematics, physics, chemistry, and economics questions into beautifully animated explanations with intelligent visualizations and narration.</p>
-<div class="ctas"><a class="btn pri" href="chat.html">Create your first video</a><a class="btn sec" href="app/templates.html">Browse sample lectures</a><a class="btn sec" href="#pricing">See pricing</a></div>
+<div class="ctas"><a class="btn pri" href="chat.html">Create your first video</a><a class="btn sec" href="app/templates.html">Browse sample lectures</a></div>
 </div>
 </div></section>
 <div class="phr" aria-hidden="true">SEE THE INVISIBLE.</div>
-<section id="pricing"><div class="wrap"><h2 class="big" style="max-width:800px">Start exploring. Upgrade when you need more.</h2>
-<div class="price" id="pr"></div><p class="mono" style="margin-top:20px;color:var(--amb)">Plan details and checkout are not connected yet.</p><p id="note" role="status"></p></div></section>
+<section id="how"><div class="wrap" style="max-width:860px"><h2 class="big" style="margin-bottom:24px">How it works</h2>
+<p class="lead" style="max-width:none">You enter a question. Phiversity plans the explanation, renders the animations, adds narration, and assembles a lecture video you can watch and revisit from your library.</p></div></section>
 <section id="faq" style="background:var(--sec)"><div class="wrap" style="max-width:860px"><h2 class="big" style="margin-bottom:40px">Questions</h2>
-<details><summary>How does Phiversity work?</summary><p>You enter a question. Phiversity plans an explanation, builds the animations, and adds narration.</p></details>
 <details><summary>Which subjects are supported?</summary><p>Mathematics, physics, chemistry, and economics.</p></details>
-<details><summary>Can I upload an image?</summary><p>Image uploads depend on the app's current configuration. This page does not promise it yet.</p></details>
-<details><summary>Can I download and edit videos?</summary><p>Export and editing availability will be confirmed once connected to the app.</p></details>
-<details><summary>What if a generation fails?</summary><p>You will see what went wrong and can retry. Failure handling is defined by the backend.</p></details>
-<details><summary>What are the free and paid limits?</summary><p>Limits will be shown here from the real plan configuration.</p></details></div></section>
-<section id="cta"><div class="wrap"><h2 class="big">Make the difficult feel understandable.</h2><p>Start with a question. Explore the idea. See the explanation come to life.</p><a class="btn pri" href="signup.html">Start creating</a></div></section>
+<details><summary>Do I need an API key?</summary><p>Bundled sample lectures work without one. Generating a lecture from your own question needs an LLM key configured on the server.</p></details>
+<details><summary>What if a generation fails?</summary><p>The job reports what went wrong and you can submit it again.</p></details></div></section>
+<section id="cta"><div class="wrap"><h2 class="big">Make the difficult feel understandable.</h2><p>Start with a question. Explore the idea. See the explanation come to life.</p><a class="btn pri" href="chat.html">Start creating</a></div></section>
 </main>
-<footer><div class="wrap"><div><a class="logo" href="#top">Phiversity</a><p>© 2026 Phiversity</p></div><div><a href="#pricing">Product</a><a href="#pricing">Pricing</a></div><div><a href="help.html">Help</a><a href="terms.html">Terms</a><a href="privacy.html">Privacy</a></div></div></footer>
+<footer><div class="wrap"><div><a class="logo" href="#top">Phiversity</a><p>© 2026 Phiversity</p></div><div><a href="#how">How it works</a><a href="#faq">FAQ</a></div><div><a href="chat.html">Create a video</a><a href="app/templates.html">Sample lectures</a></div></div></footer>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const $=s=>document.querySelector(s),nv=$('#nv');
 addEventListener('scroll',()=>nv.classList.toggle('on',scrollY>20),{passive:true});
-document.querySelectorAll('[data-na]').forEach(a=>a.onclick=e=>{e.preventDefault();$('#note').textContent='Sign-up and app routes are not connected in this preview.'});
-/* pricing placeholders */
-$('#pr').innerHTML=['Free','Pro','Team'].map(n=>`<div><h3>${n}</h3><p>Price and allowance load from plan configuration.</p><a class="btn sec" href="app/billing/plans.html">Choose ${n}</a></div>`).join('');
 /* hero 3D */
 (function(){const c=$('#cv');
-try{if(!window.THREE)throw 0;const cv=document.createElement('canvas');if(!(cv.getContext('webgl')||cv.getContext('experimental-webgl')))throw 0;
-const R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,2));c.prepend(R.domElement);
+try{if(!window.THREE)throw 0;const R=new THREE.WebGLRenderer({antialias:true,alpha:true});R.setPixelRatio(Math.min(devicePixelRatio,2));c.prepend(R.domElement);
 const S=new THREE.Scene(),C=new THREE.PerspectiveCamera(42,1,.1,100);
 const n=window.innerWidth<700?36:56,G=new THREE.PlaneGeometry(64,64,Math.round(n*2.5),Math.round(n*2.5)),P=G.attributes.position;
 const zf=(x,y,t)=>.5*Math.sin(.6*x+.35*y-t*1.2)+.35*Math.sin(.9*x-.5*y-t*1.7)+.2*Math.sin(1.7*x+1.1*y-t*2.3)+.1*Math.sin(2.6*y-t*3);
@@ -133,13 +126,12 @@ W.rotation.x=-Math.PI/2;S.add(W);S.fog=new THREE.Fog(0x000000,18,52);
 
 const pc=window.innerWidth<700?150:400,pg=new THREE.BufferGeometry(),pa=new Float32Array(pc*3);for(let i=0;i<pc*3;i++)pa[i]=(Math.random()-.5)*14;
 pg.setAttribute('position',new THREE.BufferAttribute(pa,3));const pt=new THREE.Points(pg,new THREE.PointsMaterial({color:0x999999,size:.05,transparent:true,opacity:.7}));
-const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;let mx=0,my=0,vis=true,t=0;
-addEventListener("pointermove",e=>{const r=c.getBoundingClientRect();mx=(e.clientX-r.left)/r.width-.5;my=(e.clientY-r.top)/r.height-.5});
+const rm=matchMedia('(prefers-reduced-motion:reduce)').matches;let vis=true,t=0;
 function rs(){const w=c.clientWidth,h=c.clientHeight;R.setSize(w,h,false);C.aspect=w/h;C.updateProjectionMatrix()}rs();addEventListener('resize',rs);
 new IntersectionObserver(e=>vis=e[0].isIntersecting).observe(c);
 function f(){requestAnimationFrame(f);if(!vis||document.hidden)return;if(!rm)t+=.02;
 for(let i=0;i<P.count;i++)P.setZ(i,zf(P.getX(i),P.getY(i),t));P.needsUpdate=true;
-const a=rm?0:t*.15;C.position.set(0,6,22);C.lookAt(0,0,-6);R.render(S,C)}
+C.position.set(0,6,22);C.lookAt(0,0,-6);R.render(S,C)}
 f();window.addEventListener('pagehide',()=>{G.dispose();R.dispose()});
 }catch(e){$('#fb').style.display='flex'}})();
 </script></body></html>

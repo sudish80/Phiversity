@@ -92,14 +92,14 @@ class TestStaticAndConfig:
         import shutil
         real = Path(__file__).resolve().parents[2] / "Frontend" / "assets"
         app_js = real / "app.js"
-        style = real / "style.css"
+        style = real / "player.css"
         if not app_js.is_file():
             pytest.skip("frontend assets not found")
         base, server = site
         shutil.copyfile(app_js, server.frontend / "app.js")
-        shutil.copyfile(style, server.frontend / "style.css")
+        shutil.copyfile(style, server.frontend / "player.css")
         _, _, js = get(base, "/app.js")
-        _, _, css = get(base, "/style.css")
+        _, _, css = get(base, "/player.css")
         assert b"lfPlayer" in js                      # player factory
         assert b"requestFullscreen" in js              # fullscreen control
         assert b".phi-player" in css                   # player styles
@@ -108,8 +108,7 @@ class TestStaticAndConfig:
         base, server = site
         import shutil
         real = Path(__file__).resolve().parents[2] / "Frontend"
-        for rel in ("app/generate/item.html", "app/library.html",
-                    "app/recent.html"):
+        for rel in ("app/generate/item.html", "app/library.html"):
             source = real / rel
             if not source.is_file():
                 pytest.skip("frontend page not found")
@@ -124,14 +123,13 @@ class TestStaticAndConfig:
     def test_chat_page_served_and_wired(self, site):
         """The Phiversity chat UI is the chat + video-generation front end:
         it must boot against /api/config, POST /api/generate, poll jobs,
-        and play results through the phi-player - with the canned canvas
-        demo kept only as the offline fallback."""
+        and play results through the phi-player."""
         base, server = site
         import shutil
         real = Path(__file__).resolve().parents[2] / "Frontend"
         if not (real / "chat.html").is_file():
             pytest.skip("chat page not found")
-        for rel in ("chat.html", "assets/app.js", "login.html"):
+        for rel in ("chat.html", "assets/app.js"):
             source = real / rel
             target = server.frontend / rel
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -139,13 +137,10 @@ class TestStaticAndConfig:
         _, _, page = get(base, "/chat.html")
         assert b"Phiversity Chat" in page
         for marker in (b"/api/config", b"/api/generate", b"/api/jobs/",
-                       b"/api/chats", b"lfPlayer", b"cannedAnswer",
+                       b"/api/chats", b"lfPlayer", b"openMonitor",
                        b"trackJob", b"openVideo", b"assets/app.js",
                        b'id="drawer"', b"Recent chats", b"chatRow"):
             assert marker in page, marker
-        _, _, login_page = get(base, "/login.html")
-        assert b"location='chat.html'" in login_page  # lands in the chat
-
         _, _, app_js = get(base, "/assets/app.js")
         # the sidebar navigation is gone entirely: app pages are bare
         assert b"LF_NAV" not in app_js
@@ -263,48 +258,6 @@ class TestSearchStatusDelete:
                 f"{base}/api/lectures/{bad}", method="DELETE")
             with pytest.raises(urllib.error.HTTPError):
                 urllib.request.urlopen(req, timeout=10)
-
-
-class TestChatPersistence:
-    def test_thread_round_trip(self, site):
-        """The chat transcript persists on disk (videos are referenced by
-        URL only - they are never copied into the thread)."""
-        base, _ = site
-        assert json.loads(urllib.request.urlopen(
-            base + "/api/chat", timeout=10).read())["messages"] == []
-        messages = [{"role": "user", "text": "explain friction"},
-                    {"role": "bot", "kind": "job", "id": "abc",
-                     "text": "Generating...", "status": "done",
-                     "video": "/api/lectures/demo-test/video"}]
-        status, body = post(base, "/api/chat", {"messages": messages})
-        assert status == 200 and body["ok"] is True
-        loaded = json.loads(urllib.request.urlopen(
-            base + "/api/chat", timeout=10).read())["messages"]
-        assert loaded == messages
-
-    def test_thread_survives_server_restart(self, tmp_path):
-        from phiversity.server import RenderServer
-        chat_file = tmp_path / "chat-thread.json"
-        one = RenderServer(tmp_path / "f1", tmp_path / "l1", chat_file)
-        one.save_chat([{"role": "user", "text": "hello"}])
-        two = RenderServer(tmp_path / "f1", tmp_path / "l1", chat_file)
-        assert two.load_chat() == [{"role": "user", "text": "hello"}]
-
-    def test_clear_thread(self, site):
-        base, server = site
-        post(base, "/api/chat", {"messages": [{"role": "user",
-                                               "text": "x"}]})
-        req = urllib.request.Request(base + "/api/chat", method="DELETE")
-        urllib.request.urlopen(req, timeout=10)
-        assert server.load_chat() == []
-
-    def test_invalid_thread_rejected(self, site):
-        base, _ = site
-        req = urllib.request.Request(
-            base + "/api/chat", data=b'{"messages": "not a list"}',
-            headers={"Content-Type": "application/json"})
-        with pytest.raises(urllib.error.HTTPError):
-            urllib.request.urlopen(req, timeout=10)
 
 
 class TestSavedChats:

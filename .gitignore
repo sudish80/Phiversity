@@ -33,3 +33,12 @@ Thumbs.db
 .idea/
 .vscode/
 *.swp
+
+# Secret notes - live API keys must never be committed
+apihere.md
+
+# Heavy local capture/render artifacts - never ship these
+launch-video/
+.capture-tmp/
+problem-set/
+phiversity_lectures.zip

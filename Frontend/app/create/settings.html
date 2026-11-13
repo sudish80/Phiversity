@@ -3,8 +3,6 @@
 <script>
 (async()=>{
   const cfg=await lf.get('/api/config');
-  const fill=(id,values,sel)=>{const s=document.getElementById(id);s.add(new Option('— use my own question —',''));
-    values.forEach(v=>s.add(new Option(v,v)))};
   for(const t of cfg.topics)document.getElementById('topic').add(new Option(t.title+' ('+t.topic+')',t.topic));
   for(const v of cfg.voices)document.getElementById('voice').add(new Option(v,v));
   for(const v of cfg.tts_engines)document.getElementById('tts').add(new Option(v,v));
@@ -33,4 +31,4 @@
     }
   };
 })();
-</script></div><script src="../../assets/app.js"></script></body></html>
+</script></div></body></html>

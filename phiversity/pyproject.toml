@@ -19,6 +19,8 @@ dev = ["pytest>=7.0"]
 [project.scripts]
 phiversity = "phiversity.cli:main"
 phiversity-serve = "phiversity.server:main"
+phiversity-api = "phiversity.api:main"
+phiversity-worker = "phiversity.worker:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]

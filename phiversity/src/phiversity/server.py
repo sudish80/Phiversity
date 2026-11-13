@@ -23,6 +23,7 @@ from __future__ import annotations
 
 import json
 import mimetypes
+import os
 import queue
 import re
 import threading
@@ -34,9 +35,11 @@ from pathlib import Path
 
 from .config import PipelineConfig, TTSConfig, RenderConfig, LLMConfig, \
     load_env_file
-from .db import Database, LEGACY_THREAD_ID, is_sqlite_file
+from .db import Database, is_sqlite_file
 from .llm import LLMClient, LLMError
+from .media import cloudinary_configured, destroy, upload_video
 from .pipeline import Pipeline, Segment, run_pipeline
+from .store import open_store
 from .templates import BUNDLED_LECTURES, normalize_topic, bundled_topics
 
 MAX_LOG_LINES = 400
@@ -60,7 +63,11 @@ class Job:
     video: str = ""
     error: str = ""
     logs: list = field(default_factory=list)
-    persist: object = None        # set by the server: flush to SQLite
+    user_id: str = ""             # Supabase auth user ("" when anonymous)
+    payload: dict = field(default_factory=dict)   # request options, kept
+                                                  # so a standalone worker
+                                                  # can restart the job
+    persist: object = None        # set by the server: flush to the store
 
     def log(self, line: str) -> None:
         self.logs.append(line)
@@ -84,7 +91,8 @@ class Job:
                 "progress": self.progress, "title": self.title,
                 "question": self.question, "topic": self.topic,
                 "video": self.video, "error": self.error,
-                "logs": self.logs}
+                "logs": self.logs, "user_id": self.user_id,
+                "payload": self.payload}
 
     @classmethod
     def from_record(cls, record: dict) -> "Job":
@@ -93,7 +101,9 @@ class Job:
                    progress=record["progress"], title=record["title"],
                    question=record["question"], topic=record["topic"],
                    video=record["video"], error=record["error"],
-                   logs=list(record.get("logs", [])))
+                   logs=list(record.get("logs", [])),
+                   user_id=record.get("user_id") or "",
+                   payload=record.get("payload") or {})
 
     def public(self) -> dict:
         return {"id": self.id, "status": self.status, "stage": self.stage,
@@ -101,6 +111,7 @@ class Job:
                 "question": self.question, "topic": self.topic,
                 "video": self.video, "error": self.error,
                 "created": round(self.created, 1),
+                "user_id": self.user_id,
                 "logs": self.logs[-40:]}
 
 
@@ -145,7 +156,8 @@ def _read_legacy_chat_files(root: Path) -> list:
 
 class RenderServer:
     def __init__(self, frontend: Path, lectures_dir: Path,
-                 db_path: Path | None = None):
+                 db_path: Path | None = None, store=None, *,
+                 scan_disk: bool | None = None, inline_worker: bool = True):
         self.frontend = Path(frontend).resolve()
         self.lectures_dir = Path(lectures_dir).resolve()
         db_path = Path(db_path).resolve() if db_path else (
@@ -156,32 +168,53 @@ class RenderServer:
         legacy_thread = _read_legacy_thread_file(db_path)
         legacy_chats = _read_legacy_chat_files(db_path.parent)
 
-        self.db = Database(db_path)
+        # cloud storage (Supabase) when provided; otherwise the local
+        # SQLite file. Disk re-indexing only makes sense on the local
+        # backend - in the cloud the index lives in the database and the
+        # videos live on Cloudinary.
+        self.db = store if store is not None else Database(db_path)
+        if scan_disk is None:
+            scan_disk = getattr(self.db, "kind", "sqlite") == "sqlite"
+        self.scan_disk = scan_disk
+        # when the rendering happens in another process (standalone
+        # worker), this process reads job state from the store on every
+        # poll instead of trusting its in-memory copies
+        self.poll_store = not inline_worker
         self.chat_lock = threading.Lock()
         self.jobs: dict[str, Job] = {}
         self.lock = threading.Lock()
+        self.queue: queue.Queue = queue.Queue()
 
         self._restore_jobs()
         self._import_legacy(legacy_thread, legacy_chats)
         self.refresh_lecture_index()
 
-        self.queue: queue.Queue = queue.Queue()
-        self.worker = threading.Thread(target=self._worker, daemon=True)
-        self.worker.start()
+        # the inline worker consumes the in-process queue; a standalone
+        # worker (worker.py) polls the store instead and this thread is
+        # switched off so only one place renders a given job
+        if inline_worker:
+            self.worker = threading.Thread(target=self._worker,
+                                           daemon=True)
+            self.worker.start()
 
     # -------------------------------------------------- database helpers
 
     def _restore_jobs(self) -> None:
-        """Load every job from the database; renders that were still
-        running when the server stopped are marked interrupted."""
+        """Load every job from the database. Renders that were still
+        running when the server stopped are marked interrupted; jobs
+        still queued (with their saved request options) are re-enqueued
+        so a restart or a standalone worker can pick them up."""
         now = time.time()
         for record in self.db.load_jobs():
             job = Job.from_record(record)
-            if job.status in ("queued", "running"):
+            job.persist = lambda j=job: self.db.save_job(j.to_record())
+            if job.status == "queued" and job.payload:
+                self.queue.put((job, job.payload))
+            elif job.status in ("queued", "running"):
                 job.status = "error"
                 job.error = ("render was interrupted by a server restart")
                 job.log("[error] render was interrupted by a server restart")
-            job.persist = lambda j=job: self.db.save_job(j.to_record())
+                job.persist()
             if now - job.created < 7 * 24 * 3600:
                 self.jobs[job.id] = job
 
@@ -198,7 +231,10 @@ class RenderServer:
                               chat["messages"], chat["modified"])
 
     def refresh_lecture_index(self) -> None:
-        """Re-index every lecture on disk into the database."""
+        """Re-index every lecture on disk into the database (local mode;
+        the cloud index is maintained by _on_job_done instead)."""
+        if not self.scan_disk:
+            return
         on_disk = set()
         for manifest_path in sorted(
                 self.lectures_dir.glob("*/manifest.json")):
@@ -229,31 +265,20 @@ class RenderServer:
             if row["slug"] not in on_disk:
                 self.db.delete_lecture(row["slug"])
 
-    # ------------------------------------------------------- chat thread
-    # (the legacy single-thread API now lives in the database too)
-
-    def load_chat(self) -> list:
-        chat = self.db.load_chat(LEGACY_THREAD_ID)
-        return chat["messages"] if chat else []
-
-    def save_chat(self, messages: list) -> bool:
-        if not isinstance(messages, list):
-            return False
-        return self.db.save_chat(LEGACY_THREAD_ID,
-                                  self._chat_title(messages), messages)
-
-    def clear_chat(self) -> None:
-        self.db.delete_chat(LEGACY_THREAD_ID)
-
     # ------------------------------------------------------------- jobs
 
-    def submit(self, payload: dict) -> Job | None:
+    def submit(self, payload: dict, user_id: str = "") -> Job | None:
         question = str(payload.get("question") or "").strip()
         topic = str(payload.get("topic") or "").strip()
         if not question and not topic:
             return None
         job = Job(id=uuid.uuid4().hex[:12], question=question,
-                  topic=topic)
+                  topic=topic, user_id=user_id or "",
+                  payload={k: v for k, v in payload.items()
+                           if k in ("question", "topic", "quality", "voice",
+                                    "tts", "theme", "captions", "transitions",
+                                    "max_segments", "render_timeout",
+                                    "follow_up_of", "intro_clip")})
         job.persist = lambda: self.db.save_job(job.to_record())
         with self.lock:
             self.jobs[job.id] = job
@@ -314,21 +339,15 @@ class RenderServer:
             raise LLMError("the previous lecture has no segments")
         return built
 
-    def _run_followup_job(self, job: Job, payload: dict, slug: str) -> None:
-        """Extend an existing lecture with new segments answering the
-        follow-up question, then re-stitch the full video."""
-        job.log(f"[follow-up] extending the lecture '{slug}' with your "
-                f"follow-up question")
-        manifest = json.loads(
-            (self.lectures_dir / slug / "manifest.json"
-             ).read_text(encoding="utf-8"))
-        cfg = PipelineConfig(
+    def _build_config(self, job: Job, payload: dict, *, max_segments: int,
+                      captions: bool, theme: str) -> PipelineConfig:
+        """Pipeline settings shared by fresh and follow-up renders."""
+        return PipelineConfig(
             question=job.question,
             out_dir=self.lectures_dir,
-            max_segments=int(payload.get("max_segments") or 3),
-            captions=False,
-            theme=str(payload.get("theme") or
-                     (manifest.get("theme") or {}).get("preset") or "auto"),
+            max_segments=int(payload.get("max_segments") or max_segments),
+            captions=captions,
+            theme=str(payload.get("theme") or theme),
             transitions=str(payload.get("transitions") or "none"),
             tts=TTSConfig(engine=str(payload.get("tts") or "edge"),
                           voice=str(payload.get("voice")
@@ -338,6 +357,18 @@ class RenderServer:
                                                or 420.0),
                                  heal_attempts=2),
         )
+
+    def _run_followup_job(self, job: Job, payload: dict, slug: str) -> None:
+        """Extend an existing lecture with new segments answering the
+        follow-up question, then re-stitch the full video."""
+        job.log(f"[follow-up] extending the lecture '{slug}' with your "
+                f"follow-up question")
+        manifest = json.loads(
+            (self.lectures_dir / slug / "manifest.json"
+             ).read_text(encoding="utf-8"))
+        cfg = self._build_config(
+            job, payload, max_segments=3, captions=False,
+            theme=(manifest.get("theme") or {}).get("preset") or "auto")
         if not cfg.llm.api_key and "localhost" not in cfg.llm.base_url \
                 and "127.0.0.1" not in cfg.llm.base_url:
             raise LLMError("follow-up questions need an LLM API key "
@@ -357,9 +388,23 @@ class RenderServer:
         self.refresh_lecture_index()
 
     def get_job(self, job_id: str) -> Job | None:
+        if self.poll_store:
+            try:
+                record = self.db.load_job(job_id)
+            except Exception:  # noqa: BLE001 - storage hiccup -> not found
+                return None
+            return Job.from_record(record) if record else None
         return self.jobs.get(job_id)
 
     def list_jobs(self) -> list:
+        if self.poll_store:
+            try:
+                records = sorted(self.db.load_jobs(),
+                                 key=lambda r: -r["created"])
+            except Exception:  # noqa: BLE001
+                records = []
+            return [Job.from_record(record).public()
+                    for record in records]
         return [job.public() for job in
                 sorted(self.jobs.values(), key=lambda j: -j.created)]
 
@@ -367,21 +412,9 @@ class RenderServer:
         job.status = "running"
         job.persist()
         job.log("[queue] job accepted - configuring the pipeline")
-        cfg = PipelineConfig(
-            question=job.question,
-            out_dir=self.lectures_dir,
-            max_segments=int(payload.get("max_segments") or 5),
-            captions=bool(payload.get("captions", False)),
-            theme=str(payload.get("theme") or "auto"),
-            transitions=str(payload.get("transitions") or "none"),
-            tts=TTSConfig(engine=str(payload.get("tts") or "edge"),
-                          voice=str(payload.get("voice")
-                                   or "en-US-AriaNeural")),
-            render=RenderConfig(quality=str(payload.get("quality") or "m"),
-                                 timeout=float(payload.get("render_timeout")
-                                               or 420.0),
-                                 heal_attempts=2),
-        )
+        cfg = self._build_config(
+            job, payload, max_segments=5,
+            captions=bool(payload.get("captions", False)), theme="auto")
         if job.topic:
             cfg.demo = job.topic
         # auto-detect the brand intro clip, exactly like the CLI does
@@ -396,6 +429,7 @@ class RenderServer:
                 slug = self._followup_slug(follow_of)
                 if slug:
                     self._run_followup_job(job, payload, slug)
+                    self._on_job_done(job, None, slug)
                     return
                 job.log("[follow-up] previous lecture not found or was "
                         "deleted - generating a fresh lecture instead")
@@ -405,10 +439,65 @@ class RenderServer:
             job.video = f"/api/lectures/{slug}/video"
             job.status = "done"
             self.refresh_lecture_index()
+            self._on_job_done(job, result.final_video, slug)
         except Exception as exc:  # noqa: BLE001 - surfaced to the UI
             job.status = "error"
             job.error = str(exc)
             job.log(f"[error] {exc}")
+        job.persist()
+
+    def _on_job_done(self, job: Job, final_video: Path | None,
+                     slug: str) -> None:
+        """Finished render housekeeping. In the cloud the video is
+        uploaded to Cloudinary (the backend disk is ephemeral), the
+        lecture index row gets the permanent URL, and a row lands in the
+        spec-shaped videos table. Locally everything stays on disk."""
+        if job.status != "done":
+            return
+        manifest = {}
+        manifest_path = self.lectures_dir / slug / "manifest.json"
+        try:
+            if manifest_path.is_file():
+                manifest = json.loads(
+                    manifest_path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            manifest = {}
+        if cloudinary_configured() and final_video is not None:
+            public_id = f"phiversity/{slug}/lecture"
+            try:
+                job.log("[upload] copying the finished video to Cloudinary")
+                uploaded = upload_video(final_video, public_id)
+                job.video = uploaded["url"]
+                job.log(f"[upload] done: {job.video}")
+                duration = uploaded.get("duration") or 0
+                try:
+                    from .tts import ffprobe_duration
+                    duration = duration or ffprobe_duration(final_video)
+                except Exception:  # noqa: BLE001 - metadata only
+                    pass
+                try:
+                    self.db.add_video(job.id, uploaded["url"],
+                                      uploaded.get("thumbnail_url", ""),
+                                      duration)
+                except Exception as exc:  # noqa: BLE001
+                    job.log(f"[upload] could not record the video row: {exc}")
+            except Exception as exc:  # noqa: BLE001 - keep the local copy
+                job.log(f"[upload] Cloudinary upload failed ({exc}); "
+                        f"serving the local copy while it exists")
+        if manifest or not self.scan_disk:
+            self.db.upsert_lecture({
+                "slug": slug,
+                "title": manifest.get("title") or job.title or slug,
+                "question": manifest.get("question"),
+                "format": manifest.get("format"),
+                "preset": (manifest.get("theme") or {}).get("preset"),
+                "segments": len(manifest.get("segments", [])),
+                "narration_seconds": sum(
+                    s.get("voice_seconds", 0)
+                    for s in manifest.get("segments", [])),
+                "modified": time.time(),
+                "video": job.video or f"/api/lectures/{slug}/video",
+            })
         job.persist()
 
     # ------------------------------------------------- saved chat threads
@@ -471,9 +560,13 @@ class RenderServer:
 
     # ------------------------------------------------------------- lectures
 
-    def topics(self) -> tuple:
+    @staticmethod
+    def llm_configured() -> bool:
         load_env_file()
-        configured = bool(LLMConfig.from_env().api_key)
+        return bool(LLMConfig.from_env().api_key)
+
+    def topics(self) -> tuple:
+        configured = self.llm_configured()
         return [{"topic": topic,
                  "title": BUNDLED_LECTURES[topic]["title"],
                  "format": BUNDLED_LECTURES[topic].get("format",
@@ -508,32 +601,41 @@ class RenderServer:
 
     def status(self) -> dict:
         from datetime import datetime, timezone
-        load_env_file()
-        configured = bool(LLMConfig.from_env().api_key)
         import shutil
         return {
             "server": "ok",
             "time": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "llm_configured": configured,
+            "llm_configured": self.llm_configured(),
             "sample_lectures": len(bundled_topics()),
             "generated_lectures": len(self.list_lectures()),
             "jobs": len(self.jobs),
             "ffmpeg": shutil.which("ffmpeg") is not None,
             "manim": shutil.which("manim") is not None,
             "database": str(self.db.path),
+            "store": getattr(self.db, "kind", "sqlite"),
+            "cdn": "cloudinary" if cloudinary_configured() else "local-disk",
         }
 
     def delete_lecture(self, slug: str) -> bool:
-        """Remove a generated lecture directory (validated slug only)."""
+        """Remove a generated lecture directory (validated slug only).
+        In the cloud the Cloudinary copy is destroyed as well."""
         import shutil
         if not SLUG_RE.match(slug):
             return False
         target = (self.lectures_dir / slug).resolve()
         if not str(target).startswith(str(self.lectures_dir.resolve())):
             return False
-        if not target.is_dir():
-            return False
-        shutil.rmtree(target)
+        if target.is_dir():
+            shutil.rmtree(target)
+        elif self.scan_disk:
+            return False   # local mode: a missing directory is a 404
+        elif not any(lec["slug"] == slug for lec in self.db.list_lectures()):
+            return False   # cloud mode: no stored lecture with that slug
+        if cloudinary_configured():
+            try:
+                destroy(f"phiversity/{slug}/lecture")
+            except Exception:  # noqa: BLE001 - removal is best-effort
+                pass
         self.db.delete_lecture(slug)
         with self.lock:
             for job in self.jobs.values():
@@ -546,11 +648,13 @@ class RenderServer:
     # ------------------------------------------------------------ static
 
     def resolve_static(self, path: str) -> Path | None:
-        rel = path.lstrip("/") or "index.html"
+        from urllib.parse import unquote
+        rel = unquote(path).lstrip("/") or "index.html"
         if rel.endswith("/"):
             rel += "index.html"
-        target = (self.frontend / rel).resolve()
-        if not str(target).startswith(str(self.frontend)):
+        root = self.frontend.resolve()
+        target = (root / rel).resolve()
+        if not target.is_relative_to(root):
             return None
         return target if target.is_file() else None
 
@@ -580,12 +684,23 @@ def make_handler(server: RenderServer):
 
         def _read_json(self) -> dict:
             length = int(self.headers.get("Content-Length") or 0)
-            if length <= 0 or length > 1_000_000:
+            if length > 1_000_000:
+                self.close_connection = True  # body left unread
+                return {}
+            if length <= 0:
                 return {}
             try:
                 return json.loads(self.rfile.read(length) or b"{}")
             except ValueError:
                 return {}
+
+        def _same_origin(self) -> bool:
+            """Reject browser requests that another website initiated
+            against this server (CSRF / DNS-rebinding)."""
+            from urllib.parse import urlparse
+            host = self.headers.get("Host", "")
+            origin = self.headers.get("Origin")
+            return origin is None or urlparse(origin).netloc == host
 
         # --------------------------------------------------------- routes
 
@@ -615,15 +730,13 @@ def make_handler(server: RenderServer):
                 return self._json({"lectures":
                                    sorted(server.list_lectures(),
                                           key=lambda lec: -lec["modified"])})
-            if path.startswith("/api/search"):
+            if path == "/api/search":
                 from urllib.parse import parse_qs, urlparse
                 query = parse_qs(urlparse(self.path).query).get("q", [""])[0]
                 return self._json({"lectures": server.search(query),
                                    "query": query})
             if path == "/api/status":
                 return self._json(server.status())
-            if path == "/api/chat":
-                return self._json({"messages": server.load_chat()})
             if path == "/api/chats":
                 return self._json({"chats": server.list_chats()})
             if path.startswith("/api/chats/"):
@@ -642,9 +755,8 @@ def make_handler(server: RenderServer):
 
         def do_DELETE(self):
             path = self.path.split("?", 1)[0]
-            if path == "/api/chat":
-                server.clear_chat()
-                return self._json({"ok": True})
+            if not self._same_origin():
+                return self._json({"error": "cross-origin request"}, 403)
             if path.startswith("/api/chats/"):
                 parts = path.split("/")
                 chat_id = parts[3] if len(parts) > 3 else ""
@@ -662,11 +774,8 @@ def make_handler(server: RenderServer):
 
         def do_POST(self):
             path = self.path.split("?", 1)[0]
-            if path == "/api/chat":
-                payload = self._read_json()
-                if not server.save_chat(payload.get("messages", [])):
-                    return self._json({"error": "invalid thread"}, 400)
-                return self._json({"ok": True})
+            if not self._same_origin():
+                return self._json({"error": "cross-origin request"}, 403)
             if path.startswith("/api/chats/"):
                 parts = path.split("/")
                 chat_id = parts[3] if len(parts) > 3 else ""
@@ -676,7 +785,7 @@ def make_handler(server: RenderServer):
                 if not server.save_chat_by_id(chat_id, payload):
                     return self._json({"error": "invalid chat"}, 400)
                 return self._json({"ok": True, "id": chat_id})
-            if path != "/api/generate":
+            if path not in ("/api/generate", "/api/run"):
                 return self._json({"error": "not found"}, 404)
             payload = self._read_json()
             topic = str(payload.get("topic") or "").strip()
@@ -696,7 +805,10 @@ def make_handler(server: RenderServer):
         def _send_static(self, path: str):
             target = server.resolve_static(path)
             if target is None:
-                # fall back to the landing page for app-style paths
+                # fall back to the landing page for extension-less app
+                # routes only; a missing asset or API path is a real 404
+                if "." in path.rsplit("/", 1)[-1] or path.startswith("/api/"):
+                    return self._json({"error": "not found"}, 404)
                 target = server.resolve_static("index.html")
                 if target is None:
                     return self._json({"error": "not found"}, 404)
@@ -713,11 +825,22 @@ def make_handler(server: RenderServer):
                      or "application/octet-stream")
             header = self.headers.get("Range") if video else None
             if header:
-                match = re.match(r"bytes=(\d*)-(\d*)", header)
-                start = int(match.group(1) or 0) if match else 0
-                end = (int(match.group(2)) if match and match.group(2)
-                       else total - 1)
-                end = min(end, total - 1)
+                match = re.match(r"bytes=(\d*)-(\d*)$", header)
+                first, last = (match.groups() if match else ("", ""))
+                if first:
+                    start = int(first)
+                    end = min(int(last), total - 1) if last else total - 1
+                elif last:  # suffix range: the final N bytes
+                    start = max(total - int(last), 0)
+                    end = total - 1
+                else:
+                    start, end = 0, total - 1
+                if start > end or start >= total:
+                    self.send_response(416)
+                    self.send_header("Content-Range", f"bytes */{total}")
+                    self.send_header("Content-Length", "0")
+                    self.end_headers()
+                    return
                 length = end - start + 1
                 self.send_response(206)
                 self.send_header("Content-Range",
@@ -759,7 +882,8 @@ def main(argv: list[str] | None = None) -> int:
 
     root = Path(args.root).resolve()
     frontend = root / "Frontend"
-    lectures = root / "lectures"
+    lectures = (Path(os.environ["PHIVERSITY_OUT_DIR"]).resolve()
+                if os.environ.get("PHIVERSITY_OUT_DIR") else root / "lectures")
     if not frontend.is_dir():
         raise SystemExit(f"no frontend found at {frontend}")
     lectures.mkdir(parents=True, exist_ok=True)

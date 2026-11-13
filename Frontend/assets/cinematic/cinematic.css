@@ -1,0 +1,265 @@
+/* ============================================================
+   PHIVERSITY — CINEMATIC EXPERIENCE
+   Layer: intro sequence, custom cursor, story sections, product
+   demo, finale. Sits on top of the existing site styles.
+   ============================================================ */
+
+:root{
+  --phv-vio:#8b5cf6;
+  --phv-vio2:#6d28d9;
+  --phv-blu:#38bdf8;
+  --phv-blu2:#60a5fa;
+  --phv-ink:#ececf4;
+  --phv-dim:#9aa0b4;
+  --phv-line:rgba(139,92,246,.35);
+  --phv-glass:rgba(255,255,255,.06);
+}
+
+/* ---------- lock & fx flags ---------- */
+body.phv-intro-lock{overflow:hidden}
+html.phv-fx,html.phv-fx body{cursor:none}
+html.phv-fx a,html.phv-fx button,html.phv-fx input,html.phv-fx textarea,html.phv-fx select,html.phv-fx summary{cursor:none}
+html.phv-fx.escape{cursor:auto!important}
+html.phv-fx.escape a,html.phv-fx.escape button,html.phv-fx.escape input{cursor:auto!important}
+
+/* ============================================================
+   INTRO OVERLAY
+   ============================================================ */
+#phv-intro{position:fixed;inset:0;z-index:1000;background:#000;opacity:0;pointer-events:none}
+#phv-intro.live{opacity:1;pointer-events:auto;cursor:none}
+#phv-intro canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+#phv-skip{position:fixed;right:max(20px,env(safe-area-inset-right));bottom:max(20px,env(safe-area-inset-bottom));z-index:1003;
+  font:500 .78rem/1 var(--m);letter-spacing:.08em;color:#8a8a99;background:rgba(10,10,14,.55);border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;padding:10px 18px;cursor:pointer;opacity:0;backdrop-filter:blur(8px);transition:border-color .25s,color .25s}
+#phv-intro.live #phv-skip{pointer-events:auto}
+#phv-skip:hover{border-color:var(--phv-vio);color:#fff}
+#phv-skip:focus-visible{outline:2px solid var(--phv-blu);outline-offset:3px}
+
+/* cinematic cursor actor */
+#phv-actor{position:fixed;left:0;top:0;z-index:1002;width:26px;height:26px;margin:-3px 0 0 -3px;pointer-events:none;opacity:0;will-change:transform}
+#phv-actor svg{display:block;width:100%;height:100%;filter:drop-shadow(0 0 6px rgba(139,92,246,.9))}
+.phv-trail{position:fixed;left:0;top:0;z-index:1001;width:5px;height:5px;margin:-2.5px 0 0 -2.5px;border-radius:50%;
+  background:var(--phv-vio);opacity:0;pointer-events:none;will-change:transform}
+.phv-ripple{position:fixed;left:0;top:0;z-index:1002;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;
+  border:1.5px solid rgba(139,92,246,.85);pointer-events:none;opacity:0}
+
+/* brand reveal layer */
+#phv-brand{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;pointer-events:none;opacity:0}
+#phv-brand .mark{width:clamp(72px,10vw,118px);height:auto;opacity:0;transform:translateY(14px) scale(.92)}
+#phv-brand .word{margin:26px 0 0;font:700 clamp(2rem,5.2vw,3.6rem)/1 var(--d);color:var(--phv-ink);letter-spacing:.24em;text-indent:.24em}
+#phv-brand .word b{font-weight:700;display:inline-block;opacity:0}
+#phv-brand .sub{margin:14px 0 0;font:500 clamp(.95rem,1.6vw,1.2rem)/1 var(--b);color:var(--phv-dim);letter-spacing:.34em;text-indent:.34em;opacity:0;text-transform:none}
+#phv-brand .beam{position:absolute;top:-10%;bottom:-10%;left:0;width:2px;opacity:0;
+  background:linear-gradient(180deg,transparent,var(--phv-vio) 30%,#c4b5fd 50%,var(--phv-vio) 70%,transparent);
+  filter:blur(.4px)}
+#phv-brand .sweep{position:absolute;inset:0;background:linear-gradient(105deg,transparent 42%,rgba(255,255,255,.16) 50%,transparent 58%);
+  background-size:280% 100%;background-position:120% 0;mix-blend-mode:screen;pointer-events:none}
+
+/* ============================================================
+   CUSTOM CURSOR SYSTEM (post-intro, desktop)
+   ============================================================ */
+#phv-cursor{position:fixed;left:0;top:0;z-index:2000;pointer-events:none;opacity:0;will-change:transform}
+#phv-cursor .dot{position:absolute;left:-3px;top:-3px;width:6px;height:6px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,var(--phv-vio) 70%);box-shadow:0 0 8px rgba(139,92,246,.7)}
+#phv-cursor .ring{position:absolute;left:-16px;top:-16px;width:32px;height:32px;border-radius:50%;
+  border:1px solid rgba(139,92,246,.75);transition:width .22s cubic-bezier(.3,.9,.3,1),height .22s cubic-bezier(.3,.9,.3,1),
+  left .22s cubic-bezier(.3,.9,.3,1),top .22s cubic-bezier(.3,.9,.3,1),border-color .22s,background .22s,border-radius .22s}
+#phv-cursor .label{position:absolute;left:22px;top:-34px;white-space:nowrap;font:500 .7rem/1 var(--m);letter-spacing:.1em;
+  color:var(--phv-ink);background:rgba(8,8,12,.78);border:1px solid var(--phv-line);border-radius:6px;padding:5px 9px;
+  opacity:0;transform:translateY(4px);transition:opacity .2s,transform .2s;backdrop-filter:blur(6px)}
+#phv-cursor.hover .ring{width:46px;height:46px;left:-23px;top:-23px;border-color:rgba(56,189,248,.9);background:rgba(56,189,248,.07)}
+#phv-cursor.text .ring{width:5px;height:30px;left:-2.5px;top:-15px;border-radius:3px;border-color:rgba(139,92,246,.85)}
+#phv-cursor.click .ring{width:20px;height:20px;left:-10px;top:-10px;border-color:#fff}
+#phv-cursor.labeled .label{opacity:1;transform:none}
+#phv-cursor.hidden{opacity:0!important}
+.phv-click-ripple{position:fixed;left:0;top:0;z-index:1999;width:44px;height:44px;margin:-22px 0 0 -22px;border-radius:50%;
+  border:1px solid rgba(139,92,246,.8);pointer-events:none}
+
+/* ============================================================
+   NAV / PAGE CHOREOGRAPHY
+   ============================================================ */
+body.phv-intro-lock nav,body.phv-intro-lock main,body.phv-intro-lock footer{opacity:0;pointer-events:none}
+nav,main,footer{transition:opacity .6s ease}
+body.phv-entered main{opacity:1}
+body.phv-entered nav,body.phv-entered footer{opacity:1;pointer-events:auto}
+nav .links a{position:relative;padding:4px 0}
+nav .links a::after{content:"";position:absolute;left:0;bottom:0;height:1px;width:100%;background:linear-gradient(90deg,var(--phv-vio),var(--phv-blu));
+  transform:scaleX(0);transform-origin:left;transition:transform .3s cubic-bezier(.3,.8,.3,1)}
+nav .links a:hover::after,nav .links a:focus-visible::after{transform:scaleX(1)}
+
+/* logo mark in nav/footer */
+.phv-mark{display:inline-block;width:20px;height:20px;flex:none}
+
+/* ============================================================
+   STORY CANVAS + SECTION SHELLS
+   ============================================================ */
+#phv-story{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:0;transition:opacity .9s ease}
+#phv-story.on{opacity:1}
+#phv-story.dim{opacity:.14}
+#phv-story canvas{width:100%;height:100%;display:block}
+main{position:relative;z-index:1}
+main .veil{position:absolute;inset:0;pointer-events:none;z-index:0}
+
+/* hero (upgraded) */
+#hero{min-height:100vh;display:flex;align-items:center;padding-top:110px;overflow:hidden}
+#hero .veil{background:linear-gradient(90deg,rgba(0,0,0,.88),rgba(0,0,0,.5) 55%,rgba(0,0,0,.12)),radial-gradient(circle at 70% 20%,rgba(139,92,246,.10),transparent 45%)}
+#hero h1{font-size:clamp(2.9rem,7vw,6.8rem);font-weight:700}
+#hero h1 .w{display:inline-block;overflow:hidden;vertical-align:bottom}
+#hero h1 .w>span{display:inline-block;transform:translateY(112%)}
+#hero .gr{background:linear-gradient(100deg,#fff 20%,#c4b5fd 55%,#93c5fd 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-glow{position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(420px 240px at 26% 72%,rgba(139,92,246,.16),transparent 65%);opacity:0;transition:opacity .8s}
+body.phv-entered .hero-glow{opacity:1}
+#hero .ctas .btn.pri{position:relative;overflow:hidden}
+#hero .ctas .btn.pri::before{content:"";position:absolute;top:0;left:-80%;width:60%;height:100%;
+  background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-18deg);transition:left .6s ease}
+#hero .ctas .btn.pri:hover::before{left:130%}
+
+/* question section */
+#question{min-height:92vh;display:flex;align-items:center;text-align:center}
+#question .veil{background:radial-gradient(circle at 50% 45%,rgba(0,0,0,.55),rgba(0,0,0,.88) 75%)}
+#question h2{font-size:clamp(2.2rem,5vw,4.6rem);max-width:900px;margin:0 auto}
+#question .qmark{font:500 1rem var(--m);color:var(--phv-blu);letter-spacing:.3em;text-transform:uppercase;opacity:0}
+
+/* ---------- disciplines journey (sticky) ---------- */
+#journey{position:relative}
+#journey .sticky{position:sticky;top:0;height:100vh;overflow:hidden}
+#journey .veil{background:radial-gradient(circle at 50% 55%,rgba(0,0,0,.38),rgba(0,0,0,.82) 78%)}
+#journey .cap{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  text-align:center;padding:0 24px 9vh;opacity:0;pointer-events:none}
+#journey .cap .kicker{font:500 .72rem var(--m);letter-spacing:.34em;text-transform:uppercase;color:var(--phv-blu);margin-bottom:14px}
+#journey .cap h3{font-size:clamp(2rem,4.6vw,4.2rem);margin:0}
+#journey .cap .eq{font:500 clamp(1rem,2vw,1.5rem) var(--m);color:#d9ccff;margin-top:14px;background:rgba(8,8,12,.6);
+  border:1px solid var(--phv-line);border-radius:10px;padding:10px 18px;display:inline-block}
+#journey .cap .note{margin-top:12px;font-size:.92rem;color:var(--phv-dim);max-width:520px}
+#journey .rail{position:absolute;right:max(26px,env(safe-area-inset-right));top:50%;transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:14px;z-index:2}
+#journey .rail i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18);transition:background .3s,box-shadow .3s,transform .3s;display:block}
+#journey .rail i.on{background:var(--phv-vio);box-shadow:0 0 12px rgba(139,92,246,.9);transform:scale(1.35)}
+#journey .domains{position:absolute;top:8vh;left:0;right:0;display:flex;justify-content:center;gap:clamp(14px,3vw,34px);z-index:2}
+#journey .domains span{font:500 .74rem var(--m);letter-spacing:.22em;color:rgba(255,255,255,.34);text-transform:uppercase;
+  padding:8px 4px;border-bottom:1px solid rgba(255,255,255,.12);transition:color .3s,border-color .3s}
+#journey .domains span.on{color:#fff;border-color:var(--phv-vio)}
+
+/* ---------- product section ---------- */
+#product{position:relative;background:linear-gradient(180deg,rgba(2,2,4,.92),rgba(6,6,10,.97))}
+#product .flow-tag{display:flex;justify-content:center;gap:0;flex-wrap:wrap;margin:38px 0 8px}
+#product .flow-tag span{font:500 .72rem var(--m);letter-spacing:.22em;color:var(--phv-dim);text-transform:uppercase;padding:8px 14px;position:relative}
+#product .flow-tag span:not(:last-child)::after{content:"→";position:absolute;right:-14px;top:8px;color:var(--phv-vio)}
+.phv-app{max-width:960px;margin:30px auto 0;background:rgba(10,10,16,.82);border:1px solid rgba(255,255,255,.1);border-radius:18px;
+  overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6),inset 0 1px 0 rgba(255,255,255,.06);backdrop-filter:blur(14px)}
+.phv-app .bar{display:flex;align-items:center;gap:8px;padding:13px 18px;border-bottom:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.02)}
+.phv-app .bar i{width:9px;height:9px;border-radius:50%;background:rgba(255,255,255,.14)}
+.phv-app .bar .ttl{font:500 .78rem var(--m);color:var(--phv-dim);margin-left:10px;letter-spacing:.06em}
+.phv-app .body{display:grid;grid-template-columns:1.06fr .94fr;gap:0;min-height:420px}
+.phv-app .left{padding:26px;border-right:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:18px}
+.phv-app .qbox{background:rgba(139,92,246,.07);border:1px solid rgba(139,92,246,.3);border-radius:12px;padding:16px 18px}
+.phv-app .qbox .tag{font:500 .68rem var(--m);color:var(--phv-vio);letter-spacing:.24em;text-transform:uppercase}
+.phv-app .qbox .q{font:500 1.02rem/1.5 var(--b);color:#fff;margin-top:8px;min-height:3em}
+.phv-app .qbox .caret{display:inline-block;width:2px;height:1.05em;background:var(--phv-blu);vertical-align:-2px;animation:phv-caret 1s steps(1) infinite}
+@keyframes phv-caret{50%{opacity:0}}
+.phv-app .steps .st{display:flex;gap:14px;padding:13px 4px;border-bottom:1px dashed rgba(255,255,255,.08);opacity:0}
+.phv-app .steps .st .n{flex:none;width:26px;height:26px;border-radius:8px;border:1px solid var(--phv-line);color:#d9ccff;
+  font:500 .78rem/24px var(--m);text-align:center}
+.phv-app .steps .st h4{margin:0 0 4px;font:600 .92rem var(--b);color:#fff}
+.phv-app .steps .st p{margin:0;font-size:.84rem;color:var(--phv-dim);line-height:1.55}
+.phv-app .steps .st .math{font:500 .9rem var(--m);color:#bfd3ff;margin-top:8px;background:rgba(56,189,248,.06);
+  border:1px solid rgba(56,189,248,.22);border-radius:8px;padding:7px 10px;display:inline-block}
+.phv-app .right{padding:22px;display:flex;flex-direction:column;gap:14px}
+.phv-app .panel{flex:1;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px;position:relative;min-height:170px}
+.phv-app .panel .ptag{position:absolute;top:12px;left:14px;font:500 .66rem var(--m);letter-spacing:.2em;color:var(--phv-blu);text-transform:uppercase;opacity:.85}
+.phv-app .panel svg{width:100%;height:100%;display:block}
+.phv-app .graph-curve{stroke-dasharray:1000;stroke-dashoffset:1000}
+.phv-app .vis-obj{transform-origin:50% 50%}
+#product .caption{text-align:center;color:var(--phv-dim);font-size:.9rem;margin:26px auto 0;max-width:560px}
+#product .caption code{font-family:var(--m);color:#bfd3ff}
+
+/* ---------- finale ---------- */
+#finale{min-height:108vh;display:flex;align-items:center;text-align:center;position:relative}
+#finale .veil{background:radial-gradient(circle at 50% 50%,rgba(0,0,0,.5),rgba(0,0,0,.9) 80%)}
+#finale h2{font-size:clamp(2.3rem,5.4vw,5rem)}
+#finale .sub{color:var(--phv-dim);margin:18px auto 34px;max-width:520px}
+
+/* scroll hint */
+#hero .hint{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:8px;
+  font:500 .68rem var(--m);letter-spacing:.3em;color:var(--phv-dim);text-transform:uppercase;opacity:0}
+#hero .hint .liney{width:1px;height:34px;background:linear-gradient(180deg,var(--phv-vio),transparent);transform-origin:top}
+body.phv-entered #hero .hint{opacity:1}
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media(max-width:900px){
+  .phv-app .body{grid-template-columns:1fr}
+  .phv-app .left{border-right:0;border-bottom:1px solid rgba(255,255,255,.07)}
+  #journey .rail{display:none}
+  #phv-brand .word{letter-spacing:.16em;text-indent:.16em}
+}
+@media(max-width:600px){
+  #phv-brand .sub{letter-spacing:.2em;text-indent:.2em}
+  .phv-app .right{min-height:0}
+}
+@media(pointer:coarse){#phv-cursor{display:none!important}}
+
+/* ============================================================
+   SECTION SHELLS / TYPOGRAPHY
+   ============================================================ */
+#journey{height:440vh}
+#question .qline,#finale .fline{display:block}
+main .wrap{position:relative;z-index:1}
+#hero .hg{display:grid;grid-template-columns:1fr;align-items:center;position:relative;z-index:1}
+#hero .lead{max-width:560px;color:var(--t2);margin:28px 0}
+#hero .ctas{display:flex;gap:14px;flex-wrap:wrap}
+
+/* ============================================================
+   PRODUCT DEMO — graph + 3D viz cube
+   ============================================================ */
+.phv-app .right .panel{opacity:0}
+.phv-app .steps .st{transform:translateY(14px)}
+.phv-app .steps .st.lit{border-radius:12px;box-shadow:0 0 0 1px rgba(139,92,246,.35),0 0 24px rgba(139,92,246,.12);background:rgba(139,92,246,.05)}
+.viz-stage{height:100%;min-height:170px;display:flex;align-items:center;justify-content:center;perspective:440px;padding-top:30px}
+.viz-cube{position:relative;width:74px;height:74px;transform-style:preserve-3d;animation:phvcube 16s linear infinite;animation-play-state:paused}
+.panel.viz.live .viz-cube{animation-play-state:running}
+.viz-cube i{position:absolute;inset:0;border:1px solid rgba(139,92,246,.55);background:rgba(139,92,246,.07);box-shadow:inset 0 0 18px rgba(139,92,246,.18)}
+.viz-cube i:nth-child(1){transform:translateZ(37px)}
+.viz-cube i:nth-child(2){transform:rotateY(180deg) translateZ(37px)}
+.viz-cube i:nth-child(3){transform:rotateY(90deg) translateZ(37px)}
+.viz-cube i:nth-child(4){transform:rotateY(-90deg) translateZ(37px)}
+.viz-cube i:nth-child(5){transform:rotateX(90deg) translateZ(37px)}
+.viz-cube i:nth-child(6){transform:rotateX(-90deg) translateZ(37px)}
+@keyframes phvcube{from{transform:rotateX(-24deg) rotateY(0)}to{transform:rotateX(-24deg) rotateY(360deg)}}
+
+/* ============================================================
+   NO-WEBGL / REDUCED-MOTION FALLDOWNS
+   ============================================================ */
+html.phv-nowebgl #phv-story{display:none}
+html.phv-nowebgl #hero{background:
+  radial-gradient(circle at 70% 30%,rgba(139,92,246,.14),transparent 45%),
+  repeating-linear-gradient(0deg,rgba(255,255,255,.045) 0 1px,transparent 1px 56px),
+  repeating-linear-gradient(90deg,rgba(255,255,255,.045) 0 1px,transparent 1px 56px),#000}
+html.phv-nowebgl #journey{background:
+  radial-gradient(circle at 50% 50%,rgba(139,92,246,.10),transparent 55%),
+  repeating-linear-gradient(0deg,rgba(255,255,255,.04) 0 1px,transparent 1px 56px),#000}
+
+@media(prefers-reduced-motion:reduce){
+  #phv-intro,#phv-cursor{display:none!important}
+  html.phv-fx,html.phv-fx body{cursor:auto}
+  #hero h1 .w>span{transform:none}
+  #hero .hint,#question .qmark{opacity:1}
+  #question .qline,#finale .fline{transform:none;opacity:1}
+  #finale .btn{opacity:1;transform:none}
+  #journey{height:auto;padding-block:80px}
+  #journey .sticky{position:static;height:auto;padding:40px 0}
+  #journey .cap{display:none}
+  #journey .cap[data-cap="0"]{display:flex;opacity:1;transform:none;position:static}
+  #journey .rail,#journey .domains{display:none}
+  .phv-app{opacity:1;transform:none}
+  .phv-app .steps .st{opacity:1;transform:none}
+  .phv-app .right .panel{opacity:1}
+  .phv-app .right .panel svg .axis,#px-curve,#px-tangent{stroke-dashoffset:0;opacity:1}
+  #px-point{opacity:1}
+  .viz-cube{animation:none;transform:rotateX(-24deg) rotateY(36deg)}
+  .phv-app .qbox .caret{animation:none}
+}

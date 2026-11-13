@@ -1,0 +1,59 @@
+# Render blueprint: create both services from the dashboard with
+# "New +" -> "Blueprint" after connecting this repository, or deploy
+# manually with the settings below. Secret values (sync: false) are
+# entered in the dashboard - never commit them here.
+#
+# The web service runs the API AND renders inline on the free plan.
+# The worker service below is optional: set PHIVERSITY_INLINE_WORKER=0
+# on the web service if you add the worker.
+
+services:
+  - type: web
+    name: phiversity-api
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_KEY
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: LLM_API_KEY
+        sync: false
+      - key: LLM_BASE_URL
+        sync: false
+      - key: LLM_MODEL
+        sync: false
+      - key: PHIVERSITY_PROVIDER
+        sync: false
+      - key: PHIVERSITY_VOICE
+        sync: false
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: PHIVERSITY_INLINE_WORKER
+        value: "1"
+
+  # Optional: dedicated render capacity. Keep the same repo/commit so the
+  # pipeline matches the API. Free plan workers exist only on paid
+  # instances; skip this service if you stay free (the web service then
+  # renders inline).
+  # - type: worker
+  #   name: phiversity-worker
+  #   runtime: docker
+  #   dockerfilePath: ./Dockerfile
+  #   dockerContext: .
+  #   plan: starter
+  #   dockerCommand: phiversity-worker --poll 5
+  #   envVars:
+  #     (same SUPABASE_*, LLM_*, CLOUDINARY_* values as the web service)
