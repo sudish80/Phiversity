@@ -42,3 +42,7 @@ launch-video/
 .capture-tmp/
 problem-set/
 phiversity_lectures.zip
+
+# Manim build caches (regenerated at render time)
+media/
+phiversity/src/phiversity/media/
